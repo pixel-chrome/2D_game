@@ -15,17 +15,16 @@ import java.util.List;
 import java.util.Map;
 
 public class Player {
-    public enum Direction {
-        UP, DOWN, LEFT, RIGHT
-    }
+    public enum Direction { UP, DOWN, LEFT, RIGHT }
+
     private static final float SPEED = 200f;
-    private static final int FRAME_W = 32;
-    private static final int FRAME_H = 32;
+    private static final int FRAME_W = 32;       // À ADAPTER
+    private static final int FRAME_H = 32;       // À ADAPTER
     private static final float FRAME_TIME = 0.1f;
 
     private final Vector2 position = new Vector2(320, 180);
-    private final Vector2 aim = new Vector2(1, 0);
-    
+    private final Vector2 aim = new Vector2(1, 0); // direction vers la souris (servira au katana)
+
     private final Map<Direction, Animation<TextureRegion>> idle = new EnumMap<>(Direction.class);
     private final Map<Direction, Animation<TextureRegion>> run = new EnumMap<>(Direction.class);
     private final List<Texture> textures = new ArrayList<>();
@@ -34,33 +33,55 @@ public class Player {
     private boolean moving = false;
     private float stateTime = 0f;
 
-    public Player(Texture texture) {
+    public Player() {
         for (Direction d : Direction.values()) {
             String name = d.name().toLowerCase();
-            idle.put(d, load("Sprites/IDLE/idel_" + name + ".png"));
+            idle.put(d, load("Sprites/IDLE/idle_" + name + ".png"));
             run.put(d, load("Sprites/RUN/run_" + name + ".png"));
         }
     }
 
-    public Animation<TextureRegion>
+    private Animation<TextureRegion> load(String path) {
+        Texture texture = new Texture(path);
+        texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest); // pixel art net
+        textures.add(texture);
+        TextureRegion[][] grid = TextureRegion.split(texture, FRAME_W, FRAME_H);
+        Animation<TextureRegion> anim = new Animation<>(FRAME_TIME, grid[0]); // première ligne
+        anim.setPlayMode(Animation.PlayMode.LOOP);
+        return anim;
+    }
 
     public void update(float delta, Viewport viewport) {
-        // Déplacement
+        // Déplacement (Z/W = haut, Q/A = gauche, à cause de l'AZERTY)
         Vector2 dir = new Vector2();
         if (Gdx.input.isKeyPressed(Input.Keys.Z) || Gdx.input.isKeyPressed(Input.Keys.W)) dir.y += 1;
         if (Gdx.input.isKeyPressed(Input.Keys.S)) dir.y -= 1;
         if (Gdx.input.isKeyPressed(Input.Keys.Q) || Gdx.input.isKeyPressed(Input.Keys.A)) dir.x -= 1;
         if (Gdx.input.isKeyPressed(Input.Keys.D)) dir.x += 1;
-        if (!dir.isZero()) position.add(dir.nor().scl(SPEED * delta));
+        moving = !dir.isZero();
+        if (moving) position.add(dir.nor().scl(SPEED * delta));
 
-        //Rotation de la souris
+        // Visée : le perso regarde la souris (direction la plus proche parmi les 4)
         Vector2 mouse = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-        float angle = MathUtils.atan2(mouse.y - position.y, mouse.x - position.x) * MathUtils.radiansToDegrees;
-        sprite.setRotation(angle); // adapte selon l'orientation du personnage
+        aim.set(mouse).sub(position).nor();
+        if (Math.abs(aim.x) > Math.abs(aim.y)) {
+            facing = aim.x > 0 ? Direction.RIGHT : Direction.LEFT;
+        } else {
+            facing = aim.y > 0 ? Direction.UP : Direction.DOWN;
+        }
+
+        stateTime += delta;
     }
 
     public void draw(SpriteBatch batch) {
-        sprite.setPosition(position.x - sprite.getWidth() / 2, position.y - sprite.getHeight() / 2);
-        sprite.draw(batch);
+        Animation<TextureRegion> anim = moving ? run.get(facing) : idle.get(facing);
+        TextureRegion frame = anim.getKeyFrame(stateTime);
+        batch.draw(frame, position.x - FRAME_W / 2f, position.y - FRAME_H / 2f);
+    }
+
+    public Vector2 getAim() { return aim; }
+
+    public void dispose() {
+        for (Texture t : textures) t.dispose();
     }
 }

@@ -2,7 +2,6 @@ package fr.epitech.katanagame;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -11,15 +10,13 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class Main extends ApplicationAdapter {
     private SpriteBatch batch;
     private Viewport viewport;
-    private Texture playerTexture;
     private Player player;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
         viewport = new FitViewport(640, 360);
-        playerTexture = new Texture("player.png");
-        player = new Player(playerTexture);
+        player = new Player();
     }
 
     @Override
@@ -27,7 +24,7 @@ public class Main extends ApplicationAdapter {
         viewport.update(width, height, true);
     }
 
-    @Override 
+    @Override
     public void render() {
         player.update(Gdx.graphics.getDeltaTime(), viewport);
 
@@ -39,9 +36,9 @@ public class Main extends ApplicationAdapter {
         batch.end();
     }
 
-    @Override 
+    @Override
     public void dispose() {
         batch.dispose();
-        playerTexture.dispose();
+        player.dispose();
     }
 }
