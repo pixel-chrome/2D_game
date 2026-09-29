@@ -18,8 +18,8 @@ public class Player {
     public enum Direction { UP, DOWN, LEFT, RIGHT }
 
     private static final float SPEED = 200f;
-    private static final int FRAME_W = 32;       // À ADAPTER
-    private static final int FRAME_H = 32;       // À ADAPTER
+    private static final int FRAME_W = 96;       // À ADAPTER
+    private static final int FRAME_H = 80;       // À ADAPTER
     private static final float FRAME_TIME = 0.1f;
 
     private final Vector2 position = new Vector2(320, 180);
