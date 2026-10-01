@@ -1,5 +1,6 @@
 package fr.epitech.katanagame;
 
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
@@ -8,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.badlogic.gdx.math.Rectangle;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -16,6 +18,10 @@ import java.util.Map;
 
 public class Player {
     public enum Direction { UP, DOWN, LEFT, RIGHT }
+    
+    private static final float HITBOX_W = 20f;
+    private static final float HITBOX_H = 28f;
+    private final Rectangle bounds = new Rectangle(0, 0, HITBOX_W, HITBOX_H);
 
     private static final float DASH_SPEED = 600f;
     private static final float DASH_DURATION = 0.15f;
@@ -136,6 +142,10 @@ public class Player {
         return aim; 
     }
 
+    public Vector2 getPosition() { 
+        return position; 
+    }
+
     public void dispose() {
         for (Texture t : textures) t.dispose();
     }
@@ -147,6 +157,11 @@ public class Player {
     public void takeDamage() {
         if (isInvincible() || !alive) return;   // le dash annule le coup
         alive = false;                          // un coup = mort, comme Katana Zero
+    }
+
+    public Rectangle getBounds() {
+        bounds.setPosition(position.x - HITBOX_W / 2f, position.y - HITBOX_H / 2f);
+        return bounds;
     }
 
 }
