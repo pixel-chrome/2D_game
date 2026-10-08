@@ -1,15 +1,15 @@
 package fr.epitech.katanagame;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.badlogic.gdx.math.Rectangle;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -18,16 +18,24 @@ import java.util.Map;
 
 public class Player {
     public enum Direction { UP, DOWN, LEFT, RIGHT }
-    
+
+    private static final float TILE_SIZE = 16f;
+
+    // Hitbox du corps entier (dégâts des ennemis)
     private static final float HITBOX_W = 20f;
     private static final float HITBOX_H = 28f;
     private final Rectangle bounds = new Rectangle(0, 0, HITBOX_W, HITBOX_H);
+
+    // Hitbox des pieds (collisions avec les murs)
+    private static final float FEET_W = 12f;
+    private static final float FEET_H = 8f;
+    private static final float FEET_OFFSET_Y = 16f;   // distance centre du sprite -> pieds (à ajuster)
+    private final Rectangle feet = new Rectangle(0, 0, FEET_W, FEET_H);
 
     private static final float DASH_SPEED = 600f;
     private static final float DASH_DURATION = 0.15f;
     private static final float DASH_COOLDOWN = 0.6f;
     private boolean alive = true;
-
 
     private final Vector2 dashDir = new Vector2();
     private float dashTimer = 0f;     // > 0 : dash en cours
@@ -58,7 +66,12 @@ public class Player {
             run.put(d, load("Sprites/RUN/run_" + name + ".png"));
         }
     }
-
+    public void respawn(float x, float y) {
+        position.set(x, y);
+        alive = true;
+        dashTimer = 0f;
+        dashCooldown = 0f;
+    }
     private Animation<TextureRegion> load(String path) {
         Texture texture = new Texture(path);
         texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest); // pixel art net
@@ -69,7 +82,7 @@ public class Player {
         return anim;
     }
 
-    public void update(float delta, Viewport viewport) {
+    public void update(float delta, Viewport viewport, TiledMapTileLayer[] solids) {
         dashTimer = Math.max(0f, dashTimer - delta);
         dashCooldown = Math.max(0f, dashCooldown - delta);
 
@@ -94,19 +107,53 @@ public class Player {
         // Lancer le dash
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && dashCooldown <= 0f && !isDashing()) {
             dashDir.set(moving ? dir : aim);
-            dashFacing = directionOf(dashDir);   
+            dashFacing = directionOf(dashDir);
             dashTimer = DASH_DURATION;
             dashCooldown = DASH_COOLDOWN;
         }
 
         // Mouvement : le dash prend le dessus sur la marche
         if (isDashing()) {
-            position.mulAdd(dashDir, DASH_SPEED * delta);
+            move(dashDir.x * DASH_SPEED * delta, dashDir.y * DASH_SPEED * delta, solids);
         } else if (moving) {
-            position.mulAdd(dir, SPEED * delta);
+            move(dir.x * SPEED * delta, dir.y * SPEED * delta, solids);
         }
 
         stateTime += delta;
+    }
+
+    /** Déplace le joueur par petits pas, axe par axe (pour glisser le long des murs). */
+    private void move(float dx, float dy, TiledMapTileLayer[] solids) {
+        int steps = (int) Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 4f); // pas de 4 px max
+        if (steps < 1) return;
+        float sx = dx / steps, sy = dy / steps;
+
+        for (int i = 0; i < steps; i++) {
+            position.x += sx;
+            if (collides(solids)) position.x -= sx;
+            position.y += sy;
+            if (collides(solids)) position.y -= sy;
+        }
+    }
+
+    /** Vrai si les pieds touchent une case non vide d'une couche solide (ou sortent de la map). */
+    private boolean collides(TiledMapTileLayer[] solids) {
+        Rectangle r = getFeetBounds();
+        int x0 = (int) Math.floor(r.x / TILE_SIZE);
+        int x1 = (int) Math.floor((r.x + r.width) / TILE_SIZE);
+        int y0 = (int) Math.floor(r.y / TILE_SIZE);
+        int y1 = (int) Math.floor((r.y + r.height) / TILE_SIZE);
+
+        for (int tx = x0; tx <= x1; tx++) {
+            for (int ty = y0; ty <= y1; ty++) {
+                for (TiledMapTileLayer layer : solids) {
+                    // hors de la map = obstacle
+                    if (tx < 0 || ty < 0 || tx >= layer.getWidth() || ty >= layer.getHeight()) return true;
+                    if (layer.getCell(tx, ty) != null) return true;
+                }
+            }
+        }
+        return false;
     }
 
     private Direction directionOf(Vector2 v) {
@@ -114,12 +161,12 @@ public class Player {
         return v.y > 0 ? Direction.UP : Direction.DOWN;
     }
 
-    public boolean isDashing() { 
-        return dashTimer > 0f; 
+    public boolean isDashing() {
+        return dashTimer > 0f;
     }
 
-    public boolean isInvincible() { 
-        return isDashing(); 
+    public boolean isInvincible() {
+        return isDashing();
     } // les ennemis l'utiliseront plus tard
 
     public void draw(SpriteBatch batch) {
@@ -138,20 +185,20 @@ public class Player {
         batch.setColor(1f, 1f, 1f, 1f);
     }
 
-    public Vector2 getAim() { 
-        return aim; 
+    public Vector2 getAim() {
+        return aim;
     }
 
-    public Vector2 getPosition() { 
-        return position; 
+    public Vector2 getPosition() {
+        return position;
     }
 
     public void dispose() {
         for (Texture t : textures) t.dispose();
     }
 
-    public boolean isAlive() { 
-        return alive; 
+    public boolean isAlive() {
+        return alive;
     }
 
     public void takeDamage() {
@@ -159,9 +206,15 @@ public class Player {
         alive = false;                          // un coup = mort, comme Katana Zero
     }
 
+    /** Hitbox du corps entier (dégâts). */
     public Rectangle getBounds() {
         bounds.setPosition(position.x - HITBOX_W / 2f, position.y - HITBOX_H / 2f);
         return bounds;
     }
 
+    /** Hitbox des pieds (collisions avec les murs). */
+    public Rectangle getFeetBounds() {
+        feet.setPosition(position.x - FEET_W / 2f, position.y - FEET_OFFSET_Y - FEET_H / 2f);
+        return feet;
+    }
 }

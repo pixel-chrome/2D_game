@@ -1,0 +1,77 @@
+{
+    "activeFile": "assets/maps/map1.tmx",
+    "expandedProjectPaths": [
+        "assets",
+        "core",
+        "assets/maps",
+        "core/src",
+        "core/src/ressources",
+        "."
+    ],
+    "fileStates": {
+        "/home/pololitos/Epitech/Jeu2DJava/jeudetuie.tsx": {
+            "scaleInDock": 1
+        },
+        "assets/maps/jeudetuie.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "assets/maps/map1.tmx": {
+            "scale": 0.8866666666666666,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 240.22556390977445,
+                "y": 320.8646616541353
+            }
+        },
+        "assets/maps/test1.tmx": {
+            "scale": 0.8866666666666666,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 240.22556390977445,
+                "y": 321.9924812030075
+            }
+        },
+        "core/src/ressources/jeudetuie.tsx": {
+            "scaleInDock": 1
+        },
+        "core/src/ressources/test1.tmx": {
+            "scale": 0.8866666666666666,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 240.22556390977445,
+                "y": 321.9924812030075
+            }
+        },
+        "jeudetuie.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "test1.tmx": {
+            "scale": 0.8866666666666666,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 240.22556390977445,
+                "y": 208.08270676691728
+            }
+        }
+    },
+    "last.externalTilesetPath": "/home/pololitos/Epitech/Jeu2DJava/B-OOP-301-MPL-3-1-2dgame-3/assets/maps",
+    "last.imagePath": "/home/pololitos/Epitech/Jeu2DJava/B-OOP-301-MPL-3-1-2dgame-3/assets/Free Modern Pack ( Dev Essentials )",
+    "map.lastUsedFormat": "tmx",
+    "map.orientation": "1",
+    "openFiles": [
+        "assets/maps/jeudetuie.tsx",
+        "assets/maps/map1.tmx"
+    ],
+    "project": "tilemap1.tiled-project",
+    "recentFiles": [
+        "assets/maps/jeudetuie.tsx",
+        "assets/maps/map1.tmx",
+        "jeudetuie.tsx",
+        "assets/maps/test1.tmx",
+        "core/src/ressources/test1.tmx",
+        "test1.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx"
+}
