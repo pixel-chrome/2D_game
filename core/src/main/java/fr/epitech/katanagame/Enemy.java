@@ -7,36 +7,33 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
 public class Enemy {
+    public enum Direction { RIGHT, LEFT, DOWN, UP }
+
     // --- Comportement ---
-    private static final float WIDTH = 14f;             // hitbox (à ajuster à la taille du corps)
-    private static final float HEIGHT = 24f;
+    private static final float WIDTH = 14f;             // hitbox (largeur)
+    private static final float HEIGHT = 24f;            // hitbox (hauteur)
     private static final float DETECTION_RANGE = 180f;  // distance de vue (px)
     private static final float WINDUP = 0.4f;           // temps de visée avant le tir
     private static final float FIRE_INTERVAL = 1.5f;    // délai minimum entre deux tirs
+    private static final float SHOOT_EFFECT_TIME = 0.12f; // temps d'affichage du tir
 
-    // --- Sprites ---
-    private static final String PATH = "enemy/Free8DirRobot/IdleAim/LowPolyManny_Blue_rig_IdleAim_dir";  // + numéro + ".png"
-    private static final int GRID_COLS = 5;             // grille 5 x 5
-    private static final int GRID_ROWS = 5;
-    private static final int FRAME_COUNT = 24;          // la 25e case est vide
-    private static final float FRAME_TIME = 0.08f;
-    private static final float DRAW_SCALE = 0.4f;       // 256 px * 0.3 = ~77 px à l'écran (à ajuster)
-    private static final float FOOT_OFFSET_Y = -10f;      // décalage vertical du sprite (à ajuster)
+    // --- Sprites Pixel_Hot ---
+    private static final String SPRITESHEET_PATH = "Pixel_Hot/Characters_Sprite_Sheet.png";
+    private static final int FRAME_SIZE = 32;
+    private static final float FRAME_TIME_IDLE = 0.15f;
+    private static final float FRAME_TIME_SHOOT = 0.08f;
+    private static final float FRAME_TIME_DEATH = 0.08f;
 
-    // Quel fichier (1 à 8) afficher pour chaque secteur d'angle.
-    // Indices : 0=Est, 1=Nord-Est, 2=Nord, 3=Nord-Ouest, 4=Ouest, 5=Sud-Ouest, 6=Sud, 7=Sud-Est
-    private static final int[] FILE_FOR_SECTOR = {6, 5, 4, 3, 2, 1, 8, 7};
-
-    private static final Map<Integer, Animation<TextureRegion>> idleAnims = new HashMap<>();
-    private static final List<Texture> textures = new ArrayList<>();
+    private static Texture sheetTexture;
+    private static Animation<TextureRegion> idleAnim;
+    private static Animation<TextureRegion> deathAnim;
+    private static final Map<Direction, Animation<TextureRegion>> shootAnims = new EnumMap<>(Direction.class);
 
     private final Vector2 position = new Vector2();
     private final Vector2 aim = new Vector2(0, -1);
@@ -46,7 +43,9 @@ public class Enemy {
     private boolean winding = false;    // en train de viser
     private float windupTimer = 0f;
     private float cooldown = 0f;
+    private float shootTimer = 0f;      // flash de tir
     private float stateTime = 0f;
+    private float deathTime = 0f;
 
     public Enemy(float x, float y) {
         position.set(x, y);
@@ -54,40 +53,93 @@ public class Enemy {
 
     /** À appeler une fois dans Main.create(), avant de créer les ennemis. */
     public static void loadAssets() {
-        for (int i = 1; i <= 8; i++) {
-            Texture t = new Texture(PATH + i + ".png");
-            t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-            textures.add(t);
+        if (sheetTexture != null) return;
 
-            int frameW = t.getWidth() / GRID_COLS;
-            int frameH = t.getHeight() / GRID_ROWS;
-            TextureRegion[][] grid = TextureRegion.split(t, frameW, frameH);
+        sheetTexture = new Texture(SPRITESHEET_PATH);
+        sheetTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
-            // on lit la grille ligne par ligne, et on s'arrête à FRAME_COUNT
-            Array<TextureRegion> frames = new Array<>();
-            for (int row = 0; row < GRID_ROWS; row++) {
-                for (int col = 0; col < GRID_COLS; col++) {
-                    if (frames.size < FRAME_COUNT) frames.add(grid[row][col]);
-                }
-            }
+        TextureRegion[][] grid = TextureRegion.split(sheetTexture, FRAME_SIZE, FRAME_SIZE);
 
-            Animation<TextureRegion> anim = new Animation<>(FRAME_TIME, frames);
-            anim.setPlayMode(Animation.PlayMode.LOOP);
-            idleAnims.put(i, anim);
+        // Idle avec arme (Ligne 28, colonnes 0 à 3)
+        TextureRegion[] idleFrames = new TextureRegion[4];
+        for (int i = 0; i < 4; i++) {
+            idleFrames[i] = grid[28][i];
         }
+        idleAnim = new Animation<>(FRAME_TIME_IDLE, idleFrames);
+        idleAnim.setPlayMode(Animation.PlayMode.LOOP);
+
+        // Tir / visée vers la Droite (Ligne 7, colonnes 0 à 2)
+        TextureRegion[] shootRight = new TextureRegion[3];
+        for (int i = 0; i < 3; i++) {
+            shootRight[i] = grid[7][i];
+        }
+        shootAnims.put(Direction.RIGHT, new Animation<>(FRAME_TIME_SHOOT, shootRight));
+
+        // Tir / visée vers la Gauche (Ligne 7 inversée horizontalement)
+        TextureRegion[] shootLeft = new TextureRegion[3];
+        for (int i = 0; i < 3; i++) {
+            shootLeft[i] = new TextureRegion(grid[7][i]);
+            shootLeft[i].flip(true, false);
+        }
+        shootAnims.put(Direction.LEFT, new Animation<>(FRAME_TIME_SHOOT, shootLeft));
+
+        // Tir / visée vers le Bas (Ligne 8, colonnes 0 à 2)
+        TextureRegion[] shootDown = new TextureRegion[3];
+        for (int i = 0; i < 3; i++) {
+            shootDown[i] = grid[8][i];
+        }
+        shootAnims.put(Direction.DOWN, new Animation<>(FRAME_TIME_SHOOT, shootDown));
+
+        // Tir / visée vers le Haut (Ligne 9, colonnes 0 à 2)
+        TextureRegion[] shootUp = new TextureRegion[3];
+        for (int i = 0; i < 3; i++) {
+            shootUp[i] = grid[9][i];
+        }
+        shootAnims.put(Direction.UP, new Animation<>(FRAME_TIME_SHOOT, shootUp));
+
+        // Mort / destruction en cristaux (Ligne 3, colonnes 0 à 4)
+        TextureRegion[] deathFrames = new TextureRegion[5];
+        for (int i = 0; i < 5; i++) {
+            deathFrames[i] = grid[3][i];
+        }
+        deathAnim = new Animation<>(FRAME_TIME_DEATH, deathFrames);
+        deathAnim.setPlayMode(Animation.PlayMode.NORMAL);
     }
 
     /** À appeler dans Main.dispose(). */
     public static void disposeAssets() {
-        for (Texture t : textures) t.dispose();
-        textures.clear();
-        idleAnims.clear();
+        if (sheetTexture != null) {
+            sheetTexture.dispose();
+            sheetTexture = null;
+        }
+        shootAnims.clear();
+        idleAnim = null;
+        deathAnim = null;
+    }
+
+    private Direction getAimDirection() {
+        if (Math.abs(aim.x) > Math.abs(aim.y)) {
+            return aim.x > 0 ? Direction.RIGHT : Direction.LEFT;
+        } else {
+            return aim.y > 0 ? Direction.UP : Direction.DOWN;
+        }
     }
 
     public void update(float delta, Player player, TiledMapTileLayer[] walls, List<Bullet> bullets) {
         stateTime += delta;
 
-        if (!alive || !player.isAlive()) {
+        if (!alive) {
+            deathTime += delta;
+            winding = false;
+            shootTimer = 0f;
+            return;
+        }
+
+        if (shootTimer > 0f) {
+            shootTimer -= delta;
+        }
+
+        if (!player.isAlive()) {
             winding = false;
             return;
         }
@@ -112,6 +164,7 @@ public class Enemy {
             if (windupTimer <= 0f) {
                 bullets.add(new Bullet(position, aim));   // tir !
                 winding = false;
+                shootTimer = SHOOT_EFFECT_TIME;
                 cooldown = FIRE_INTERVAL;
             }
         } else if (cooldown <= 0f) {
@@ -121,18 +174,36 @@ public class Enemy {
     }
 
     public void draw(SpriteBatch batch) {
-        if (!alive) return;
+        if (!alive) {
+            if (deathAnim != null && !deathAnim.isAnimationFinished(deathTime)) {
+                TextureRegion frame = deathAnim.getKeyFrame(deathTime, false);
+                batch.draw(frame, position.x - FRAME_SIZE / 2f, position.y - FRAME_SIZE / 2f);
+            }
+            return;
+        }
 
-        // angle de visée (0° = droite, sens anti-horaire) découpé en 8 secteurs de 45°
-        int sector = Math.round(aim.angleDeg() / 45f) % 8;
-        Animation<TextureRegion> anim = idleAnims.get(FILE_FOR_SECTOR[sector]);
-        TextureRegion frame = anim.getKeyFrame(stateTime);
+        Direction dir = getAimDirection();
+        TextureRegion frame;
 
-        float w = frame.getRegionWidth() * DRAW_SCALE;
-        float h = frame.getRegionHeight() * DRAW_SCALE;
+        if (shootTimer > 0f) {
+            Animation<TextureRegion> anim = shootAnims.get(dir);
+            frame = anim != null ? anim.getKeyFrames()[1] : idleAnim.getKeyFrame(stateTime);
+        } else if (winding) {
+            Animation<TextureRegion> anim = shootAnims.get(dir);
+            frame = anim != null ? anim.getKeyFrames()[0] : idleAnim.getKeyFrame(stateTime);
+            batch.setColor(1f, 0.7f, 0.7f, 1f);
+        } else {
+            if (dir == Direction.DOWN && idleAnim != null) {
+                frame = idleAnim.getKeyFrame(stateTime);
+            } else {
+                Animation<TextureRegion> anim = shootAnims.get(dir);
+                frame = anim != null ? anim.getKeyFrames()[0] : (idleAnim != null ? idleAnim.getKeyFrame(stateTime) : null);
+            }
+        }
 
-        if (winding) batch.setColor(1f, 0.6f, 0.6f, 1f);   // teinte rouge quand il vise
-        batch.draw(frame, position.x - w / 2f, position.y - h / 2f + FOOT_OFFSET_Y, w, h);
+        if (frame != null) {
+            batch.draw(frame, position.x - FRAME_SIZE / 2f, position.y - FRAME_SIZE / 2f);
+        }
         batch.setColor(1f, 1f, 1f, 1f);
     }
 
@@ -143,5 +214,9 @@ public class Enemy {
 
     public boolean isAlive() { return alive; }
 
-    public void takeDamage() { alive = false; }   // servira avec l'attaque au katana
+    public void takeDamage() {
+        if (!alive) return;
+        alive = false;
+        deathTime = 0f;
+    }
 }
