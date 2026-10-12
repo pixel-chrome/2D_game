@@ -155,6 +155,11 @@ public class Main extends ApplicationAdapter {
         // --- Logique ---
         if (player.isAlive()) {
             player.update(delta, viewport, solidLayers);
+            if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+                for (Enemy enemy : enemies) {
+                    player.attack(enemy);
+                }
+            }
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
             restart();
         }

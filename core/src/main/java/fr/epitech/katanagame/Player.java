@@ -16,6 +16,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import fr.epitech.katanagame.Enemy;
+
 public class Player {
     public enum Direction { UP, DOWN, LEFT, RIGHT }
 
@@ -46,6 +48,11 @@ public class Player {
     private static final int FRAME_H = 80;       // À ADAPTER
     private static final float FRAME_TIME = 0.1f;
 
+    // ATTACK
+    private static final float ATTACK_DURATION = 0.56f;
+    private float attackTimer = 0f;
+    private final Map<Direction, Animation<TextureRegion>> attack = new EnumMap<>(Direction.class);
+
     private final Vector2 position = new Vector2(320, 180);
     private final Vector2 aim = new Vector2(1, 0); // direction vers la souris (servira au katana)
 
@@ -59,11 +66,17 @@ public class Player {
 
     private Direction dashFacing = Direction.DOWN;
 
+    public Enemy mechant;
+
     public Player() {
         for (Direction d : Direction.values()) {
             String name = d.name().toLowerCase();
             idle.put(d, load("Sprites/IDLE/idle_" + name + ".png"));
             run.put(d, load("Sprites/RUN/run_" + name + ".png"));
+            // ATTACK animation
+            Animation<TextureRegion> attackAnimation = load("Sprites/ATTACK 1/attack1_" + name + ".png");
+            attackAnimation.setPlayMode(Animation.PlayMode.NORMAL);
+            attack.put(d, attackAnimation);
         }
     }
     public void respawn(float x, float y) {
@@ -119,6 +132,7 @@ public class Player {
             move(dir.x * SPEED * delta, dir.y * SPEED * delta, solids);
         }
 
+        attackTimer = Math.max(0f, attackTimer - delta);
         stateTime += delta;
     }
 
@@ -173,12 +187,16 @@ public class Player {
         Animation<TextureRegion> anim;
         float time = stateTime;
 
-        if (isDashing()) {
+        if (attackTimer > 0f) {
+            anim = attack.get(facing);
+            time = ATTACK_DURATION - attackTimer;
+        } else if (isDashing()) {
             anim = run.get(dashFacing);
-            time = stateTime * 2f;                  // course accélérée
-            batch.setColor(1f, 1f, 1f, 0.5f);       // semi-transparent
+            time = stateTime * 2f;
+            batch.setColor(1f, 1f, 1f, 0.5f);
         } else {
             anim = moving ? run.get(facing) : idle.get(facing);
+            time = stateTime;
         }
 
         batch.draw(anim.getKeyFrame(time), position.x - FRAME_W / 2f, position.y - FRAME_H / 2f);
@@ -216,5 +234,24 @@ public class Player {
     public Rectangle getFeetBounds() {
         feet.setPosition(position.x - FEET_W / 2f, position.y - FEET_OFFSET_Y - FEET_H / 2f);
         return feet;
+    }
+
+    public void attack(Enemy enemy) {
+        if (enemy == null || !enemy.isAlive()) {
+            return;
+        }
+
+        attackTimer = ATTACK_DURATION;
+
+        Rectangle attackBounds = new Rectangle(
+            position.x + aim.x * 20f - 12f,
+            position.y + aim.y * 20f - 12f,
+            24f,
+            24f
+        );
+
+        if (attackBounds.overlaps(enemy.getBounds())) {
+            enemy.takeDamage();
+        }
     }
 }
