@@ -7,7 +7,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public class Bullet {
-    private static final float SPEED = 180f;     // px/s (le dash fait 600 : il est possible de l'esquiver)
+    public static final float SPEED = 500f;     // px/s (le dash fait 600 : il est possible de l'esquiver)
     private static final float RADIUS = 2f;
     private static final float LIFETIME = 3f;    // secondes
 
@@ -33,6 +33,8 @@ public class Bullet {
     public void draw(ShapeRenderer shapes) {
         shapes.setColor(Color.YELLOW);
         shapes.circle(position.x, position.y, RADIUS);
+        shapes.rectLine(position.x, position.y,
+                position.x - velocity.x * 0.025f, position.y - velocity.y * 0.025f, RADIUS * 1.5f);
     }
 
     public Rectangle getBounds() {
