@@ -11,6 +11,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -23,13 +26,10 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class Main extends ApplicationAdapter {
-    private static final float VIEW_W = 450f;
-    private static final float VIEW_H = 310f;
+    private static final float VIEW_W = 480f;
+    private static final float VIEW_H = 270f;
     private static final float CAMERA_SMOOTH = 8f;
     private static final float LOOK_AHEAD = 0.3f;
-
-    private static final float MAP_W = 30 * 16;   // 480
-    private static final float MAP_H = 20 * 16;   // 320
 
     private SpriteBatch batch;
     private Viewport viewport;
@@ -42,19 +42,48 @@ public class Main extends ApplicationAdapter {
     private TiledMapTileLayer[] solidLayers;   // couches qui bloquent le joueur
     private TiledMapTileLayer[] wallLayers;    // couches qui bloquent les balles et la vue des gardes
 
+    private float mapW, mapH;                                    // taille de la map en pixels (lue dans le .tmx)
+    private final Vector2 playerSpawn = new Vector2(100, 100);   // valeur de secours si pas de point "player"
+    private final List<Vector2> enemySpawns = new ArrayList<>();
+
     private final List<Enemy> enemies = new ArrayList<>();
     private final List<Bullet> bullets = new ArrayList<>();
+
+    /** Lit la taille de la map et les points de départ du calque d'objets "Spawns". */
+    private void loadMapInfo() {
+        MapProperties p = map.getProperties();
+        mapW = p.get("width", Integer.class) * p.get("tilewidth", Integer.class);
+        mapH = p.get("height", Integer.class) * p.get("tileheight", Integer.class);
+
+        MapLayer spawns = map.getLayers().get("Spawns");
+        if (spawns == null) {
+            Gdx.app.log("MAP", "Pas de calque 'Spawns' dans la map : valeurs par défaut utilisées");
+            return;
+        }
+        for (MapObject obj : spawns.getObjects()) {
+            MapProperties props = obj.getProperties();
+            // coin bas-gauche (libGDX a déjà inversé l'axe Y) + moitié de la taille = centre de l'objet
+            // (pour un point, la taille vaut 0 : on obtient directement sa position)
+            float x = props.get("x", 0f, Float.class) + props.get("width", 0f, Float.class) / 2f;
+            float y = props.get("y", 0f, Float.class) + props.get("height", 0f, Float.class) / 2f;
+
+            if ("player_spawn".equals(obj.getName())) {
+                playerSpawn.set(x, y);
+            } else {
+                enemySpawns.add(new Vector2(x, y));   // tout le reste = un garde
+            }
+        }
+        Gdx.app.log("MAP", "map " + mapW + "x" + mapH + " px, " + enemySpawns.size() + " garde(s)");
+    }
 
     private void spawnEnemies() {
         enemies.clear();
         bullets.clear();
-        enemies.add(new Enemy(380, 200));
-        enemies.add(new Enemy(120, 120));
-        enemies.add(new Enemy(300, 60));
+        for (Vector2 s : enemySpawns) enemies.add(new Enemy(s.x, s.y));
     }
 
     private void restart() {
-        player.respawn(320, 180);
+        player.respawn(playerSpawn.x, playerSpawn.y);
         spawnEnemies();
     }
 
@@ -67,18 +96,22 @@ public class Main extends ApplicationAdapter {
         TmxMapLoader.Parameters params = new TmxMapLoader.Parameters();
         params.textureMinFilter = Texture.TextureFilter.Nearest;
         params.textureMagFilter = Texture.TextureFilter.Nearest;
-        map = new TmxMapLoader().load("maps/map1.tmx", params);
+        map = new TmxMapLoader().load("maps/etage_1.tmx", params);
         mapRenderer = new OrthogonalTiledMapRenderer(map);   // 1 unité = 1 pixel
+        loadMapInfo();
 
         solidLayers = new TiledMapTileLayer[] {
-            (TiledMapTileLayer) map.getLayers().get("mures"),
-            (TiledMapTileLayer) map.getLayers().get("Objets")
+            (TiledMapTileLayer) map.getLayers().get("Mur"),
+            (TiledMapTileLayer) map.getLayers().get("Objets"),
+            (TiledMapTileLayer) map.getLayers().get("Chaises"),
+            (TiledMapTileLayer) map.getLayers().get("Petits Objets")
         };
         wallLayers = new TiledMapTileLayer[] {
-            (TiledMapTileLayer) map.getLayers().get("mures")
+            (TiledMapTileLayer) map.getLayers().get("Mur")
         };
 
         player = new Player();
+        player.respawn(playerSpawn.x, playerSpawn.y);
         viewport.getCamera().position.set(player.getPosition().x, player.getPosition().y, 0);
 
         Enemy.loadAssets();
@@ -94,6 +127,7 @@ public class Main extends ApplicationAdapter {
         Camera cam = viewport.getCamera();
         Vector2 p = player.getPosition();
 
+        // décalage de la caméra vers la souris
         float mx = Gdx.input.getX() / (float) Gdx.graphics.getWidth() - 0.5f;
         float my = 0.5f - Gdx.input.getY() / (float) Gdx.graphics.getHeight();
 
@@ -107,10 +141,10 @@ public class Main extends ApplicationAdapter {
         // la caméra ne sort pas de la map (centrée si la vue est plus grande que la map)
         float halfW = VIEW_W / 2f;
         float halfH = VIEW_H / 2f;
-        cam.position.x = (VIEW_W >= MAP_W) ? MAP_W / 2f
-                : MathUtils.clamp(cam.position.x, halfW, MAP_W - halfW);
-        cam.position.y = (VIEW_H >= MAP_H) ? MAP_H / 2f
-                : MathUtils.clamp(cam.position.y, halfH, MAP_H - halfH);
+        cam.position.x = (VIEW_W >= mapW) ? mapW / 2f
+                : MathUtils.clamp(cam.position.x, halfW, mapW - halfW);
+        cam.position.y = (VIEW_H >= mapH) ? mapH / 2f
+                : MathUtils.clamp(cam.position.y, halfH, mapH - halfH);
         cam.update();
     }
 
@@ -145,7 +179,7 @@ public class Main extends ApplicationAdapter {
         batch.setProjectionMatrix(viewport.getCamera().combined);
         mapRenderer.setView((OrthographicCamera) viewport.getCamera());
 
-        mapRenderer.render(new int[]{0, 1, 2});   // sol, mures, Objets
+        mapRenderer.render();   // tous les calques de tuiles, dans l'ordre de Tiled
 
         batch.begin();
         for (Enemy e : enemies) e.draw(batch);
