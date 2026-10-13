@@ -224,6 +224,11 @@ public class GameScreen extends ScreenAdapter {
             shapeRenderer.setColor(Color.YELLOW);
             Rectangle f = player.getFeetBounds();
             shapeRenderer.rect(f.x, f.y, f.width, f.height);
+            shapeRenderer.setColor(Color.CYAN);
+            Rectangle attackBounds = player.getAttackBounds();
+            if (attackBounds != null) {
+                shapeRenderer.rect(attackBounds.x, attackBounds.y, attackBounds.width, attackBounds.height);
+            }
             shapeRenderer.setColor(Color.GREEN);
             for (Enemy e : enemies) {
                 if (!e.isAlive()) continue;
