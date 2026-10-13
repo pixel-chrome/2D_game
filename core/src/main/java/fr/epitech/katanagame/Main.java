@@ -1,5 +1,6 @@
 package fr.epitech.katanagame;
 
+import com.badlogic.gdx.graphics.GL20;
 import java.util.ArrayList;
 import java.util.List;
 import com.badlogic.gdx.ApplicationAdapter;
@@ -184,18 +185,27 @@ public class Main extends ApplicationAdapter {
         batch.setProjectionMatrix(viewport.getCamera().combined);
         mapRenderer.setView((OrthographicCamera) viewport.getCamera());
 
-        mapRenderer.render();   // tous les calques de tuiles, dans l'ordre de Tiled
+        mapRenderer.render();
+
+        // cônes de vision (transparents, sous les sprites)
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        for (Enemy e : enemies) e.drawVision(shapeRenderer, wallLayers);
+        shapeRenderer.end();
 
         batch.begin();
         for (Enemy e : enemies) e.draw(batch);
         player.draw(batch);
         batch.end();
 
-        // les balles (formes simples)
-        shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+        // balles et points d'exclamation (par-dessus les sprites)
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         for (Bullet b : bullets) b.draw(shapeRenderer);
+        for (Enemy e : enemies) e.drawAlert(shapeRenderer);
         shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
 
         // debug (F1 pour afficher / cacher)
         if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) debug = !debug;

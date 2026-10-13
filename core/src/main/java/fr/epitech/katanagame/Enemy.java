@@ -1,9 +1,11 @@
 package fr.epitech.katanagame;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
@@ -29,7 +31,11 @@ public class Enemy {
     private static final float DETECTION_RANGE = 180f;  // distance de vue (px)
     private static final float WINDUP = 0.4f;           // temps de visée avant le tir
     private static final float FIRE_INTERVAL = 1.2f;    // délai minimum entre deux tirs
-    private static final float SHOOT_EFFECT_TIME = 0.12f; // temps d'affichage du tir
+    private static final float SHOOT_EFFECT_TIME = 0.24f; // temps d'affichage du tir
+
+    // --- Cône de vision ---
+    private static final float FOV = 90f;               // angle total du cône (degrés)
+    private static final int CONE_RAYS = 24;            // finesse du dessin (plus = plus précis)
 
     // --- Sprites Pixel_Hot ---
     private static final String SPRITESHEET_PATH = "Pixel_Hot/Characters_Sprite_Sheet.png";
@@ -43,6 +49,7 @@ public class Enemy {
     private static final float WALK_SPEED = 40f;
     private static final float PAUSE_MIN = 0.8f;
     private static final float PAUSE_MAX = 2f;
+    private static final float FRAME_TIME_WALK = 0.12f;
 
     private static final float LOSE_SIGHT_TIME = 1.5f; // temps avant de renoncer
 
@@ -50,6 +57,7 @@ public class Enemy {
     private static Animation<TextureRegion> idleAnim;
     private static Animation<TextureRegion> deathAnim;
     private static final Map<Direction, Animation<TextureRegion>> shootAnims = new EnumMap<>(Direction.class);
+    private static final Map<Direction, Animation<TextureRegion>> walkAnims = new EnumMap<>(Direction.class);
 
     private final Vector2 position = new Vector2();
     private final Vector2 aim = new Vector2(0, -1);
@@ -62,6 +70,7 @@ public class Enemy {
     private boolean hasLastTarget = false;
 
     private boolean alerted = false;
+    private boolean seesPlayer = false;  // il voit le joueur à cet instant (sert au "!")
     private float alertTimer = 0f;
     private boolean walking = false;
     private float pauseTimer = 0f;
@@ -79,6 +88,7 @@ public class Enemy {
 
     public Enemy(float x, float y) {
         position.set(x, y);
+        home.set(x, y);   // centre de la zone de patrouille
     }
 
     /** À appeler une fois dans Main.create(), avant de créer les ennemis. */
@@ -98,25 +108,25 @@ public class Enemy {
         idleAnim = new Animation<>(FRAME_TIME_IDLE, idleFrames);
         idleAnim.setPlayMode(Animation.PlayMode.LOOP);
 
-        // Tir / visée vers la Droite (Ligne 7, colonnes 0 à 2)
+        // Tir / visée vers la Droite (Ligne 8, colonnes 0 à 2)
         TextureRegion[] shootRight = new TextureRegion[3];
         for (int i = 0; i < 3; i++) {
-            shootRight[i] = grid[7][i];
+            shootRight[i] = grid[8][i];
         }
         shootAnims.put(Direction.RIGHT, new Animation<>(FRAME_TIME_SHOOT, shootRight));
 
-        // Tir / visée vers la Gauche (Ligne 7 inversée horizontalement)
+        // Tir / visée vers la Gauche (Ligne 8 inversée horizontalement)
         TextureRegion[] shootLeft = new TextureRegion[3];
         for (int i = 0; i < 3; i++) {
-            shootLeft[i] = new TextureRegion(grid[7][i]);
+            shootLeft[i] = new TextureRegion(grid[8][i]);
             shootLeft[i].flip(true, false);
         }
         shootAnims.put(Direction.LEFT, new Animation<>(FRAME_TIME_SHOOT, shootLeft));
 
-        // Tir / visée vers le Bas (Ligne 8, colonnes 0 à 2)
+        // Tir / visée vers le Bas (Ligne 7, colonnes 0 à 2)
         TextureRegion[] shootDown = new TextureRegion[3];
         for (int i = 0; i < 3; i++) {
-            shootDown[i] = grid[8][i];
+            shootDown[i] = grid[7][i];
         }
         shootAnims.put(Direction.DOWN, new Animation<>(FRAME_TIME_SHOOT, shootDown));
 
@@ -126,6 +136,66 @@ public class Enemy {
             shootUp[i] = grid[9][i];
         }
         shootAnims.put(Direction.UP, new Animation<>(FRAME_TIME_SHOOT, shootUp));
+
+        // --- Marche vers le bas : ligne 22, colonnes 0 à 7 ---
+        TextureRegion[] walkDown = new TextureRegion[8];
+
+        for (int i = 0; i < 8; i++) {
+            walkDown[i] = grid[22][i];
+        }
+
+        Animation<TextureRegion> walkDownAnim =
+                new Animation<>(FRAME_TIME_WALK, walkDown);
+
+        walkDownAnim.setPlayMode(Animation.PlayMode.LOOP);
+
+        walkAnims.put(Direction.DOWN, walkDownAnim);
+
+
+        // --- Marche vers la droite : ligne 23, colonnes 0 à 7 ---
+        TextureRegion[] walkRight = new TextureRegion[8];
+
+        for (int i = 0; i < 8; i++) {
+            walkRight[i] = grid[23][i];
+        }
+
+        Animation<TextureRegion> walkRightAnim =
+                new Animation<>(FRAME_TIME_WALK, walkRight);
+
+        walkRightAnim.setPlayMode(Animation.PlayMode.LOOP);
+
+        walkAnims.put(Direction.RIGHT, walkRightAnim);
+
+
+        // --- Marche vers la gauche : miroir de la marche à droite ---
+        TextureRegion[] walkLeft = new TextureRegion[8];
+
+        for (int i = 0; i < 8; i++) {
+            walkLeft[i] = new TextureRegion(grid[23][i]);
+            walkLeft[i].flip(true, false);
+        }
+
+        Animation<TextureRegion> walkLeftAnim =
+                new Animation<>(FRAME_TIME_WALK, walkLeft);
+
+        walkLeftAnim.setPlayMode(Animation.PlayMode.LOOP);
+
+        walkAnims.put(Direction.LEFT, walkLeftAnim);
+
+
+        // --- Marche vers le haut : ligne 24, colonnes 0 à 7 ---
+        TextureRegion[] walkUp = new TextureRegion[8];
+
+        for (int i = 0; i < 8; i++) {
+            walkUp[i] = grid[24][i];
+        }
+
+        Animation<TextureRegion> walkUpAnim =
+                new Animation<>(FRAME_TIME_WALK, walkUp);
+
+        walkUpAnim.setPlayMode(Animation.PlayMode.LOOP);
+
+        walkAnims.put(Direction.UP, walkUpAnim);
 
         // Mort / destruction en cristaux (Ligne 3, colonnes 0 à 4)
         TextureRegion[] deathFrames = new TextureRegion[5];
@@ -163,6 +233,7 @@ public class Enemy {
             winding = false;
             volleysLeft = 0;
             shootTimer = 0f;
+            seesPlayer = false;
             return;
         }
 
@@ -171,6 +242,7 @@ public class Enemy {
         if (!player.isAlive()) {
             winding = false;
             volleysLeft = 0;
+            seesPlayer = false;
             return;
         }
         cooldown = Math.max(0f, cooldown - delta);
@@ -184,8 +256,15 @@ public class Enemy {
         lastTarget.set(target);
         hasLastTarget = true;
 
-        boolean sees = position.dst(target) <= DETECTION_RANGE
+        // Il voit le joueur seulement s'il est dans le cône, à portée, et sans mur entre eux
+        Vector2 toTarget = new Vector2(target).sub(position);
+        float angleDiff = Math.abs(((toTarget.angleDeg() - aim.angleDeg() + 540f) % 360f) - 180f);
+        boolean inCone = angleDiff <= FOV / 2f;
+
+        boolean sees = inCone
+                && toTarget.len() <= DETECTION_RANGE
                 && Collision.hasLineOfSight(walls, position, target);
+        seesPlayer = sees;
 
         if (sees) {
             alerted = true;
@@ -204,7 +283,7 @@ public class Enemy {
             patrol(delta, walls);
             return;
         }
-
+        walking = false;   // alerté : il arrête de marcher
         // Alerté : il fixe le joueur (ou le dernier endroit où il l'a vu)
         aim.set(lastKnown).sub(position).nor();
 
@@ -239,7 +318,8 @@ public class Enemy {
         if (!alive) {
             if (deathAnim != null && !deathAnim.isAnimationFinished(deathTime)) {
                 TextureRegion frame = deathAnim.getKeyFrame(deathTime, false);
-                batch.draw(frame, position.x - FRAME_SIZE / 2f, position.y - FRAME_SIZE / 2f);
+                batch.draw(frame, position.x - FRAME_SIZE / 2f,
+                        position.y - FRAME_SIZE / 2f);
             }
             return;
         }
@@ -248,25 +328,108 @@ public class Enemy {
         TextureRegion frame;
 
         if (shootTimer > 0f) {
+
             Animation<TextureRegion> anim = shootAnims.get(dir);
-            frame = anim != null ? anim.getKeyFrames()[1] : idleAnim.getKeyFrame(stateTime);
+
+            // Jouer l'animation de tir
+            frame = anim != null
+                    ? anim.getKeyFrame(
+                            SHOOT_EFFECT_TIME - shootTimer,
+                            false
+                    )
+                    : idleAnim.getKeyFrame(stateTime);
+
         } else if (winding) {
+
             Animation<TextureRegion> anim = shootAnims.get(dir);
-            frame = anim != null ? anim.getKeyFrames()[0] : idleAnim.getKeyFrame(stateTime);
+
+            // Première image : position de visée
+            frame = anim != null
+                    ? anim.getKeyFrames()[0]
+                    : idleAnim.getKeyFrame(stateTime);
+
             batch.setColor(1f, 0.7f, 0.7f, 1f);
+
+        } else if (walking) {
+
+            // Animation de marche
+            Animation<TextureRegion> anim = walkAnims.get(dir);
+
+            frame = anim != null
+                    ? anim.getKeyFrame(stateTime, true)
+                    : idleAnim.getKeyFrame(stateTime);
+        } else if (alerted) {
+            // Alerté : il pointe son arme dans ta direction (côté, haut ou bas)
+            Animation<TextureRegion> anim = shootAnims.get(dir);
+            frame = anim != null
+                    ? anim.getKeyFrames()[0]
+                    : idleAnim.getKeyFrame(stateTime);
         } else {
-            if (dir == Direction.DOWN && idleAnim != null) {
-                frame = idleAnim.getKeyFrame(stateTime);
-            } else {
-                Animation<TextureRegion> anim = shootAnims.get(dir);
-                frame = anim != null ? anim.getKeyFrames()[0] : (idleAnim != null ? idleAnim.getKeyFrame(stateTime) : null);
-            }
+
+            // Animation d'attente
+            frame = idleAnim.getKeyFrame(stateTime);
         }
 
         if (frame != null) {
-            batch.draw(frame, position.x - FRAME_SIZE / 2f, position.y - FRAME_SIZE / 2f);
+            batch.draw(
+                    frame,
+                    position.x - FRAME_SIZE / 2f,
+                    position.y - FRAME_SIZE / 2f
+            );
         }
+
         batch.setColor(1f, 1f, 1f, 1f);
+    }
+
+    /**
+     * Dessine le cône de vision (ShapeRenderer en mode Filled, avec le blending activé).
+     * Jaune = il n'a rien vu, rouge = il est alerté. Les murs coupent le cône.
+     */
+    public void drawVision(ShapeRenderer shapes, TiledMapTileLayer[] walls) {
+        if (!alive) return;
+
+        if (alerted) shapes.setColor(1f, 0.1f, 0.1f, 0.28f);
+        else shapes.setColor(1f, 0.9f, 0.2f, 0.18f);
+
+        float start = aim.angleDeg() - FOV / 2f;
+        float step = FOV / CONE_RAYS;
+        float prevX = 0f, prevY = 0f;
+
+        for (int i = 0; i <= CONE_RAYS; i++) {
+            float a = start + i * step;
+            float dx = MathUtils.cosDeg(a);
+            float dy = MathUtils.sinDeg(a);
+
+            // on avance le long du rayon jusqu'à un mur ou la portée maximale
+            float len = DETECTION_RANGE;
+            for (float d = 4f; d <= DETECTION_RANGE; d += 4f) {
+                if (Collision.isSolid(walls, position.x + dx * d, position.y + dy * d)) {
+                    len = d - 2f;
+                    break;
+                }
+            }
+
+            float x = position.x + dx * len;
+            float y = position.y + dy * len;
+            if (i > 0) shapes.triangle(position.x, position.y, prevX, prevY, x, y);
+            prevX = x;
+            prevY = y;
+        }
+    }
+
+    /** Dessine un "!" au-dessus de la tête quand il voit le joueur. */
+    public void drawAlert(ShapeRenderer shapes) {
+        if (!alive || !seesPlayer) return;
+
+        float bob = Math.abs(MathUtils.sin(stateTime * 8f)) * 2f;   // petit rebond
+        float x = position.x;
+        float y = position.y + FRAME_SIZE / 2f + 4f + bob;
+
+        shapes.setColor(Color.BLACK);                  // contour
+        shapes.rect(x - 3f, y - 1f, 6f, 16f);
+        shapes.setColor(1f, 0.2f, 0.2f, 1f);           // le trait du "!"
+        shapes.rect(x - 2f, y + 5f, 4f, 9f);
+        shapes.rect(x - 2f, y, 4f, 4f);                // le point
     }
 
     public Rectangle getBounds() {
