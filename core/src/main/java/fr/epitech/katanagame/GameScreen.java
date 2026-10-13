@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -47,7 +48,7 @@ public class GameScreen extends ScreenAdapter {
     private TiledMapTileLayer[] wallLayers;    // couches qui bloquent les balles et la vue des gardes
 
     private float mapW, mapH;                                    // taille de la map en pixels (lue dans le .tmx)
-    private final Vector2 playerSpawn = new Vector2(100, 100);   // valeur de secours si pas de point "player"
+    private final Vector2 playerSpawn = new Vector2(100, 100);   // valeur de secours si pas de point "player_spawn"
     private final List<Vector2> enemySpawns = new ArrayList<>();
 
     private final List<Enemy> enemies = new ArrayList<>();
@@ -203,16 +204,25 @@ public class GameScreen extends ScreenAdapter {
 
         mapRenderer.render();   // tous les calques de tuiles, dans l'ordre de Tiled
 
+        // cônes de vision (transparents, sous les sprites)
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        for (Enemy e : enemies) e.drawVision(shapeRenderer, wallLayers);
+        shapeRenderer.end();
+
         batch.begin();
         for (Enemy e : enemies) e.draw(batch);
         player.draw(batch);
         batch.end();
 
-        // les balles (formes simples)
-        shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+        // balles et points d'exclamation (par-dessus les sprites)
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         for (Bullet b : bullets) b.draw(shapeRenderer);
+        for (Enemy e : enemies) e.drawAlert(shapeRenderer);
         shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
 
         // debug (F1 pour afficher / cacher)
         if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) debug = !debug;
