@@ -171,24 +171,7 @@ public class Player {
      * de la map).
      */
     private boolean collides(TiledMapTileLayer[] solids) {
-        Rectangle r = getFeetBounds();
-        int x0 = (int) Math.floor(r.x / TILE_SIZE);
-        int x1 = (int) Math.floor((r.x + r.width) / TILE_SIZE);
-        int y0 = (int) Math.floor(r.y / TILE_SIZE);
-        int y1 = (int) Math.floor((r.y + r.height) / TILE_SIZE);
-
-        for (int tx = x0; tx <= x1; tx++) {
-            for (int ty = y0; ty <= y1; ty++) {
-                for (TiledMapTileLayer layer : solids) {
-                    // hors de la map = obstacle
-                    if (tx < 0 || ty < 0 || tx >= layer.getWidth() || ty >= layer.getHeight())
-                        return true;
-                    if (layer.getCell(tx, ty) != null)
-                        return true;
-                }
-            }
-        }
-        return false;
+        return Collision.overlapsSolid(solids, getFeetBounds());
     }
 
     private Direction directionOf(Vector2 v) {

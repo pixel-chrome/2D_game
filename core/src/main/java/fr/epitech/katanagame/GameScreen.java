@@ -44,8 +44,15 @@ public class GameScreen extends ScreenAdapter {
 
     private TiledMap map;
     private OrthogonalTiledMapRenderer mapRenderer;
-    private TiledMapTileLayer[] solidLayers;   // couches qui bloquent le joueur
-    private TiledMapTileLayer[] wallLayers;    // couches qui bloquent les balles et la vue des gardes
+    private TiledMapTileLayer[] moveLayers;     // bloquent les corps (joueur + gardes)
+    private TiledMapTileLayer[] bulletLayers;   // bloquent les balles
+    private TiledMapTileLayer[] sightLayers;    // bloquent la vue des gardes
+
+    private TiledMapTileLayer layer(String name) {
+        if (map.getLayers().get(name) == null)
+            throw new IllegalStateException("Calque introuvable dans la map : " + name);
+        return (TiledMapTileLayer) map.getLayers().get(name);
+}
 
     private float mapW, mapH;                                    // taille de la map en pixels (lue dans le .tmx)
     private final Vector2 playerSpawn = new Vector2(100, 100);   // valeur de secours si pas de point "player_spawn"
@@ -69,15 +76,11 @@ public class GameScreen extends ScreenAdapter {
         mapRenderer = new OrthogonalTiledMapRenderer(map);   // 1 unité = 1 pixel
         loadMapInfo();
 
-        solidLayers = new TiledMapTileLayer[] {
-            (TiledMapTileLayer) map.getLayers().get("Mur"),
-            (TiledMapTileLayer) map.getLayers().get("Objets"),
-            (TiledMapTileLayer) map.getLayers().get("Chaises"),
-            (TiledMapTileLayer) map.getLayers().get("Petits Objets")
+        moveLayers = new TiledMapTileLayer[] {
+            layer("Mur"), layer("Objets"), layer("Chaises")
         };
-        wallLayers = new TiledMapTileLayer[] {
-            (TiledMapTileLayer) map.getLayers().get("Mur")
-        };
+        bulletLayers = new TiledMapTileLayer[] { layer("Mur"), layer("Objets") };
+        sightLayers  = new TiledMapTileLayer[] { layer("Mur") };
 
         player = new Player();
         player.respawn(playerSpawn.x, playerSpawn.y);
@@ -172,7 +175,7 @@ public class GameScreen extends ScreenAdapter {
 
         // --- Logique ---
         if (player.isAlive()) {
-            player.update(delta, viewport, solidLayers);
+            player.update(delta, viewport, moveLayers);
             if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
                 for (Enemy enemy : enemies) {
                     player.attack(enemy);
@@ -182,10 +185,10 @@ public class GameScreen extends ScreenAdapter {
             restart();
         }
 
-        for (Enemy e : enemies) e.update(delta, player, wallLayers, bullets);
+        for (Enemy e : enemies) e.update(delta, player, sightLayers, moveLayers, bullets);
 
         for (Bullet b : bullets) {
-            b.update(delta, wallLayers);
+            b.update(delta, bulletLayers);
             if (b.isAlive() && player.isAlive() && !player.isInvincible()
                     && b.getBounds().overlaps(player.getBounds())) {
                 player.takeDamage();
@@ -209,7 +212,7 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        for (Enemy e : enemies) e.drawVision(shapeRenderer, wallLayers);
+        for (Enemy e : enemies) e.drawVision(shapeRenderer, sightLayers);
         shapeRenderer.end();
 
         batch.begin();

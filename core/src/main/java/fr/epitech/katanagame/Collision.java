@@ -2,6 +2,7 @@ package fr.epitech.katanagame;
 
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Rectangle;
 
 /** Fonctions utilitaires pour tester la map (balles, ligne de vue des ennemis). */
 public final class Collision {
@@ -31,5 +32,22 @@ public final class Collision {
             if (isSolid(layers, x, y)) return false;
         }
         return true;
+    }
+    /** Vrai si le rectangle touche une case non vide d'une des couches (ou sort de la map). */
+    public static boolean overlapsSolid(TiledMapTileLayer[] layers, Rectangle r) {
+        int x0 = (int) Math.floor(r.x / TILE_SIZE);
+        int x1 = (int) Math.floor((r.x + r.width) / TILE_SIZE);
+        int y0 = (int) Math.floor(r.y / TILE_SIZE);
+        int y1 = (int) Math.floor((r.y + r.height) / TILE_SIZE);
+
+        for (int tx = x0; tx <= x1; tx++) {
+            for (int ty = y0; ty <= y1; ty++) {
+                for (TiledMapTileLayer layer : layers) {
+                    if (tx < 0 || ty < 0 || tx >= layer.getWidth() || ty >= layer.getHeight()) return true;
+                    if (layer.getCell(tx, ty) != null) return true;
+                }
+            }
+        }
+        return false;
     }
 }

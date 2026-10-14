@@ -86,11 +86,32 @@ public class Enemy {
     private float stateTime = 0f;
     private float deathTime = 0f;
 
+    private static final float FEET_W = 10f;
+    private static final float FEET_H = 6f;
+    private static final float FEET_OFFSET_Y = 10f;   // centre du sprite -> pieds (à ajuster)
+    private final Rectangle feet = new Rectangle();
+
     public Enemy(float x, float y) {
         position.set(x, y);
         home.set(x, y);   // centre de la zone de patrouille
     }
+    public Rectangle getFeetBounds() {
+        feet.set(position.x - FEET_W / 2f, position.y - FEET_OFFSET_Y - FEET_H / 2f, FEET_W, FEET_H);
+        return feet;
+    }
 
+    /** Avance axe par axe ; renvoie false si le garde est bloqué. */
+    private boolean tryMove(float dx, float dy, TiledMapTileLayer[] solids) {
+        boolean blocked = false;
+
+        position.x += dx;
+        if (Collision.overlapsSolid(solids, getFeetBounds())) { position.x -= dx; blocked |= dx != 0; }
+
+        position.y += dy;
+        if (Collision.overlapsSolid(solids, getFeetBounds())) { position.y -= dy; blocked |= dy != 0; }
+
+        return !blocked;
+    }
     /** À appeler une fois dans Main.create(), avant de créer les ennemis. */
     public static void loadAssets() {
         if (sheetTexture != null) return;
@@ -225,7 +246,8 @@ public class Enemy {
         }
     }
 
-    public void update(float delta, Player player, TiledMapTileLayer[] walls, List<Bullet> bullets) {
+    public void update(float delta, Player player, TiledMapTileLayer[] sight,
+                   TiledMapTileLayer[] move, List<Bullet> bullets) {
         stateTime += delta;
 
         if (!alive) {
@@ -263,7 +285,7 @@ public class Enemy {
 
         boolean sees = inCone
                 && toTarget.len() <= DETECTION_RANGE
-                && Collision.hasLineOfSight(walls, position, target);
+                && Collision.hasLineOfSight(sight, position, target);
         seesPlayer = sees;
 
         if (sees) {
@@ -280,7 +302,7 @@ public class Enemy {
         }
 
         if (!alerted) {
-            patrol(delta, walls);
+            patrol(delta, move);
             return;
         }
         walking = false;   // alerté : il arrête de marcher
@@ -471,8 +493,12 @@ public class Enemy {
                 pauseTimer = MathUtils.random(PAUSE_MIN, PAUSE_MAX);
             } else {
                 toTarget.nor();
-                aim.set(toTarget);   // il regarde dans la direction où il marche
-                position.mulAdd(toTarget, Math.min(dist, WALK_SPEED * delta));
+                aim.set(toTarget);
+                Vector2 step = new Vector2(toTarget).scl(Math.min(dist, WALK_SPEED * delta));
+                if (!tryMove(step.x, step.y, walls)) {     // "walls" = le tableau move reçu en paramètre
+                    walking = false;                       // bloqué : il s'arrête et fait une pause
+                    pauseTimer = MathUtils.random(PAUSE_MIN, PAUSE_MAX);
+                }
             }
         } else {
             pauseTimer -= delta;
