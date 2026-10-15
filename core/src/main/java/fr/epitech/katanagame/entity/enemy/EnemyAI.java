@@ -19,11 +19,13 @@ final class EnemyAI {
     private boolean alerted, seesPlayer, walking;
     private float alertTimer, pauseTimer;
 
+    /** Initialise l’IA et la position de référence de l’ennemi. */
     EnemyAI(Enemy enemy, float x, float y) {
         this.enemy = enemy;
         home.set(x, y);
     }
 
+    /** Actualise l’alerte et la dernière position connue du joueur. */
     void updateAlert(boolean sees, Vector2 target, float delta) {
         seesPlayer = sees;
         if (sees) {
@@ -40,6 +42,7 @@ final class EnemyAI {
         }
     }
 
+    /** Déplace l’ennemi vers ses destinations de patrouille. */
     void patrol(float delta, TiledMapTileLayer[] walls) {
         if (walking) {
             Vector2 toTarget = new Vector2(wanderTarget).sub(enemy.getPosition());
@@ -57,11 +60,13 @@ final class EnemyAI {
         }
     }
 
+    /** Démarre une pause avant le prochain déplacement. */
     private void startPause() {
         walking = false;
         pauseTimer = MathUtils.random(PAUSE_MIN, PAUSE_MAX);
     }
 
+    /** Choisit une destination de patrouille accessible. */
     private void pickWanderTarget(TiledMapTileLayer[] walls) {
         for (int attempt = 0; attempt < 8; attempt++) {
             float angle = MathUtils.random(360f);
@@ -77,10 +82,16 @@ final class EnemyAI {
         pauseTimer = 0.5f;
     }
 
+    /** Arrête le déplacement de patrouille. */
     void stopWalking() { walking = false; }
+    /** Indique si l’ennemi est alerté. */
     boolean isAlerted() { return alerted; }
+    /** Indique si l’ennemi voit actuellement le joueur. */
     boolean seesPlayer() { return seesPlayer; }
+    /** Indique si l’ennemi marche. */
     boolean isWalking() { return walking; }
+    /** Retourne la dernière position connue du joueur. */
     Vector2 lastKnown() { return lastKnown; }
+    /** Met à jour l’état de vision du joueur. */
     void setSeesPlayer(boolean value) { seesPlayer = value; }
 }

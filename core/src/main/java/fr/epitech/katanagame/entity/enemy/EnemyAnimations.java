@@ -20,8 +20,10 @@ final class EnemyAnimations {
     private static final Map<Direction, Animation<TextureRegion>> shootAnims = new EnumMap<>(Direction.class);
     private static final Map<Direction, Animation<TextureRegion>> walkAnims = new EnumMap<>(Direction.class);
 
+    /** Empêche l’instanciation de cette classe utilitaire. */
     private EnemyAnimations() {}
 
+    /** Charge les spritesheets et prépare les animations partagées. */
     static void loadAssets() {
         if (sheetTexture != null) return;
         sheetTexture = new Texture(SPRITESHEET_PATH);
@@ -39,6 +41,7 @@ final class EnemyAnimations {
         walkAnims.put(Direction.UP, animation(FRAME_TIME_WALK, frames(grid, 24, 8, false), Animation.PlayMode.LOOP));
     }
 
+    /** Extrait une séquence de frames depuis une ligne du spritesheet. */
     private static TextureRegion[] frames(TextureRegion[][] grid, int row, int count, boolean flipX) {
         TextureRegion[] result = new TextureRegion[count];
         for (int i = 0; i < count; i++) {
@@ -47,18 +50,22 @@ final class EnemyAnimations {
         }
         return result;
     }
+    /** Construit une animation à partir de ses frames. */
     private static Animation<TextureRegion> animation(float time, TextureRegion[] frames, Animation.PlayMode mode) {
         Animation<TextureRegion> result = new Animation<>(time, frames);
         result.setPlayMode(mode);
         return result;
     }
+    /** Libère les textures et animations partagées. */
     static void disposeAssets() {
         if (sheetTexture != null) { sheetTexture.dispose(); sheetTexture = null; }
         shootAnims.clear(); walkAnims.clear(); idleAnim = null; deathAnim = null;
     }
+    /** Choisit puis dessine l’animation adaptée à l’état de l’ennemi. */
     static void draw(Enemy enemy, SpriteBatch batch) {
         if (!enemy.isAlive()) {
             if (deathAnim != null && !deathAnim.isAnimationFinished(enemy.deathTime()))
+                /** Dessine une frame à la position de l’ennemi. */
                 drawFrame(enemy, batch, deathAnim.getKeyFrame(enemy.deathTime(), false));
             return;
         }
@@ -76,9 +83,11 @@ final class EnemyAnimations {
         } else if (enemy.isAlerted()) {
             frame = shoot != null ? shoot.getKeyFrames()[0] : idleAnim.getKeyFrame(enemy.stateTime());
         } else frame = idleAnim.getKeyFrame(enemy.stateTime());
+        /** Dessine une frame à la position de l’ennemi. */
         drawFrame(enemy, batch, frame);
         batch.setColor(1f, 1f, 1f, 1f);
     }
+    /** Dessine une frame à la position de l’ennemi. */
     private static void drawFrame(Enemy enemy, SpriteBatch batch, TextureRegion frame) {
         batch.draw(frame, enemy.getPosition().x - FRAME_SIZE / 2f, enemy.getPosition().y - FRAME_SIZE / 2f);
     }

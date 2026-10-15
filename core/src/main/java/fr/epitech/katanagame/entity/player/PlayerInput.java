@@ -7,6 +7,7 @@ import fr.epitech.katanagame.world.World;
 
 /** Centralise la lecture des commandes du joueur. */
 final class PlayerInput {
+    /** Empêche l’instanciation de cette classe utilitaire. */
     private PlayerInput() {}
 
     /** Z/W = haut, S = bas, Q/A = gauche, D = droite (AZERTY et QWERTY). */

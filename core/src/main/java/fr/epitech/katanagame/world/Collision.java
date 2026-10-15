@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Rectangle;
 public final class Collision {
     private static final float TILE_SIZE = 16f;
 
+    /** Empêche l’instanciation de cette classe utilitaire. */
     private Collision() {}
 
     /** Vrai si le point (px, py) est dans une case non vide d'une des couches (ou hors de la map). */

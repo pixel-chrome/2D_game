@@ -14,11 +14,15 @@ import com.badlogic.gdx.Screen;
  * Le jeu en lui-même vit dans GameScreen.
  */
 public class Main extends Game {
+    /** Nom affiché du jeu. */
     public static final String TITLE = "LAME D'AUBE";   // nom provisoire : à changer
 
+    /** Styles et ressources partagés de l’interface. */
     public Theme theme;
+    /** Fond animé partagé par les menus. */
     public MenuBackground background;
 
+    /** Initialise les paramètres, les ressources communes et le menu principal. */
     @Override
     public void create() {
         GameSettings.load();
@@ -34,6 +38,7 @@ public class Main extends Game {
         if (old != null) old.dispose();
     }
 
+    /** Libère les ressources partagées du jeu. */
     @Override
     public void dispose() {
         super.dispose();

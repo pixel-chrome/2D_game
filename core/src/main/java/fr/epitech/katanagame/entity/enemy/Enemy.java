@@ -11,14 +11,17 @@ import fr.epitech.katanagame.entity.Character;
 import fr.epitech.katanagame.entity.player.Player;
 import fr.epitech.katanagame.world.World;
 
-/** Entité ennemie : orchestre l'IA, la vision, l'arme et le rendu. */
+/** Entité ennemie : Gère l'IA, la vision, l'arme et le rendu. */
 public class Enemy extends Character {
     private static final float WIDTH = 14f, HEIGHT = 24f;
     private static final float FEET_W = 10f, FEET_H = 6f, FEET_OFFSET_Y = 10f;
+    /** Logique de comportement et de patrouille. */
     private final EnemyAI ai;
+    /** Système de tir de l’ennemi. */
     private final EnemyWeapon weapon;
     private float stateTime, deathTime;
 
+    /** Initialise un ennemi, son intelligence artificielle et son arme. */
     public Enemy(float x, float y) {
         super(x, y, WIDTH, HEIGHT, FEET_W, FEET_H, FEET_OFFSET_Y);
         aim.set(0, -1);
@@ -26,7 +29,9 @@ public class Enemy extends Character {
         weapon = new EnemyWeapon(this);
     }
 
+    /** Charge les ressources graphiques partagées des ennemis. */
     public static void loadAssets() { EnemyAnimations.loadAssets(); }
+    /** Libère les ressources graphiques partagées des ennemis. */
     public static void disposeAssets() { EnemyAnimations.disposeAssets(); }
 
     @Override protected void onDeath() { deathTime = 0f; }
@@ -70,10 +75,12 @@ public class Enemy extends Character {
 
     @Override public void draw(SpriteBatch batch) { EnemyAnimations.draw(this, batch); }
 
+    /** Affiche le champ de vision de l’ennemi. */
     public void drawVision(ShapeRenderer shapes, TiledMapTileLayer[] walls) {
         EnemyVision.draw(this, shapes, walls);
     }
 
+    /** Affiche l’indicateur d’alerte de l’ennemi. */
     public void drawAlert(ShapeRenderer shapes) {
         if (!isAlive() || !ai.seesPlayer()) return;
         float bob = Math.abs(MathUtils.sin(stateTime * 8f)) * 2f;
@@ -86,12 +93,18 @@ public class Enemy extends Character {
         shapes.rect(x - 2f, y, 4f, 4f);
     }
 
-    // API interne des composants de déplacement, vision et animation.
+    /** Déplace l’ennemi en appliquant les collisions de la carte. */
     boolean moveForAI(float dx, float dy, TiledMapTileLayer[] walls) { return move(dx, dy, walls); }
+    /** Retourne le temps écoulé pour l’animation courante. */
     float stateTime() { return stateTime; }
+    /** Retourne le temps écoulé depuis la mort de l’ennemi. */
     float deathTime() { return deathTime; }
+    /** Retourne le temps restant de l’effet de tir. */
     float shootTimer() { return weapon.shootTimer(); }
+    /** Indique si l’ennemi prépare un tir. */
     boolean isWinding() { return weapon.isWinding(); }
+    /** Indique si l’ennemi est en déplacement. */
     boolean isWalking() { return ai.isWalking(); }
+    /** Indique si l’ennemi est alerté. */
     boolean isAlerted() { return ai.isAlerted(); }
 }

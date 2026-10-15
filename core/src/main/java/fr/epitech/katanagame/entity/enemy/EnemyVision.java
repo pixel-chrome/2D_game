@@ -11,8 +11,10 @@ final class EnemyVision {
     static final float DETECTION_RANGE = 180f;
     private static final float FOV = 90f;
     private static final int CONE_RAYS = 24;
+    /** Classe utilitaire pour les calculs de vision des ennemis. */
     private EnemyVision() {}
 
+    /** Vérifie l’angle, la portée et la ligne de vue vers la cible. */
     static boolean canSee(Enemy enemy, Vector2 target, TiledMapTileLayer[] sight) {
         Vector2 toTarget = new Vector2(target).sub(enemy.getPosition());
         float angleDiff = Math.abs(((toTarget.angleDeg() - enemy.getAim().angleDeg() + 540f) % 360f) - 180f);
@@ -20,6 +22,7 @@ final class EnemyVision {
                 && Collision.hasLineOfSight(sight, enemy.getPosition(), target);
     }
 
+    /** Dessine le cône de vision en tenant compte des obstacles. */
     static void draw(Enemy enemy, ShapeRenderer shapes, TiledMapTileLayer[] walls) {
         if (!enemy.isAlive()) return;
         if (enemy.isAlerted()) shapes.setColor(1f, 0.1f, 0.1f, 0.28f);

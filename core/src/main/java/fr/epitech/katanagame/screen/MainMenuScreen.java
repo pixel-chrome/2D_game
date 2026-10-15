@@ -21,6 +21,7 @@ public class MainMenuScreen extends ScreenAdapter {
     private final Main game;
     private final Stage stage = new Stage(new FitViewport(MenuBackground.W, MenuBackground.H));
 
+    /** Construit l’interface du menu principal. */
     public MainMenuScreen(Main game) {
         this.game = game;
         Theme t = game.theme;
@@ -63,6 +64,7 @@ public class MainMenuScreen extends ScreenAdapter {
         return b;
     }
 
+    /** Active les entrées de l’interface. */
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
@@ -70,6 +72,7 @@ public class MainMenuScreen extends ScreenAdapter {
         stage.getRoot().addAction(Actions.fadeIn(0.5f));
     }
 
+    /** Dessine et met à jour le menu. */
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0f, 0f, 0f, 1f);
@@ -79,11 +82,13 @@ public class MainMenuScreen extends ScreenAdapter {
         stage.draw();
     }
 
+    /** Adapte l’interface aux dimensions de la fenêtre. */
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
 
+    /** Libère les ressources du menu. */
     @Override
     public void dispose() {
         stage.dispose();

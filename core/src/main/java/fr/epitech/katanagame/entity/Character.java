@@ -14,6 +14,7 @@ public abstract class Character extends Entity {
     protected final Vector2 aim = new Vector2(1, 0);
     private boolean alive = true;
 
+    /** Initialise les dimensions et la position du personnage. */
     protected Character(float x, float y, float width, float height,
                         float feetW, float feetH, float feetOffsetY) {
         super(x, y, width, height, feetW, feetH, feetOffsetY);
@@ -21,14 +22,17 @@ public abstract class Character extends Entity {
 
     // --- Vie ---
 
+    /** Indique si le personnage est vivant. */
     public boolean isAlive() {
         return alive;
     }
 
+    /** Indique si le personnage ignore les dégâts. */
     public boolean isInvincible() {
         return false;
     }
 
+    /** Applique un dégât si le personnage peut être touché. */
     public void takeDamage() {
         if (!alive || isInvincible()) return;
         alive = false;
@@ -41,14 +45,17 @@ public abstract class Character extends Entity {
         alive = true;
     }
 
+    /** Point d’extension appelé lorsque le personnage meurt. */
     protected void onDeath() {}
 
     // --- Visée ---
 
+    /** Retourne le vecteur de visée du personnage. */
     public Vector2 getAim() {
         return aim;
     }
 
+    /** Retourne la direction correspondant à la visée. */
     public Direction getFacing() {
         return Direction.of(aim);
     }

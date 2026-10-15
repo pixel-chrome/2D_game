@@ -11,12 +11,16 @@ public final class GameSettings {
     private static final int WINDOW_W = 1280;
     private static final int WINDOW_H = 720;
 
+    /** Volume général de la musique. */
     public static float musicVolume = 0.7f;
+    /** Volume des effets sonores. */
     public static float sfxVolume = 0.8f;
+    /** Indique si le plein écran est activé. */
     public static boolean fullscreen = false;
 
     private static Preferences prefs;
 
+    /** Empêche l’instanciation de cette classe utilitaire. */
     private GameSettings() {}
 
     /** À appeler une fois au démarrage (dans Main.create()). */
@@ -32,6 +36,7 @@ public final class GameSettings {
         if (fullscreen) applyDisplay();
     }
 
+    /** Enregistre les paramètres actuels. */
     public static void save() {
         if (prefs == null) prefs = Gdx.app.getPreferences(FILE);
         prefs.putFloat("music", musicVolume);

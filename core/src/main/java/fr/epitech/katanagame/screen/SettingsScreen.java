@@ -32,6 +32,7 @@ public class SettingsScreen extends ScreenAdapter {
     private final Stage stage = new Stage(new FitViewport(MenuBackground.W, MenuBackground.H));
     private boolean leaving = false;
 
+    /** Construit l’interface des paramètres. */
     public SettingsScreen(Main game, Runnable onBack) {
         this.game = game;
         this.onBack = onBack;
@@ -87,6 +88,7 @@ public class SettingsScreen extends ScreenAdapter {
         stage.addActor(root);
     }
 
+    /** Crée un curseur de volume relié à un paramètre. */
     private Slider volumeSlider(float initial, Label valueLabel, Consumer<Float> setter) {
         Slider slider = new Slider(0f, 1f, 0.05f, false, game.theme.sliderStyle);
         slider.setValue(initial);   // avant le listener
@@ -101,6 +103,7 @@ public class SettingsScreen extends ScreenAdapter {
         return slider;
     }
 
+    /** Enregistre les réglages et retourne à l’écran précédent. */
     private void goBack() {
         if (leaving) return;
         leaving = true;
@@ -108,6 +111,7 @@ public class SettingsScreen extends ScreenAdapter {
         Gdx.app.postRunnable(onBack);   // jamais détruire l'écran pendant un clic
     }
 
+    /** Active les entrées de l’interface. */
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
@@ -115,6 +119,7 @@ public class SettingsScreen extends ScreenAdapter {
         stage.getRoot().addAction(Actions.fadeIn(0.3f));
     }
 
+    /** Met à jour et dessine l’écran des paramètres. */
     @Override
     public void render(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) goBack();
@@ -126,11 +131,13 @@ public class SettingsScreen extends ScreenAdapter {
         stage.draw();
     }
 
+    /** Adapte l’interface à la taille de la fenêtre. */
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
 
+    /** Libère les ressources de l’écran. */
     @Override
     public void dispose() {
         stage.dispose();

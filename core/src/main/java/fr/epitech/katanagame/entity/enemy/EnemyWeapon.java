@@ -22,8 +22,10 @@ final class EnemyWeapon {
     private float windupTimer, cooldown, volleyTimer, shootTimer;
     private int volleysLeft;
 
+    /** Associe un système de tir à un ennemi. */
     EnemyWeapon(Enemy enemy) { this.enemy = enemy; }
 
+    /** Estime la vitesse du joueur pour anticiper sa position. */
     void trackPlayerVelocity(Vector2 target, float delta) {
         if (hasLastTarget && delta > 0f) playerVel.set(target).sub(lastTarget).scl(1f / delta);
         else playerVel.setZero();
@@ -31,16 +33,22 @@ final class EnemyWeapon {
         hasLastTarget = true;
     }
 
+    /** Met à jour les délais de tir et l’effet visuel. */
     void updateTimers(float delta) {
         if (shootTimer > 0f) shootTimer -= delta;
         cooldown = Math.max(0f, cooldown - delta);
     }
 
+    /** Interrompt la séquence d’attaque. */
     void stopAttacking() { winding = false; volleysLeft = 0; }
+    /** Réinitialise l’effet visuel de tir. */
     void clearShootEffect() { shootTimer = 0f; }
+    /** Indique si l’arme est en phase de préparation. */
     boolean isWinding() { return winding; }
+    /** Retourne la durée restante de l’effet de tir. */
     float shootTimer() { return shootTimer; }
 
+    /** Gère la préparation, les salves et le délai entre les tirs. */
     void updateAttack(float delta, Vector2 target, List<Bullet> bullets) {
         if (volleysLeft > 0) {
             volleyTimer -= delta;
@@ -63,6 +71,7 @@ final class EnemyWeapon {
         }
     }
 
+    /** Crée une salve de projectiles en direction de la cible. */
     private void fireVolley(Vector2 target, List<Bullet> bullets) {
         float dist = enemy.getPosition().dst(target);
         float leadTime = Math.min(dist / Bullet.SPEED, 0.6f) * LEAD_FACTOR;

@@ -45,6 +45,7 @@ public class Theme implements Disposable {
 
     private final List<Texture> textures = new ArrayList<>();
 
+    /** Crée les polices, couleurs et styles communs de l’interface. */
     public Theme() {
         // Polices : la police par défaut, agrandie, pour un rendu « pixel »
         font.getData().setScale(2f);
@@ -115,6 +116,7 @@ public class Theme implements Disposable {
         return new TextureRegionDrawable(new TextureRegion(tex));
     }
 
+    /** Libère les polices et textures du thème. */
     @Override
     public void dispose() {
         font.dispose();

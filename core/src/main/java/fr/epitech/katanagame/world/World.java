@@ -16,15 +16,20 @@ import java.util.List;
  * Évite de passer 5 paramètres différents à chaque update().
  */
 public class World {
+    /** Viewport de la partie. */
     public final Viewport viewport;
     public final TiledMapTileLayer[] moveLayers;     // bloquent les corps (joueur + gardes)
+    /** Calques qui bloquent les projectiles. */
     public final TiledMapTileLayer[] bulletLayers;   // bloquent les balles
+    /** Calques qui bloquent la vision des ennemis. */
     public final TiledMapTileLayer[] sightLayers;    // bloquent la vue des gardes
 
+    /** Joueur contrôlé par l’utilisateur. */
     public final Player player;
     public final List<Enemy> enemies = new ArrayList<>();
     public final List<Bullet> bullets = new ArrayList<>();
 
+    /** Initialise les références vers le joueur, le viewport et les calques de collision. */
     public World(Viewport viewport, Player player,
                  TiledMapTileLayer[] moveLayers,
                  TiledMapTileLayer[] bulletLayers,

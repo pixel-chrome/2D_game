@@ -15,7 +15,9 @@ import com.badlogic.gdx.utils.Disposable;
 public class Player extends Character implements Disposable {
     private static final float HITBOX_W = 20f, HITBOX_H = 28f;
     private static final float FEET_W = 12f, FEET_H = 8f, FEET_OFFSET_Y = 16f;
+    /** Vitesse normale du joueur. */
     private static final float SPEED = 200f, DASH_SPEED = 700f;
+    /** Durée du dash en secondes. */
     private static final float DASH_DURATION = 0.15f, DASH_COOLDOWN = 0.6f;
     static final float ATTACK_DURATION = 0.56f;
     private static final float ATTACK_REACH = 20f, ATTACK_OFFSET = -12f;
@@ -28,6 +30,7 @@ public class Player extends Character implements Disposable {
     private float dashTimer, dashCooldown, attackTimer, stateTime;
     private boolean moving;
 
+    /** Initialise le joueur et ses dimensions de collision. */
     public Player() { super(320, 180, HITBOX_W, HITBOX_H, FEET_W, FEET_H, FEET_OFFSET_Y); }
 
     @Override public boolean isInvincible() { return isDashing(); }
@@ -37,6 +40,7 @@ public class Player extends Character implements Disposable {
         dashTimer = dashCooldown = attackTimer = 0f;
     }
 
+    /** Indique si le dash est en cours. */
     public boolean isDashing() { return dashTimer > 0f; }
 
     @Override public void update(float delta, World world) {
@@ -58,6 +62,7 @@ public class Player extends Character implements Disposable {
         stateTime += delta;
     }
 
+    /** Déclenche un dash dans la direction choisie si possible. */
     private void handleDash(Vector2 moveDir) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && dashCooldown <= 0f && !isDashing()) {
             dashDir.set(moving ? moveDir : aim);
@@ -67,6 +72,7 @@ public class Player extends Character implements Disposable {
         }
     }
 
+    /** Déclenche l’attaque et vérifie les ennemis touchés. */
     private void attack(World world) {
         attackTimer = ATTACK_DURATION;
         attackBounds.set(position.x + aim.x * ATTACK_REACH + ATTACK_OFFSET,

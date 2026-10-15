@@ -20,9 +20,7 @@ public abstract class Entity {
     private final float width, height;
     private final float feetW, feetH, feetOffsetY;
 
-    /**
-     * @param feetOffsetY distance entre le centre du sprite et le centre des pieds
-     */
+    /** @param feetOffsetY distance entre le centre du sprite et le centre des pieds */
     protected Entity(float x, float y, float width, float height,
                      float feetW, float feetH, float feetOffsetY) {
         position.set(x, y);
@@ -33,10 +31,13 @@ public abstract class Entity {
         this.feetOffsetY = feetOffsetY;
     }
 
+    /** Met à jour l’entité ; l’implémentation dépend du type d’entité. */
     public abstract void update(float delta, World world);
 
+    /** Dessine l’entité ; l’implémentation dépend du type d’entité. */
     public abstract void draw(SpriteBatch batch);
 
+    /** Retourne la position de l’entité. */
     public Vector2 getPosition() {
         return position;
     }

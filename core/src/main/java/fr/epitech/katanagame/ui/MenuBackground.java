@@ -39,10 +39,12 @@ public class MenuBackground implements Disposable {
     private final float[] ep = new float[EMBERS];
     private float time = 0f;
 
+    /** Initialise les particules décoratives du fond de menu. */
     public MenuBackground() {
         for (int i = 0; i < EMBERS; i++) respawn(i, true);
     }
 
+    /** Place une braise à une nouvelle position. */
     private void respawn(int i, boolean anywhere) {
         ex[i] = MathUtils.random(W);
         ey[i] = anywhere ? MathUtils.random(H) : -5f;
@@ -93,6 +95,7 @@ public class MenuBackground implements Disposable {
         shapes.end();
     }
 
+    /** Dessine une silhouette de bâtiment. */
     private void drawTower(float x, float w, float h) {
         shapes.setColor(SILHOUETTE);
         shapes.rect(x, 0, w, h);
@@ -119,6 +122,7 @@ public class MenuBackground implements Disposable {
         shapes.circle(cx + 64f, cy + 32f, 5f, 16);
     }
 
+    /** Anime et dessine les braises flottantes. */
     private void drawEmbers(float delta) {
         for (int i = 0; i < EMBERS; i++) {
             ey[i] += es[i] * delta;
@@ -130,6 +134,7 @@ public class MenuBackground implements Disposable {
         }
     }
 
+    /** Libère les ressources graphiques du fond. */
     @Override
     public void dispose() {
         shapes.dispose();

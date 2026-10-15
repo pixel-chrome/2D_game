@@ -23,6 +23,7 @@ final class PlayerAnimations implements Disposable {
     private final Map<Direction, Animation<TextureRegion>> attack = new EnumMap<>(Direction.class);
     private final List<Texture> textures = new ArrayList<>();
 
+    /** Charge les animations utilisées par le joueur. */
     PlayerAnimations() {
         for (Direction d : Direction.values()) {
             String name = d.name().toLowerCase();
@@ -32,6 +33,7 @@ final class PlayerAnimations implements Disposable {
         }
     }
 
+    /** Charge un spritesheet et construit son animation. */
     private Animation<TextureRegion> load(String path, Animation.PlayMode mode) {
         Texture texture = new Texture(path);
         texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -42,6 +44,7 @@ final class PlayerAnimations implements Disposable {
         return anim;
     }
 
+    /** Dessine l’animation correspondant à la direction et à l’action du joueur. */
     void draw(Player player, SpriteBatch batch, float stateTime, float attackTimer,
               boolean moving, boolean dashing, Direction dashFacing) {
         Animation<TextureRegion> anim;
