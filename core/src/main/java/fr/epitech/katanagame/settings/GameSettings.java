@@ -1,4 +1,6 @@
-package fr.epitech.katanagame;
+package fr.epitech.katanagame.settings;
+
+import fr.epitech.katanagame.Main;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;

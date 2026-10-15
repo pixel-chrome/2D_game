@@ -1,12 +1,12 @@
 {
-    "activeFile": "assets/maps/etage_1.tmx",
+    "activeFile": "assets/maps/etage_2.tmx",
     "expandedProjectPaths": [
-        "core/src",
+        "assets/maps",
+        ".",
         "core/src/ressources",
         "core",
-        "assets/maps",
         "assets",
-        "."
+        "core/src"
     ],
     "fileStates": {
         "/home/pololitos/Epitech/Jeu2DJava/jeudetuie.tsx": {
@@ -16,26 +16,38 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "assets/maps/Cute1_walls.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "assets/maps/Donjon_wall.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "assets/maps/JeuMid.tsx": {
             "scaleInDock": 1
         },
         "assets/maps/JeuMédiéval.tsx": {
             "scaleInDock": 1
         },
+        "assets/maps/Objets_gros.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "assets/maps/etage_1.tmx": {
             "scale": 0.8319,
-            "selectedLayer": 5,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 760.9087630724846,
-                "y": 515.0859478302681
+                "x": 560.1634811876428,
+                "y": 399.6874624353889
             }
         },
         "assets/maps/etage_2.tmx": {
             "scale": 0.9823,
-            "selectedLayer": 0,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 474.3968237809223,
-                "y": 433.1670569072584
+                "x": 440.8021989208999,
+                "y": 416.8787539448233
             }
         },
         "assets/maps/jeudetuie.tsx": {
@@ -46,7 +58,7 @@
             "scale": 0.8866666666666666,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 240.22556390977445,
+                "x": 240.22556390977442,
                 "y": 159.58646616541353
             }
         },
@@ -93,14 +105,22 @@
     "openFiles": [
         "assets/maps/jeudetuie.tsx",
         "assets/maps/map1.tmx",
-        "assets/maps/etage_1.tmx"
+        "assets/maps/etage_1.tmx",
+        "assets/maps/Donjon_wall.tsx",
+        "assets/maps/Cute1_walls.tsx",
+        "assets/maps/Objets_gros.tsx",
+        "assets/maps/etage_2.tmx"
     ],
     "project": "tilemap1.tiled-project",
     "recentFiles": [
-        "assets/maps/Catacombes1.tsx",
         "assets/maps/jeudetuie.tsx",
         "assets/maps/map1.tmx",
         "assets/maps/etage_1.tmx",
+        "assets/maps/Donjon_wall.tsx",
+        "assets/maps/Cute1_walls.tsx",
+        "assets/maps/Objets_gros.tsx",
+        "assets/maps/etage_2.tmx",
+        "assets/maps/Catacombes1.tsx",
         "jeudetuie.tsx",
         "assets/maps/test1.tmx",
         "core/src/ressources/test1.tmx",

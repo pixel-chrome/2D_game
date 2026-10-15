@@ -1,4 +1,6 @@
-package fr.epitech.katanagame;
+package fr.epitech.katanagame.entity.projectile;
+
+import fr.epitech.katanagame.world.Collision;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;

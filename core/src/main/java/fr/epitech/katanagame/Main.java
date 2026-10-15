@@ -1,5 +1,11 @@
 package fr.epitech.katanagame;
 
+import fr.epitech.katanagame.screen.GameScreen;
+import fr.epitech.katanagame.screen.MainMenuScreen;
+import fr.epitech.katanagame.settings.GameSettings;
+import fr.epitech.katanagame.ui.MenuBackground;
+import fr.epitech.katanagame.ui.Theme;
+
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
 

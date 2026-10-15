@@ -1,4 +1,10 @@
-package fr.epitech.katanagame;
+package fr.epitech.katanagame.screen;
+
+import fr.epitech.katanagame.Main;
+import fr.epitech.katanagame.entity.enemy.Enemy;
+import fr.epitech.katanagame.entity.player.Player;
+import fr.epitech.katanagame.entity.projectile.Bullet;
+import fr.epitech.katanagame.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +32,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-/** Le jeu en lui-même (anciennement dans Main). */
+/** Le jeu en lui-même : charge la map, crée le World, orchestre update et rendu. */
 public class GameScreen extends ScreenAdapter {
     private static final float VIEW_W = 480f;
     private static final float VIEW_H = 270f;
@@ -36,32 +42,21 @@ public class GameScreen extends ScreenAdapter {
     private final Main game;
     private boolean leaving = false;
 
-    private SpriteBatch batch;
-    private Viewport viewport;
-    private Player player;
-    private ShapeRenderer shapeRenderer;
+    private final SpriteBatch batch;
+    private final Viewport viewport;
+    private final ShapeRenderer shapeRenderer;
     private boolean debug = true;
 
-    private TiledMap map;
-    private OrthogonalTiledMapRenderer mapRenderer;
-    private TiledMapTileLayer[] moveLayers;     // bloquent les corps (joueur + gardes)
-    private TiledMapTileLayer[] bulletLayers;   // bloquent les balles
-    private TiledMapTileLayer[] sightLayers;    // bloquent la vue des gardes
+    private final TiledMap map;
+    private final OrthogonalTiledMapRenderer mapRenderer;
 
-    private TiledMapTileLayer layer(String name) {
-        if (map.getLayers().get(name) == null)
-            throw new IllegalStateException("Calque introuvable dans la map : " + name);
-        return (TiledMapTileLayer) map.getLayers().get(name);
-}
+    private final World world;
+    private final Player player;
 
-    private float mapW, mapH;                                    // taille de la map en pixels (lue dans le .tmx)
-    private final Vector2 playerSpawn = new Vector2(100, 100);   // valeur de secours si pas de point "player_spawn"
+    private float mapW, mapH;                                    // taille de la map en pixels
+    private final Vector2 playerSpawn = new Vector2(100, 100);   // valeur de secours
     private final List<Vector2> enemySpawns = new ArrayList<>();
 
-    private final List<Enemy> enemies = new ArrayList<>();
-    private final List<Bullet> bullets = new ArrayList<>();
-
-    /** Ancien create() : tout ce qui initialise la partie. */
     public GameScreen(Main game) {
         this.game = game;
 
@@ -76,18 +71,23 @@ public class GameScreen extends ScreenAdapter {
         mapRenderer = new OrthogonalTiledMapRenderer(map);   // 1 unité = 1 pixel
         loadMapInfo();
 
-        moveLayers = new TiledMapTileLayer[] {
-            layer("Mur"), layer("Objets"), layer("Chaises")
-        };
-        bulletLayers = new TiledMapTileLayer[] { layer("Mur"), layer("Objets") };
-        sightLayers  = new TiledMapTileLayer[] { layer("Mur") };
-
         player = new Player();
+        world = new World(viewport, player,
+                new TiledMapTileLayer[] { layer("Mur"), layer("Objets"), layer("Chaises") },
+                new TiledMapTileLayer[] { layer("Mur"), layer("Objets") },
+                new TiledMapTileLayer[] { layer("Mur") });
+
         player.respawn(playerSpawn.x, playerSpawn.y);
         viewport.getCamera().position.set(player.getPosition().x, player.getPosition().y, 0);
 
         Enemy.loadAssets();
         spawnEnemies();
+    }
+
+    private TiledMapTileLayer layer(String name) {
+        if (map.getLayers().get(name) == null)
+            throw new IllegalStateException("Calque introuvable dans la map : " + name);
+        return (TiledMapTileLayer) map.getLayers().get(name);
     }
 
     /** Lit la taille de la map et les points de départ du calque d'objets "Spawns". */
@@ -103,8 +103,7 @@ public class GameScreen extends ScreenAdapter {
         }
         for (MapObject obj : spawns.getObjects()) {
             MapProperties props = obj.getProperties();
-            // coin bas-gauche (libGDX a déjà inversé l'axe Y) + moitié de la taille = centre de l'objet
-            // (pour un point, la taille vaut 0 : on obtient directement sa position)
+            // coin bas-gauche + moitié de la taille = centre de l'objet
             float x = props.get("x", 0f, Float.class) + props.get("width", 0f, Float.class) / 2f;
             float y = props.get("y", 0f, Float.class) + props.get("height", 0f, Float.class) / 2f;
 
@@ -118,9 +117,9 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void spawnEnemies() {
-        enemies.clear();
-        bullets.clear();
-        for (Vector2 s : enemySpawns) enemies.add(new Enemy(s.x, s.y));
+        world.enemies.clear();
+        world.bullets.clear();
+        for (Vector2 s : enemySpawns) world.enemies.add(new Enemy(s.x, s.y));
     }
 
     private void restart() {
@@ -130,14 +129,40 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void show() {
-        // Le jeu lit le clavier et la souris directement : pas de processeur d'entrées
-        // (sinon l'ancien menu garderait la main).
-        Gdx.input.setInputProcessor(null);
+        Gdx.input.setInputProcessor(null);   // le jeu lit clavier/souris directement
     }
 
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, false);
+    }
+
+    // =====================================================================
+    // Logique
+    // =====================================================================
+
+    private void update(float delta) {
+        if (!leaving && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            leaving = true;
+            Gdx.app.postRunnable(() -> game.switchTo(new MainMenuScreen(game)));
+        }
+
+        player.update(delta, world);
+        if (!player.isAlive() && Gdx.input.isKeyJustPressed(Input.Keys.R)) restart();
+
+        for (Enemy e : world.enemies) e.update(delta, world);
+
+        for (Bullet b : world.bullets) {
+            b.update(delta, world.bulletLayers);
+            if (b.isAlive() && player.isAlive() && !player.isInvincible()
+                    && b.getBounds().overlaps(player.getBounds())) {
+                player.takeDamage();
+                b.kill();
+            }
+        }
+        world.bullets.removeIf(b -> !b.isAlive());
+
+        updateCamera(delta);
     }
 
     private void updateCamera(float delta) {
@@ -165,91 +190,68 @@ public class GameScreen extends ScreenAdapter {
         cam.update();
     }
 
+    // =====================================================================
+    // Rendu
+    // =====================================================================
+
     @Override
     public void render(float delta) {
-        // Échap : retour au menu principal (un vrai menu pause viendra ensuite)
-        if (!leaving && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            leaving = true;
-            Gdx.app.postRunnable(() -> game.switchTo(new MainMenuScreen(game)));
-        }
+        update(delta);
 
-        // --- Logique ---
-        if (player.isAlive()) {
-            player.update(delta, viewport, moveLayers);
-            if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-                for (Enemy enemy : enemies) {
-                    player.attack(enemy);
-                }
-            }
-        } else if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
-            restart();
-        }
-
-        for (Enemy e : enemies) e.update(delta, player, sightLayers, moveLayers, bullets);
-
-        for (Bullet b : bullets) {
-            b.update(delta, bulletLayers);
-            if (b.isAlive() && player.isAlive() && !player.isInvincible()
-                    && b.getBounds().overlaps(player.getBounds())) {
-                player.takeDamage();
-                b.kill();
-            }
-        }
-        bullets.removeIf(b -> !b.isAlive());
-
-        updateCamera(delta);
-
-        // --- Dessin ---
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
+        shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
         mapRenderer.setView((OrthographicCamera) viewport.getCamera());
 
         mapRenderer.render();   // tous les calques de tuiles, dans l'ordre de Tiled
 
-        // cônes de vision (transparents, sous les sprites)
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+
+        // cônes de vision (transparents, sous les sprites)
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        for (Enemy e : enemies) e.drawVision(shapeRenderer, sightLayers);
+        for (Enemy e : world.enemies) e.drawVision(shapeRenderer, world.sightLayers);
         shapeRenderer.end();
 
         batch.begin();
-        for (Enemy e : enemies) e.draw(batch);
+        for (Enemy e : world.enemies) e.draw(batch);
         player.draw(batch);
         batch.end();
 
         // balles et points d'exclamation (par-dessus les sprites)
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        for (Bullet b : bullets) b.draw(shapeRenderer);
-        for (Enemy e : enemies) e.drawAlert(shapeRenderer);
+        for (Bullet b : world.bullets) b.draw(shapeRenderer);
+        for (Enemy e : world.enemies) e.drawAlert(shapeRenderer);
         shapeRenderer.end();
         Gdx.gl.glDisable(GL20.GL_BLEND);
 
-        // debug (F1 pour afficher / cacher)
         if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) debug = !debug;
-        if (debug) {
-            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-            shapeRenderer.setColor(Color.RED);
-            Rectangle b = player.getBounds();
-            shapeRenderer.rect(b.x, b.y, b.width, b.height);
-            shapeRenderer.setColor(Color.YELLOW);
-            Rectangle f = player.getFeetBounds();
-            shapeRenderer.rect(f.x, f.y, f.width, f.height);
-            shapeRenderer.setColor(Color.CYAN);
-            Rectangle attackBounds = player.getAttackBounds();
-            if (attackBounds != null) {
-                shapeRenderer.rect(attackBounds.x, attackBounds.y, attackBounds.width, attackBounds.height);
-            }
-            shapeRenderer.setColor(Color.GREEN);
-            for (Enemy e : enemies) {
-                if (!e.isAlive()) continue;
-                Rectangle eb = e.getBounds();
-                shapeRenderer.rect(eb.x, eb.y, eb.width, eb.height);
-            }
-            shapeRenderer.end();
+        if (debug) drawDebug();
+    }
+
+    private void drawDebug() {
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+
+        shapeRenderer.setColor(Color.RED);
+        Rectangle b = player.getBounds();
+        shapeRenderer.rect(b.x, b.y, b.width, b.height);
+
+        shapeRenderer.setColor(Color.YELLOW);
+        Rectangle f = player.getFeetBounds();
+        shapeRenderer.rect(f.x, f.y, f.width, f.height);
+
+        shapeRenderer.setColor(Color.CYAN);
+        Rectangle atk = player.getAttackBounds();
+        if (atk != null) shapeRenderer.rect(atk.x, atk.y, atk.width, atk.height);
+
+        shapeRenderer.setColor(Color.GREEN);
+        for (Enemy e : world.enemies) {
+            if (!e.isAlive()) continue;
+            Rectangle eb = e.getBounds();
+            shapeRenderer.rect(eb.x, eb.y, eb.width, eb.height);
         }
+        shapeRenderer.end();
     }
 
     @Override

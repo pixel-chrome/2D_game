@@ -1,4 +1,4 @@
-package fr.epitech.katanagame;
+package fr.epitech.katanagame.world;
 
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Vector2;
