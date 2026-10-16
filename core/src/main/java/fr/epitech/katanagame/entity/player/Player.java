@@ -104,7 +104,13 @@ public class Player extends Character implements Disposable {
         attackBounds.set(position.x + aim.x * ATTACK_REACH + ATTACK_OFFSET,
                 position.y + aim.y * ATTACK_REACH + ATTACK_OFFSET, ATTACK_W, ATTACK_H);
         for (Enemy enemy : world.enemies) {
-            if (enemy.isAlive() && attackBounds.overlaps(enemy.getBounds())) enemy.takeDamage();
+            if (enemy.isAlive() && attackBounds.overlaps(enemy.getBounds())) {
+                enemy.takeDamage();
+                if (!enemy.isAlive()) {
+                    Vector2 at = enemy.getBounds().getCenter(new Vector2());
+                    world.blood.splatter(at, at.cpy().sub(position), world.bulletLayers);
+                }
+            }
         }
     }
 

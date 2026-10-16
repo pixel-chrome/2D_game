@@ -78,6 +78,21 @@ public final class BloodEffects {
         flash = 0.55f;
     }
 
+    /** Sang d'un ennemi tué : gerbe plus petite et quelques taches au sol, sans flash ni mare. */
+    public void splatter(Vector2 at, Vector2 dir, TiledMapTileLayer[] walls) {
+        float base = dir.isZero() ? random.nextFloat() * 360f : dir.angleDeg();
+        for (int i = 0; i < 45; i++) {
+            boolean spray = random.nextFloat() < 0.7f;
+            float angle = spray ? base + (random.nextFloat() - 0.5f) * 60f : random.nextFloat() * 360f;
+            float speed = spray ? 120f + random.nextFloat() * 260f : 30f + random.nextFloat() * 130f;
+            addDrop(at, angle, speed, 1.2f + random.nextFloat() * 2.2f);
+        }
+        for (int i = 0; i < 6; i++) {                                 // petite flaque faite de grosses taches
+            float a = random.nextFloat() * (float) (2 * Math.PI), d = random.nextFloat() * 8f;
+            addStain(at.x + (float) Math.cos(a) * d, at.y + (float) Math.sin(a) * d * 0.7f, 4f + random.nextFloat() * 4f);
+        }
+    }
+
     private void addDrop(Vector2 at, float angleDeg, float speed, float size) {
         Drop d = new Drop();
         d.x = at.x;
