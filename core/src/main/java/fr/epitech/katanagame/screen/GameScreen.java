@@ -32,6 +32,10 @@ public class GameScreen extends ScreenAdapter {
     /** Active ou désactive l’affichage des hitbox. */
     private boolean debug = true;
 
+    /** Délai (s, court : style Hotline Miami) entre la mort du joueur et l’écran de game over. */
+    private static final float GAME_OVER_DELAY = 0.3f;
+    private float deadTimer;
+
     /** Charge la carte et prépare les éléments de la partie. */
     public GameScreen(Main game) {
         this.game = game;
@@ -70,6 +74,7 @@ public class GameScreen extends ScreenAdapter {
         player.respawn(spawn.x, spawn.y);
         spawnEnemies();
         camera.centerOn(player.getPosition());
+        deadTimer = 0f;
     }
 
     /** Prépare l’écran de jeu lorsqu’il devient actif. */
@@ -93,6 +98,13 @@ public class GameScreen extends ScreenAdapter {
             return;
         }
         update(delta);
+        if (!player.isAlive()) {
+            deadTimer += delta;
+            if (deadTimer >= GAME_OVER_DELAY) {
+                game.setScreen(new GameOverScreen(game, this));
+                return;
+            }
+        }
         if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) debug = !debug;
         drawFrame();
     }
