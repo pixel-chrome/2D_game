@@ -54,13 +54,7 @@ public final class BloodEffects {
 
     /** Gerbe de sang depuis un point, projetée surtout dans la direction du tir. */
     public void burst(Vector2 at, Vector2 dir, TiledMapTileLayer[] walls) {
-        float base = dir.isZero() ? random.nextFloat() * 360f : dir.angleDeg();
-        for (int i = 0; i < 80; i++) {
-            boolean spray = random.nextFloat() < 0.65f;               // jet de sortie, dans l'axe du tir
-            float angle = spray ? base + (random.nextFloat() - 0.5f) * 70f : random.nextFloat() * 360f;
-            float speed = spray ? 140f + random.nextFloat() * 300f : 40f + random.nextFloat() * 160f;
-            addDrop(at, angle, speed, 1.2f + random.nextFloat() * 2.4f);
-        }
+        spray(at, dir, 80, 0.65f, 70f, 1f);
         for (int i = 0; i < 10; i++) {                                // gros morceaux, plus lents
             addDrop(at, random.nextFloat() * 360f, 30f + random.nextFloat() * 110f, 3.5f + random.nextFloat() * 2f);
         }
@@ -69,7 +63,7 @@ public final class BloodEffects {
         poolTime = 0f;
         poolCenter.set(at);
         for (int i = 0; i < POOL_BLOBS; i++) {
-            float a = random.nextFloat() * 360f * (float) (Math.PI / 180.0);
+            float a = random.nextFloat() * (float) (2 * Math.PI);
             float d = random.nextFloat() * 10f;
             blobX[i] = (float) Math.cos(a) * d;
             blobY[i] = (float) Math.sin(a) * d * 0.7f;               // un peu aplati : vu de dessus en perspective
@@ -80,16 +74,24 @@ public final class BloodEffects {
 
     /** Sang d'un ennemi tué : gerbe plus petite et quelques taches au sol, sans flash ni mare. */
     public void splatter(Vector2 at, Vector2 dir, TiledMapTileLayer[] walls) {
-        float base = dir.isZero() ? random.nextFloat() * 360f : dir.angleDeg();
-        for (int i = 0; i < 45; i++) {
-            boolean spray = random.nextFloat() < 0.7f;
-            float angle = spray ? base + (random.nextFloat() - 0.5f) * 60f : random.nextFloat() * 360f;
-            float speed = spray ? 120f + random.nextFloat() * 260f : 30f + random.nextFloat() * 130f;
-            addDrop(at, angle, speed, 1.2f + random.nextFloat() * 2.2f);
-        }
+        spray(at, dir, 45, 0.7f, 60f, 0.87f);
         for (int i = 0; i < 6; i++) {                                 // petite flaque faite de grosses taches
             float a = random.nextFloat() * (float) (2 * Math.PI), d = random.nextFloat() * 8f;
             addStain(at.x + (float) Math.cos(a) * d, at.y + (float) Math.sin(a) * d * 0.7f, 4f + random.nextFloat() * 4f);
+        }
+    }
+
+    /**
+     * Lance count gouttes : une part (focus) en jet serré dans l'axe de dir, le reste dans toutes
+     * les directions, plus lentement. power règle la vitesse globale.
+     */
+    private void spray(Vector2 at, Vector2 dir, int count, float focus, float spreadDeg, float power) {
+        float base = dir.isZero() ? random.nextFloat() * 360f : dir.angleDeg();
+        for (int i = 0; i < count; i++) {
+            boolean jet = random.nextFloat() < focus;
+            float angle = jet ? base + (random.nextFloat() - 0.5f) * spreadDeg : random.nextFloat() * 360f;
+            float speed = jet ? 140f + random.nextFloat() * 300f : 40f + random.nextFloat() * 160f;
+            addDrop(at, angle, speed * power, 1.2f + random.nextFloat() * 2.4f);
         }
     }
 

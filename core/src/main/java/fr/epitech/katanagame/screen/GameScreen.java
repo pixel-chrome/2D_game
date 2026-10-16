@@ -33,12 +33,7 @@ public class GameScreen extends ScreenAdapter {
     private boolean debug = true;
 
     /** Délai (s, court : style Hotline Miami) entre la mort du joueur et l’écran de game over. */
-    private static final float GAME_OVER_DELAY = 0.45f;
-    private float deadTimer;
-
-    /** Mort : arrêt sur image à l'impact, puis ennemis et tirs au ralenti (le sang, lui, reste en temps réel). */
-    private static final float HIT_STOP = 0.06f, DEATH_SLOWMO = 0.25f;
-    private float hitStop;
+    private final DeathSequence death = new DeathSequence();
 
     /** Charge la carte et prépare les éléments de la partie. */
     public GameScreen(Main game) {
@@ -78,8 +73,7 @@ public class GameScreen extends ScreenAdapter {
         player.respawn(spawn.x, spawn.y);
         spawnEnemies();
         camera.centerOn(player.getPosition());
-        deadTimer = 0f;
-        hitStop = 0f;
+        death.reset();
         world.blood.clear();
     }
 
@@ -105,8 +99,7 @@ public class GameScreen extends ScreenAdapter {
         }
         update(delta);
         if (!player.isAlive()) {
-            deadTimer += delta;
-            if (deadTimer >= GAME_OVER_DELAY) {
+            if (death.isOver()) {
                 game.setScreen(new GameOverScreen(game, this));
                 return;
             }
@@ -130,8 +123,9 @@ public class GameScreen extends ScreenAdapter {
     private void update(float delta) {
         float live = delta, worldDt = delta;
         if (!player.isAlive()) {
-            if (hitStop > 0f) { hitStop -= delta; live = 0f; worldDt = 0f; }
-            else worldDt = delta * DEATH_SLOWMO;
+            death.advance(delta);
+            live = delta * death.effectsScale();
+            worldDt = delta * death.worldScale();
         }
         player.update(live, world);
         world.blood.update(live, world.bulletLayers);
@@ -153,7 +147,7 @@ public class GameScreen extends ScreenAdapter {
                 Vector2 dir = bullet.getDirection();
                 player.hit(dir);
                 world.blood.burst(player.getBounds().getCenter(new Vector2()), dir, world.bulletLayers);
-                hitStop = HIT_STOP;
+                death.start();
                 bullet.kill();
             }
         }

@@ -96,11 +96,10 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
             boolean moving,
             boolean dashing,
             Direction dashFacing,
-            float deathTime,
-            float deathSide
+            Corpse corpse
     ) {
-        if (deathTime >= 0f) {
-            drawCorpse(player, batch, deathTime, deathSide);
+        if (corpse != null) {
+            drawCorpse(player, batch, corpse);
             return;
         }
 
@@ -157,7 +156,8 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
     }
 
     /** Corps touché : il bascule en arrière, rebondit un peu, puis reste au sol, assombri. */
-    private void drawCorpse(Player player, SpriteBatch batch, float deathTime, float side) {
+    private void drawCorpse(Player player, SpriteBatch batch, Corpse corpse) {
+        float deathTime = corpse.time();
         float t = Math.min(1f, deathTime / FALL_TIME);
         float ease = 1f - (1f - t) * (1f - t);
         float hop = (float) Math.sin(Math.PI * t) * 6f;
@@ -168,7 +168,7 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
         float y = player.getPosition().y - FRAME_H / 2f;
 
         batch.setColor(1f, shade, shade, 1f);
-        batch.draw(frame, x, y + hop, FRAME_W / 2f, FRAME_H / 2f, FRAME_W, FRAME_H, 1f, 1f, side * 80f * ease);
+        batch.draw(frame, x, y + hop, FRAME_W / 2f, FRAME_H / 2f, FRAME_W, FRAME_H, 1f, 1f, corpse.side() * 80f * ease);
         batch.setColor(1f, 1f, 1f, 1f);
     }
 

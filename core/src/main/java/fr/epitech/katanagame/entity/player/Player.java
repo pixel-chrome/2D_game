@@ -23,8 +23,6 @@ public class Player extends Character implements Disposable {
     static final float ATTACK_DURATION = 0.56f;
     private static final float ATTACK_REACH = 20f, ATTACK_OFFSET = -12f;
     private static final float ATTACK_W = 30f, ATTACK_H = 24f;
-    /** Projection du corps à la mort (px/s) et freinage au sol. */
-    private static final float KNOCKBACK = 260f, KNOCK_DRAG = 7f;
 
     private final PlayerAnimations animations = new PlayerAnimations();
     private final Vector2 dashDir = new Vector2();
@@ -32,9 +30,7 @@ public class Player extends Character implements Disposable {
     private Direction dashFacing = Direction.DOWN;
     private float dashTimer, dashCooldown, attackTimer, stateTime;
     private boolean moving;
-    /** Temps écoulé depuis la mort, poussée du corps et sens de chute (-1 / +1). */
-    private float deathTime, deathSide = 1f;
-    private final Vector2 knock = new Vector2();
+    private final Corpse corpse = new Corpse();
 
     /** Initialise le joueur et ses dimensions de collision. */
     public Player() { super(320, 180, HITBOX_W, HITBOX_H, FEET_W, FEET_H, FEET_OFFSET_Y); }
@@ -44,31 +40,25 @@ public class Player extends Character implements Disposable {
     @Override public void respawn(float x, float y) {
         super.respawn(x, y);
         dashTimer = dashCooldown = attackTimer = 0f;
-        deathTime = 0f;
-        knock.setZero();
+        corpse.reset();
     }
 
     /** Touché par un tir venant dans la direction dir : le corps sera projeté dans ce sens. */
     public void hit(Vector2 dir) {
         if (!isAlive() || isInvincible()) return;
-        knock.set(dir).nor().scl(KNOCKBACK);
-        deathSide = dir.x >= 0f ? -1f : 1f;
+        corpse.fall(dir);
         takeDamage();
     }
 
-    @Override protected void onDeath() {
-        deathTime = 0f;
-        dashTimer = 0f;
-    }
+    @Override protected void onDeath() { dashTimer = 0f; }
 
     /** Indique si le dash est en cours. */
     public boolean isDashing() { return dashTimer > 0f; }
 
     @Override public void update(float delta, World world) {
         if (!isAlive()) {                       // le corps glisse puis s'immobilise
-            deathTime += delta;
-            knock.scl(Math.max(0f, 1f - KNOCK_DRAG * delta));
-            move(knock.x * delta, knock.y * delta, world.moveLayers);
+            Vector2 step = corpse.advance(delta);
+            move(step.x, step.y, world.moveLayers);
             return;
         }
         dashTimer = Math.max(0f, dashTimer - delta);
@@ -119,7 +109,7 @@ public class Player extends Character implements Disposable {
 
     @Override public void draw(SpriteBatch batch) {
         animations.draw(this, batch, stateTime, attackTimer, moving, isDashing(), dashFacing,
-                isAlive() ? -1f : deathTime, deathSide);
+                isAlive() ? null : corpse);
     }
 
     @Override public void dispose() { animations.dispose(); }
