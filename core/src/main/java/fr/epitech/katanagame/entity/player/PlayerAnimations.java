@@ -35,6 +35,9 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
 
     private final List<Texture> textures = new ArrayList<>();
 
+    /** Effets visuels du dash (fantômes, trait, poussière). */
+    private final DashEffects dash = new DashEffects();
+
     PlayerAnimations() {
         for (Direction direction : Direction.values()) {
             String name = direction.name().toLowerCase();
@@ -140,16 +143,19 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
                 footY
         );
 
-        // Transparence du dash appliquée au personnage,
-        // mais pas à son ombre.
-        batch.setColor(
-                1f,
-                1f,
-                1f,
-                dashing && attackTimer <= 0f ? 0.5f : 1f
-        );
+        dash.update(player, frame, x, y, dashing, stateTime);
+        dash.drawDust(batch, stateTime);
+        dash.drawStreakAndGhosts(batch, stateTime, dashing);
 
-        batch.draw(frame, x, y);
+        // Pendant le dash : léger étirement dans le sens du mouvement et teinte froide.
+        boolean dashBody = dashing && attackTimer <= 0f;
+        float sx = 1f, sy = 1f;
+        if (dashBody) {
+            boolean horizontal = dashFacing == Direction.LEFT || dashFacing == Direction.RIGHT;
+            if (horizontal) { sx = 1.18f; sy = 0.92f; } else { sx = 0.92f; sy = 1.14f; }
+            batch.setColor(0.85f, 0.92f, 1f, 1f);
+        }
+        batch.draw(frame, x, y, FRAME_W / 2f, 0f, FRAME_W, FRAME_H, sx, sy, 0f);
 
         // Réinitialisation de la couleur pour les prochains sprites.
         batch.setColor(1f, 1f, 1f, 1f);
@@ -174,6 +180,7 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
 
     @Override
     public void dispose() {
+        dash.dispose();
         for (Texture texture : textures) {
             texture.dispose();
         }

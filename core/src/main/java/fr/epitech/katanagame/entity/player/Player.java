@@ -29,7 +29,7 @@ public class Player extends Character implements Disposable {
     private final Rectangle attackBounds = new Rectangle();
     private Direction dashFacing = Direction.DOWN;
     private float dashTimer, dashCooldown, attackTimer, stateTime;
-    private boolean moving;
+    private boolean moving, dashStarted;
     private final Corpse corpse = new Corpse();
 
     /** Initialise le joueur et ses dimensions de collision. */
@@ -52,10 +52,21 @@ public class Player extends Character implements Disposable {
 
     @Override protected void onDeath() { dashTimer = 0f; }
 
+    /** Direction (normalisée) du dernier dash. */
+    public Vector2 getDashDir() { return dashDir; }
+
+    /** Vrai une seule fois par dash, au moment où il démarre (secousse de caméra). */
+    public boolean pollDashStart() {
+        boolean started = dashStarted;
+        dashStarted = false;
+        return started;
+    }
+
     /** Indique si le dash est en cours. */
     public boolean isDashing() { return dashTimer > 0f; }
 
     @Override public void update(float delta, World world) {
+        stateTime += delta;   // le temps continue après la mort : les effets (traînée) finissent de s'éteindre
         if (!isAlive()) {                       // le corps glisse puis s'immobilise
             Vector2 step = corpse.advance(delta);
             move(step.x, step.y, world.moveLayers);
@@ -75,7 +86,6 @@ public class Player extends Character implements Disposable {
         else if (moving) move(dir.x * SPEED * delta, dir.y * SPEED * delta, world.moveLayers);
 
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) attack(world);
-        stateTime += delta;
     }
 
     /** Déclenche un dash dans la direction choisie si possible. */
@@ -83,6 +93,7 @@ public class Player extends Character implements Disposable {
         if (GameSettings.justPressed(GameSettings.Action.DASH) && dashCooldown <= 0f && !isDashing()) {
             dashDir.set(moving ? moveDir : aim);
             dashFacing = Direction.of(dashDir);
+            dashStarted = true;
             dashTimer = DASH_DURATION;
             dashCooldown = DASH_COOLDOWN;
         }

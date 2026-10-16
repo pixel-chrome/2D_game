@@ -128,6 +128,7 @@ public class GameScreen extends ScreenAdapter {
             worldDt = delta * death.worldScale();
         }
         player.update(live, world);
+        if (player.pollDashStart()) camera.shake(2.5f);
         world.blood.update(live, world.bulletLayers);
         if (!player.isAlive() && Gdx.input.isKeyJustPressed(Input.Keys.R)) restart();
 

@@ -18,6 +18,12 @@ public final class GameCamera {
     /** Intensité du décalage vers la souris. */
     private static final float MOUSE_LOOK_AHEAD = 0.3f;
 
+    /** Vitesse à laquelle la secousse s'éteint. */
+    private static final float SHAKE_DECAY = 16f;
+
+    private float shake;
+    private float shakeX, shakeY;
+
     private final Viewport viewport = new FitViewport(VIEW_WIDTH, VIEW_HEIGHT);
 
     /** Retourne le viewport utilisé par la caméra. */
@@ -29,6 +35,11 @@ public final class GameCamera {
         viewport.getCamera().update();
     }
 
+    /** Déclenche une courte secousse (en pixels du monde). */
+    public void shake(float amount) {
+        shake = Math.max(shake, amount);
+    }
+
     /** Adapte le viewport à la taille de la fenêtre. */
     public void resize(int width, int height) {
         viewport.update(width, height, false);
@@ -37,6 +48,8 @@ public final class GameCamera {
     /** Suit le joueur, anticipe légèrement la souris et limite la caméra à la carte. */
     public void update(float delta, Vector2 playerPosition, float mapWidth, float mapHeight) {
         Camera camera = viewport.getCamera();
+        camera.position.x -= shakeX;   // on retire la secousse de la frame précédente
+        camera.position.y -= shakeY;
 
         // Petit décalage vers la souris.
         float screenWidth = Math.max(1, Gdx.graphics.getWidth());
@@ -58,6 +71,12 @@ public final class GameCamera {
         camera.position.y = VIEW_HEIGHT >= mapHeight
                 ? mapHeight / 2f
                 : MathUtils.clamp(camera.position.y, halfHeight, mapHeight - halfHeight);
+
+        shakeX = shake > 0.05f ? MathUtils.random(-shake, shake) : 0f;
+        shakeY = shake > 0.05f ? MathUtils.random(-shake, shake) : 0f;
+        shake = Math.max(0f, shake - shake * SHAKE_DECAY * delta);
+        camera.position.x += shakeX;
+        camera.position.y += shakeY;
         camera.update();
     }
 }
