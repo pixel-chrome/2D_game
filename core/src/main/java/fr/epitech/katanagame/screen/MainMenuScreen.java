@@ -1,8 +1,8 @@
 package fr.epitech.katanagame.screen;
 
 import fr.epitech.katanagame.Main;
-import fr.epitech.katanagame.ui.MenuBackground;
 import fr.epitech.katanagame.ui.Theme;
+import fr.epitech.katanagame.ui.MenuBackground;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
@@ -16,63 +16,59 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
-/** Menu principal : Jouer / Paramètres / Quitter. */
+/** Menu principal : titre à gauche, katana à droite, trois choix. */
 public class MainMenuScreen extends ScreenAdapter {
     private final Main game;
     private final Stage stage = new Stage(new FitViewport(MenuBackground.W, MenuBackground.H));
+    private boolean leaving = false;
 
-    /** Construit l’interface du menu principal. */
     public MainMenuScreen(Main game) {
         this.game = game;
         Theme t = game.theme;
 
-        // Titre qui passe lentement de l'os à la braise
-        Label title = new Label(Main.TITLE, t.titleStyle);
-        title.setColor(Theme.BONE);
-        title.addAction(Actions.forever(Actions.sequence(
-                Actions.color(Theme.EMBER, 2.5f),
-                Actions.color(Theme.BONE, 2.5f))));
+        Label title = new Label(Theme.spaced(Main.TITLE), t.titleStyle);
         Label subtitle = new Label("UNE LAME. UN DASH. UN SEUL COUP.", t.hintStyle);
 
         TextButton play = button("JOUER", () -> game.switchTo(new GameScreen(game)));
         TextButton settings = button("PARAMETRES", () ->
-                game.switchTo(new SettingsScreen(game, () -> game.switchTo(new MainMenuScreen(game)))));
+                game.switchTo(new SettingsScreen(game, null, () -> game.switchTo(new MainMenuScreen(game)))));
         TextButton quit = button("QUITTER", () -> Gdx.app.exit());
 
         Table root = new Table();
         root.setFillParent(true);
-        root.add(title).padBottom(8f).row();
-        root.add(subtitle).padBottom(50f).row();
-        root.add(play).width(360f).height(56f).padBottom(16f).row();
-        root.add(settings).width(360f).height(56f).padBottom(16f).row();
-        root.add(quit).width(360f).height(56f).row();
+        root.left().padLeft(110f);
+        root.add(title).left().padBottom(10f).row();
+        root.add(subtitle).left().padLeft(4f).padBottom(70f).row();
+        root.add(play).left().width(300f).height(44f).padBottom(6f).row();
+        root.add(settings).left().width(300f).height(44f).padBottom(6f).row();
+        root.add(quit).left().width(300f).height(44f).row();
         stage.addActor(root);
     }
 
     /**
-     * Bouton dont l'action est exécutée à la frame suivante : on ne peut pas
-     * détruire l'écran (et son Stage) pendant qu'il est en train de traiter un clic.
+     * L'action part à la frame suivante : on ne peut pas détruire l'écran (et son
+     * Stage) pendant qu'il traite un clic. Le garde-fou évite le double clic.
      */
     private TextButton button(String text, Runnable action) {
-        TextButton b = new TextButton(text, game.theme.buttonStyle);
+        TextButton b = game.theme.button(text, false);
         b.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                if (leaving) return;
+                leaving = true;
                 Gdx.app.postRunnable(action);
             }
         });
         return b;
     }
 
-    /** Active les entrées de l’interface. */
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
         stage.getRoot().getColor().a = 0f;
-        stage.getRoot().addAction(Actions.fadeIn(0.5f));
+        stage.getRoot().addAction(Actions.fadeIn(0.9f));
     }
 
-    /** Dessine et met à jour le menu. */
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0f, 0f, 0f, 1f);
@@ -82,13 +78,11 @@ public class MainMenuScreen extends ScreenAdapter {
         stage.draw();
     }
 
-    /** Adapte l’interface aux dimensions de la fenêtre. */
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
 
-    /** Libère les ressources du menu. */
     @Override
     public void dispose() {
         stage.dispose();

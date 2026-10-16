@@ -3,6 +3,7 @@ package fr.epitech.katanagame.entity.player;
 import fr.epitech.katanagame.entity.Character;
 import fr.epitech.katanagame.entity.Direction;
 import fr.epitech.katanagame.entity.enemy.Enemy;
+import fr.epitech.katanagame.settings.GameSettings;
 import fr.epitech.katanagame.world.World;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -64,7 +65,7 @@ public class Player extends Character implements Disposable {
 
     /** Déclenche un dash dans la direction choisie si possible. */
     private void handleDash(Vector2 moveDir) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && dashCooldown <= 0f && !isDashing()) {
+        if (GameSettings.justPressed(GameSettings.Action.DASH) && dashCooldown <= 0f && !isDashing()) {
             dashDir.set(moving ? moveDir : aim);
             dashFacing = Direction.of(dashDir);
             dashTimer = DASH_DURATION;

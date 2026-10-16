@@ -3,6 +3,7 @@ package fr.epitech.katanagame;
 import fr.epitech.katanagame.screen.GameScreen;
 import fr.epitech.katanagame.screen.MainMenuScreen;
 import fr.epitech.katanagame.settings.GameSettings;
+import fr.epitech.katanagame.ui.FilmOverlay;
 import fr.epitech.katanagame.ui.MenuBackground;
 import fr.epitech.katanagame.ui.Theme;
 
@@ -19,6 +20,8 @@ public class Main extends Game {
 
     /** Styles et ressources partagés de l’interface. */
     public Theme theme;
+    /** Voile et vignette de type film. */
+    public FilmOverlay film;
     /** Fond animé partagé par les menus. */
     public MenuBackground background;
 
@@ -27,7 +30,8 @@ public class Main extends Game {
     public void create() {
         GameSettings.load();
         theme = new Theme();
-        background = new MenuBackground();
+        film = new FilmOverlay();
+        background = new MenuBackground(film);
         setScreen(new MainMenuScreen(this));
     }
 
@@ -35,7 +39,7 @@ public class Main extends Game {
     public void switchTo(Screen next) {
         Screen old = getScreen();
         setScreen(next);
-        if (old != null) old.dispose();
+        if (old != null && old != next) old.dispose();
     }
 
     /** Libère les ressources partagées du jeu. */
@@ -46,5 +50,6 @@ public class Main extends Game {
         if (current != null) current.dispose();
         theme.dispose();
         background.dispose();
+        film.dispose();
     }
 }
