@@ -11,6 +11,7 @@ import fr.epitech.katanagame.entity.player.Player;
 import fr.epitech.katanagame.entity.projectile.Bullet;
 import fr.epitech.katanagame.render.GameRenderer;
 import fr.epitech.katanagame.render.ShadowRenderer;
+import fr.epitech.katanagame.settings.GameSettings;
 import fr.epitech.katanagame.world.MapLoader;
 import fr.epitech.katanagame.world.World;
 import com.badlogic.gdx.math.Vector2;
@@ -34,6 +35,9 @@ public class GameScreen extends ScreenAdapter {
 
     /** Délai (s, court : style Hotline Miami) entre la mort du joueur et l’écran de game over. */
     private final DeathSequence death = new DeathSequence();
+
+    /** Ralenti du temps (maintenir la touche RALENTI). */
+    private final SlowMotion slowMo = new SlowMotion();
 
     /** Charge la carte et prépare les éléments de la partie. */
     public GameScreen(Main game) {
@@ -74,6 +78,7 @@ public class GameScreen extends ScreenAdapter {
         spawnEnemies();
         camera.centerOn(player.getPosition());
         death.reset();
+        slowMo.reset();
         world.blood.clear();
     }
 
@@ -110,7 +115,7 @@ public class GameScreen extends ScreenAdapter {
 
     /** Dessine une image de la partie sans rien faire avancer (utilisé par la pause). */
     public void drawFrame() {
-        renderer.render(world, player, camera.getViewport(), debug);
+        renderer.render(world, player, camera.getViewport(), debug, slowMo.getCharge(), slowMo.getIntensity());
     }
 
     /** Fait vivre le corps et le sang pendant l'écran de game over. */
@@ -121,7 +126,8 @@ public class GameScreen extends ScreenAdapter {
 
     /** Met à jour le joueur, les ennemis et l’état du monde. */
     private void update(float delta) {
-        float live = delta, worldDt = delta;
+        slowMo.update(delta, player.isAlive() && GameSettings.pressed(GameSettings.Action.SLOWMO));
+        float live = delta * slowMo.playerScale(), worldDt = delta * slowMo.worldScale();
         if (!player.isAlive()) {
             death.advance(delta);
             live = delta * death.effectsScale();

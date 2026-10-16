@@ -18,6 +18,7 @@ import fr.epitech.katanagame.world.World;
 public final class GameRenderer implements Disposable {
     private final SpriteBatch batch = new SpriteBatch();
     private final ShapeRenderer shapes = new ShapeRenderer();
+    private final SlowMoEffects slowMoEffects = new SlowMoEffects();
     /** Renderer de la carte Tiled, fourni par le chargeur de carte. */
     private final OrthogonalTiledMapRenderer mapRenderer;
 
@@ -27,7 +28,8 @@ public final class GameRenderer implements Disposable {
     }
 
     /** Dessine la carte, les personnages, les projectiles et les éléments de débogage. */
-    public void render(World world, Player player, Viewport viewport, boolean debug) {
+    public void render(World world, Player player, Viewport viewport, boolean debug,
+                       float slowCharge, float slowIntensity) {
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
@@ -79,7 +81,10 @@ public final class GameRenderer implements Disposable {
         }
         // Flash d'impact par-dessus tout.
         world.blood.drawFlash(shapes, viewport.getCamera());
+        slowMoEffects.drawBar(shapes, (OrthographicCamera) viewport.getCamera(), slowCharge);
         shapes.end();
+
+        slowMoEffects.drawOverlay(slowIntensity);
         Gdx.gl.glDisable(GL20.GL_BLEND);
 
         if (debug) {
@@ -92,5 +97,6 @@ public final class GameRenderer implements Disposable {
     public void dispose() {
         batch.dispose();
         shapes.dispose();
+        slowMoEffects.dispose();
     }
 }

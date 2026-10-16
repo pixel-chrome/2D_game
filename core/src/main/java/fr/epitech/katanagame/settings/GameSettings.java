@@ -18,7 +18,8 @@ public final class GameSettings {
     public enum Action {
         UP("HAUT", Input.Keys.Z), DOWN("BAS", Input.Keys.S),
         LEFT("GAUCHE", Input.Keys.Q), RIGHT("DROITE", Input.Keys.D),
-        DASH("ESQUIVE", Input.Keys.SPACE);
+        DASH("ESQUIVE", Input.Keys.SPACE),
+        SLOWMO("RALENTI", Input.Keys.SHIFT_LEFT);
 
         public final String label;
         final int defaultKey;
