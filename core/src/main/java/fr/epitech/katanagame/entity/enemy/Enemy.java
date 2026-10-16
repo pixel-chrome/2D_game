@@ -1,6 +1,7 @@
 package fr.epitech.katanagame.entity.enemy;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
@@ -9,34 +10,55 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import fr.epitech.katanagame.entity.Character;
 import fr.epitech.katanagame.entity.player.Player;
+import fr.epitech.katanagame.entity.projectile.LaserAssets;
 import fr.epitech.katanagame.world.World;
 
-/** Entité ennemie : Gère l'IA, la vision, l'arme et le rendu. */
+/** Entité ennemie : gère l'IA, la vision, l'arme et le rendu. */
 public class Enemy extends Character {
-    private static final float WIDTH = 14f, HEIGHT = 24f;
-    private static final float FEET_W = 10f, FEET_H = 6f, FEET_OFFSET_Y = 10f;
+    private static final float WIDTH = 14f;
+    private static final float HEIGHT = 24f;
+    private static final float FEET_W = 10f;
+    private static final float FEET_H = 6f;
+    private static final float FEET_OFFSET_Y = 10f;
+
     /** Logique de comportement et de patrouille. */
     private final EnemyAI ai;
-    /** Système de tir de l’ennemi. */
+    /** Système de tir de l'ennemi. */
     private final EnemyWeapon weapon;
-    private float stateTime, deathTime;
+    /** Texture laser conservée par cet ennemi pendant toute la partie. */
+    private final Texture laserTexture;
 
-    /** Initialise un ennemi, son intelligence artificielle et son arme. */
+    private float stateTime;
+    private float deathTime;
+
+    /** Initialise un ennemi, son IA, son arme et la couleur de son laser. */
     public Enemy(float x, float y) {
         super(x, y, WIDTH, HEIGHT, FEET_W, FEET_H, FEET_OFFSET_Y);
-        aim.set(0, -1);
+        aim.set(0f, -1f);
+        laserTexture = LaserAssets.getRandomTexture();
         ai = new EnemyAI(this, x, y);
         weapon = new EnemyWeapon(this);
     }
 
-    /** Charge les ressources graphiques partagées des ennemis. */
-    public static void loadAssets() { EnemyAnimations.loadAssets(); }
-    /** Libère les ressources graphiques partagées des ennemis. */
-    public static void disposeAssets() { EnemyAnimations.disposeAssets(); }
+    /** Charge les ressources graphiques partagées des ennemis et des lasers. */
+    public static void loadAssets() {
+        EnemyAnimations.loadAssets();
+        LaserAssets.loadAssets();
+    }
 
-    @Override protected void onDeath() { deathTime = 0f; }
+    /** Libère les ressources graphiques partagées des ennemis et des lasers. */
+    public static void disposeAssets() {
+        EnemyAnimations.disposeAssets();
+        LaserAssets.disposeAssets();
+    }
 
-    @Override public void update(float delta, World world) {
+    @Override
+    protected void onDeath() {
+        deathTime = 0f;
+    }
+
+    @Override
+    public void update(float delta, World world) {
         stateTime += delta;
         if (!isAlive()) {
             deathTime += delta;
@@ -52,6 +74,7 @@ public class Enemy extends Character {
             ai.setSeesPlayer(false);
             return;
         }
+
         weapon.updateTimers(delta);
         Rectangle pb = player.getBounds();
         Vector2 target = new Vector2(pb.x + pb.width / 2f, pb.y + pb.height / 2f);
@@ -64,6 +87,7 @@ public class Enemy extends Character {
             ai.patrol(delta, world.moveLayers);
             return;
         }
+
         ai.stopWalking();
         aim.set(ai.lastKnown()).sub(position).nor();
         if (!sees) {
@@ -71,18 +95,47 @@ public class Enemy extends Character {
             return;
         }
         weapon.updateAttack(delta, target, world.bullets);
+        weapon.updateMotion(delta, world.moveLayers);
     }
 
-    @Override public void draw(SpriteBatch batch) { EnemyAnimations.draw(this, batch); }
+    @Override
+    public void draw(SpriteBatch batch) {
+        EnemyAnimations.draw(this, batch);
+    }
 
-    /** Affiche le champ de vision de l’ennemi. */
+    /** Retourne la texture laser attribuée à cet ennemi. */
+    public Texture getLaserTexture() {
+        return laserTexture;
+    }
+
+    /** Affiche le champ de vision de l'ennemi. */
     public void drawVision(ShapeRenderer shapes, TiledMapTileLayer[] walls) {
         EnemyVision.draw(this, shapes, walls);
     }
 
-    /** Affiche l’indicateur d’alerte de l’ennemi. */
+    /** Affiche un petit point d'énergie pendant la canalisation du tir. */
+    public void drawCharge(ShapeRenderer shapes) {
+        if (!isAlive() || !weapon.isWinding()) {
+            return;
+        }
+
+        float progress = weapon.chargeProgress();
+        Vector2 point = weapon.chargePosition();
+        float radius = 1.5f + progress * 2.2f;
+        float alpha = 0.35f + progress * 0.55f;
+
+        shapes.setColor(0.35f, 0.85f, 1f, alpha * 0.35f);
+        shapes.circle(point.x, point.y, radius + 2f);
+        shapes.setColor(0.65f, 0.95f, 1f, alpha);
+        shapes.circle(point.x, point.y, radius);
+    }
+
+    /** Affiche l'indicateur d'alerte de l'ennemi. */
     public void drawAlert(ShapeRenderer shapes) {
-        if (!isAlive() || !ai.seesPlayer()) return;
+        if (!isAlive() || !ai.seesPlayer()) {
+            return;
+        }
+
         float bob = Math.abs(MathUtils.sin(stateTime * 8f)) * 2f;
         float x = position.x;
         float y = position.y + EnemyAnimations.FRAME_SIZE / 2f + 4f + bob;
@@ -93,18 +146,52 @@ public class Enemy extends Character {
         shapes.rect(x - 2f, y, 4f, 4f);
     }
 
-    /** Déplace l’ennemi en appliquant les collisions de la carte. */
-    boolean moveForAI(float dx, float dy, TiledMapTileLayer[] walls) { return move(dx, dy, walls); }
-    /** Retourne le temps écoulé pour l’animation courante. */
-    float stateTime() { return stateTime; }
-    /** Retourne le temps écoulé depuis la mort de l’ennemi. */
-    float deathTime() { return deathTime; }
-    /** Retourne le temps restant de l’effet de tir. */
-    float shootTimer() { return weapon.shootTimer(); }
-    /** Indique si l’ennemi prépare un tir. */
-    boolean isWinding() { return weapon.isWinding(); }
-    /** Indique si l’ennemi est en déplacement. */
-    boolean isWalking() { return ai.isWalking(); }
-    /** Indique si l’ennemi est alerté. */
-    boolean isAlerted() { return ai.isAlerted(); }
+    /** Déplace l'ennemi en appliquant les collisions de la carte. */
+    boolean moveForAI(float dx, float dy, TiledMapTileLayer[] walls) {
+        return move(dx, dy, walls);
+    }
+
+    /** Retourne le temps écoulé pour l'animation courante. */
+    float stateTime() {
+        return stateTime;
+    }
+
+    /** Retourne le temps écoulé depuis la mort de l'ennemi. */
+    float deathTime() {
+        return deathTime;
+    }
+
+    /** Retourne le temps restant de l'effet de tir. */
+    float shootTimer() {
+        return weapon.shootTimer();
+    }
+
+    /** Indique si l'ennemi prépare un tir. */
+    boolean isWinding() {
+        return weapon.isWinding();
+    }
+
+    /** Échelle horizontale utilisée pour déformer légèrement le sprite pendant le tir. */
+    float firingScaleX() {
+        float charge = weapon.chargeProgress();
+        float shot = weapon.shootProgress();
+        return 1f + 0.10f * charge - 0.04f * shot;
+    }
+
+    /** Échelle verticale utilisée pour déformer légèrement le sprite pendant le tir. */
+    float firingScaleY() {
+        float charge = weapon.chargeProgress();
+        float shot = weapon.shootProgress();
+        return 1f - 0.08f * charge + 0.16f * shot;
+    }
+
+    /** Indique si l'ennemi est en déplacement. */
+    boolean isWalking() {
+        return ai.isWalking();
+    }
+
+    /** Indique si l'ennemi est alerté. */
+    boolean isAlerted() {
+        return ai.isAlerted();
+    }
 }

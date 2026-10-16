@@ -6,8 +6,8 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import fr.epitech.katanagame.entity.enemy.Enemy;
 import fr.epitech.katanagame.entity.player.Player;
@@ -18,7 +18,7 @@ import fr.epitech.katanagame.world.World;
 public final class GameRenderer implements Disposable {
     private final SpriteBatch batch = new SpriteBatch();
     private final ShapeRenderer shapes = new ShapeRenderer();
-    /** Dessine la carte Tiled. */
+    /** Renderer de la carte Tiled, fourni par le chargeur de carte. */
     private final OrthogonalTiledMapRenderer mapRenderer;
 
     /** Prépare le rendu en utilisant le renderer de la carte fourni. */
@@ -26,7 +26,7 @@ public final class GameRenderer implements Disposable {
         this.mapRenderer = mapRenderer;
     }
 
-    /** Dessine la carte, les personnages, les effets et les éléments de débogage. */
+    /** Dessine la carte, les personnages, les projectiles et les éléments de débogage. */
     public void render(World world, Player player, Viewport viewport, boolean debug) {
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
         viewport.apply();
@@ -45,19 +45,39 @@ public final class GameRenderer implements Disposable {
         }
         shapes.end();
 
+        // Petit point lumineux qui annonce brièvement la direction du tir.
+        shapes.begin(ShapeRenderer.ShapeType.Filled);
+        for (Enemy enemy : world.enemies) {
+            enemy.drawCharge(shapes);
+        }
+        shapes.end();
+
+        // Dessine les ennemis et le joueur au-dessus des ombres.
         batch.begin();
-        for (Enemy enemy : world.enemies) enemy.draw(batch);
+        for (Enemy enemy : world.enemies) {
+            enemy.draw(batch);
+        }
         player.draw(batch);
         batch.end();
 
-        // Les projectiles et alertes passent au-dessus des sprites.
+        // Dessine les lasers au-dessus des personnages.
+        batch.begin();
+        for (Bullet bullet : world.bullets) {
+            bullet.draw(batch);
+        }
+        batch.end();
+
+        // Les indicateurs d'alerte passent au-dessus des sprites et des projectiles.
         shapes.begin(ShapeRenderer.ShapeType.Filled);
-        for (Bullet bullet : world.bullets) bullet.draw(shapes);
-        for (Enemy enemy : world.enemies) enemy.drawAlert(shapes);
+        for (Enemy enemy : world.enemies) {
+            enemy.drawAlert(shapes);
+        }
         shapes.end();
         Gdx.gl.glDisable(GL20.GL_BLEND);
 
-        if (debug) DebugRenderer.draw(shapes, world, player);
+        if (debug) {
+            DebugRenderer.draw(shapes, world, player);
+        }
     }
 
     /** Libère les ressources graphiques créées par ce renderer. */
