@@ -36,9 +36,10 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
 
     private final List<Texture> textures = new ArrayList<>();
 
+    // Durées calées sur le dash (0,15 s = durée d'invincibilité) : l'effet s'éteint avec elle.
     // --- Effets du dash (traînée d'images rémanentes, trait de lame, poussière) ---
-    private static final float GHOST_LIFE = 0.28f, GHOST_STEP = 7f;
-    private static final float STREAK_LIFE = 0.2f;
+    private static final float GHOST_LIFE = 0.15f, GHOST_STEP = 7f;
+    private static final float STREAK_LIFE = 0.1f;
     private static final float DUST_LIFE = 0.32f;
     private static final int DUST_COUNT = 7;
     private static final Color GHOST_START = new Color(0.9f, 0.95f, 1f, 1f);

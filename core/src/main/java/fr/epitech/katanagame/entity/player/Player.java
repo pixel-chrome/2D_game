@@ -55,6 +55,7 @@ public class Player extends Character implements Disposable {
     public boolean isDashing() { return dashTimer > 0f; }
 
     @Override public void update(float delta, World world) {
+        stateTime += delta;   // le temps continue après la mort : les effets (traînée) finissent de s'éteindre
         if (!isAlive()) return;
         dashTimer = Math.max(0f, dashTimer - delta);
         dashCooldown = Math.max(0f, dashCooldown - delta);
@@ -70,7 +71,6 @@ public class Player extends Character implements Disposable {
         else if (moving) move(dir.x * SPEED * delta, dir.y * SPEED * delta, world.moveLayers);
 
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) attack(world);
-        stateTime += delta;
     }
 
     /** Déclenche un dash dans la direction choisie si possible. */
