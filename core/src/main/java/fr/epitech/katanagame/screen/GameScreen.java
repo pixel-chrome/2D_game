@@ -33,8 +33,12 @@ public class GameScreen extends ScreenAdapter {
     private boolean debug = true;
 
     /** Délai (s, court : style Hotline Miami) entre la mort du joueur et l’écran de game over. */
-    private static final float GAME_OVER_DELAY = 0.3f;
+    private static final float GAME_OVER_DELAY = 0.45f;
     private float deadTimer;
+
+    /** Mort : arrêt sur image à l'impact, puis ennemis et tirs au ralenti (le sang, lui, reste en temps réel). */
+    private static final float HIT_STOP = 0.06f, DEATH_SLOWMO = 0.25f;
+    private float hitStop;
 
     /** Charge la carte et prépare les éléments de la partie. */
     public GameScreen(Main game) {
@@ -75,6 +79,8 @@ public class GameScreen extends ScreenAdapter {
         spawnEnemies();
         camera.centerOn(player.getPosition());
         deadTimer = 0f;
+        hitStop = 0f;
+        world.blood.clear();
     }
 
     /** Prépare l’écran de jeu lorsqu’il devient actif. */
@@ -114,13 +120,27 @@ public class GameScreen extends ScreenAdapter {
         renderer.render(world, player, camera.getViewport(), debug);
     }
 
+    /** Fait vivre le corps et le sang pendant l'écran de game over. */
+    public void updateEffects(float delta) {
+        player.update(delta, world);
+        world.blood.update(delta, world.bulletLayers);
+    }
+
     /** Met à jour le joueur, les ennemis et l’état du monde. */
     private void update(float delta) {
-        player.update(delta, world);
+        float live = delta, worldDt = delta;
+        if (!player.isAlive()) {
+            if (hitStop > 0f) { hitStop -= delta; live = 0f; worldDt = 0f; }
+            else worldDt = delta * DEATH_SLOWMO;
+        }
+        player.update(live, world);
+        world.blood.update(live, world.bulletLayers);
         if (!player.isAlive() && Gdx.input.isKeyJustPressed(Input.Keys.R)) restart();
 
-        for (Enemy enemy : world.enemies) enemy.update(delta, world);
-        updateBullets(delta);
+        if (worldDt > 0f) {
+            for (Enemy enemy : world.enemies) enemy.update(worldDt, world);
+            updateBullets(worldDt);
+        }
         camera.update(delta, player.getPosition(), mapLoader.getWidth(), mapLoader.getHeight());
     }
 
@@ -130,7 +150,10 @@ public class GameScreen extends ScreenAdapter {
             bullet.update(delta, world.bulletLayers);
             if (bullet.isAlive() && player.isAlive() && !player.isInvincible()
                     && bullet.getBounds().overlaps(player.getBounds())) {
-                player.takeDamage();
+                Vector2 dir = bullet.getDirection();
+                player.hit(dir);
+                world.blood.burst(player.getBounds().getCenter(new Vector2()), dir, world.bulletLayers);
+                hitStop = HIT_STOP;
                 bullet.kill();
             }
         }

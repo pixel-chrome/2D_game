@@ -96,6 +96,11 @@ public class Bullet {
         );
     }
 
+    /** Direction de déplacement (vecteur unitaire). */
+    public Vector2 getDirection() {
+        return new Vector2(velocity).nor();
+    }
+
     /** Retourne la hitbox actuelle du projectile. */
     public Rectangle getBounds() {
         bounds.set(position.x - RADIUS, position.y - RADIUS, RADIUS * 2f, RADIUS * 2f);

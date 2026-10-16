@@ -38,6 +38,11 @@ public final class GameRenderer implements Disposable {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
+        // Le sang reste au sol : il passe sous tout le reste.
+        shapes.begin(ShapeRenderer.ShapeType.Filled);
+        world.blood.draw(shapes);
+        shapes.end();
+
         // Les cônes de vision passent sous les sprites.
         shapes.begin(ShapeRenderer.ShapeType.Filled);
         for (Enemy enemy : world.enemies) {
@@ -72,6 +77,8 @@ public final class GameRenderer implements Disposable {
         for (Enemy enemy : world.enemies) {
             enemy.drawAlert(shapes);
         }
+        // Flash d'impact par-dessus tout.
+        world.blood.drawFlash(shapes, viewport.getCamera());
         shapes.end();
         Gdx.gl.glDisable(GL20.GL_BLEND);
 

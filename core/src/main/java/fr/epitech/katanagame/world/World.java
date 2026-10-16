@@ -3,6 +3,7 @@ package fr.epitech.katanagame.world;
 import fr.epitech.katanagame.entity.enemy.Enemy;
 import fr.epitech.katanagame.entity.player.Player;
 import fr.epitech.katanagame.entity.projectile.Bullet;
+import fr.epitech.katanagame.render.BloodEffects;
 
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -28,6 +29,8 @@ public class World {
     public final Player player;
     public final List<Enemy> enemies = new ArrayList<>();
     public final List<Bullet> bullets = new ArrayList<>();
+    /** Sang et flash d'impact (mort du joueur). */
+    public final BloodEffects blood = new BloodEffects();
 
     /** Initialise les références vers le joueur, le viewport et les calques de collision. */
     public World(Viewport viewport, Player player,

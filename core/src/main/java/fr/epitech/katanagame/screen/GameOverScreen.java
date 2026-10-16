@@ -91,7 +91,8 @@ public class GameOverScreen extends ScreenAdapter {
         else if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) shortcut(this::toMenu);
 
         ScreenUtils.clear(0f, 0f, 0f, 1f);
-        level.drawFrame();                       // la partie, figée
+        level.updateEffects(delta);              // le sang continue de couler
+        level.drawFrame();                       // la partie, sinon figée
         stage.getViewport().apply();
         game.film.draw(delta, stage.getCamera().combined, 0.7f, 1f);
         stage.act(delta);

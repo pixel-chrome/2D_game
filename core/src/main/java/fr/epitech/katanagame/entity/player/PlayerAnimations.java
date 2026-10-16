@@ -21,6 +21,9 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
 
     private static final float FRAME_TIME = 0.1f;
 
+    /** Durée de la chute du corps à la mort. */
+    private static final float FALL_TIME = 0.18f;
+
     private final Map<Direction, Animation<TextureRegion>> idle =
             new EnumMap<>(Direction.class);
 
@@ -92,8 +95,15 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
             float attackTimer,
             boolean moving,
             boolean dashing,
-            Direction dashFacing
+            Direction dashFacing,
+            float deathTime,
+            float deathSide
     ) {
+        if (deathTime >= 0f) {
+            drawCorpse(player, batch, deathTime, deathSide);
+            return;
+        }
+
         Animation<TextureRegion> animation;
         float time = stateTime;
 
@@ -143,6 +153,22 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
         batch.draw(frame, x, y);
 
         // Réinitialisation de la couleur pour les prochains sprites.
+        batch.setColor(1f, 1f, 1f, 1f);
+    }
+
+    /** Corps touché : il bascule en arrière, rebondit un peu, puis reste au sol, assombri. */
+    private void drawCorpse(Player player, SpriteBatch batch, float deathTime, float side) {
+        float t = Math.min(1f, deathTime / FALL_TIME);
+        float ease = 1f - (1f - t) * (1f - t);
+        float hop = (float) Math.sin(Math.PI * t) * 6f;
+        float shade = 1f - 0.5f * Math.min(1f, deathTime / 0.3f);
+
+        TextureRegion frame = idle.get(player.getFacing()).getKeyFrame(0f);
+        float x = player.getPosition().x - FRAME_W / 2f;
+        float y = player.getPosition().y - FRAME_H / 2f;
+
+        batch.setColor(1f, shade, shade, 1f);
+        batch.draw(frame, x, y + hop, FRAME_W / 2f, FRAME_H / 2f, FRAME_W, FRAME_H, 1f, 1f, side * 80f * ease);
         batch.setColor(1f, 1f, 1f, 1f);
     }
 
