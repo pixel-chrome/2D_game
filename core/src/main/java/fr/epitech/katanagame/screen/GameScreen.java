@@ -105,6 +105,7 @@ public class GameScreen extends ScreenAdapter {
     /** Met à jour le joueur, les ennemis et l’état du monde. */
     private void update(float delta) {
         player.update(delta, world);
+        if (player.pollDashStart()) camera.shake(2.5f);
         if (!player.isAlive() && Gdx.input.isKeyJustPressed(Input.Keys.R)) restart();
 
         for (Enemy enemy : world.enemies) enemy.update(delta, world);

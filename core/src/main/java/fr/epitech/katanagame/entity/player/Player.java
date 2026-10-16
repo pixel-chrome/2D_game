@@ -29,7 +29,7 @@ public class Player extends Character implements Disposable {
     private final Rectangle attackBounds = new Rectangle();
     private Direction dashFacing = Direction.DOWN;
     private float dashTimer, dashCooldown, attackTimer, stateTime;
-    private boolean moving;
+    private boolean moving, dashStarted;
 
     /** Initialise le joueur et ses dimensions de collision. */
     public Player() { super(320, 180, HITBOX_W, HITBOX_H, FEET_W, FEET_H, FEET_OFFSET_Y); }
@@ -39,6 +39,16 @@ public class Player extends Character implements Disposable {
     @Override public void respawn(float x, float y) {
         super.respawn(x, y);
         dashTimer = dashCooldown = attackTimer = 0f;
+    }
+
+    /** Direction (normalisée) du dernier dash. */
+    public Vector2 getDashDir() { return dashDir; }
+
+    /** Vrai une seule fois par dash, au moment où il démarre (secousse de caméra). */
+    public boolean pollDashStart() {
+        boolean started = dashStarted;
+        dashStarted = false;
+        return started;
     }
 
     /** Indique si le dash est en cours. */
@@ -68,6 +78,7 @@ public class Player extends Character implements Disposable {
         if (GameSettings.justPressed(GameSettings.Action.DASH) && dashCooldown <= 0f && !isDashing()) {
             dashDir.set(moving ? moveDir : aim);
             dashFacing = Direction.of(dashDir);
+            dashStarted = true;
             dashTimer = DASH_DURATION;
             dashCooldown = DASH_COOLDOWN;
         }
