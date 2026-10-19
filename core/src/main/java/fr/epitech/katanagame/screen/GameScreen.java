@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 import fr.epitech.katanagame.Main;
 import fr.epitech.katanagame.camera.GameCamera;
 import fr.epitech.katanagame.entity.enemy.Enemy;
+import fr.epitech.katanagame.entity.enemy.SkullKnight;
 import fr.epitech.katanagame.entity.player.Player;
 import fr.epitech.katanagame.entity.projectile.Bullet;
 import fr.epitech.katanagame.render.GameRenderer;
@@ -57,6 +58,14 @@ public class GameScreen extends ScreenAdapter {
     /** Pour gérer les ombres */
     private MapShadows mapShadows;
 
+    /** Arrêt sur image restant (s) après un parry réussi. */
+    private float hitStop;
+    private static final float PARRY_HIT_STOP = 0.09f;
+    /** Ralenti du monde juste après un parry réussi (durée en s, échelle de temps). */
+    private static final float PARRY_SLOW_TIME = 0.35f, PARRY_SLOW_SCALE = 0.3f;
+    private float parrySlow;
+
+    /** Charge la carte et prépare les éléments de la partie. */
     public GameScreen(Main game) {
         this.game = game;
         camera = new GameCamera();
@@ -150,12 +159,20 @@ public class GameScreen extends ScreenAdapter {
         for (Vector2 spawn : mapLoader.getEnemySpawns()) {
             world.enemies.add(new Enemy(spawn.x, spawn.y));
         }
+        for (Vector2 spawn : mapLoader.getKnightSpawns()) {
+            world.enemies.add(new SkullKnight(spawn.x, spawn.y));
+        }
     }
 
     /** Recommence l'étage courant (touche R ou « Recommencer » de la pause). */
     public void restart() {
-        enterLevel(currentEntry);
-    }
+    enterLevel(currentEntry);
+
+    // Réinitialisation des effets du parry
+    world.parryFx.clear();
+    hitStop = 0f;
+    parrySlow = 0f;
+}
 
     /**
      * Si le joueur touche une porte ouverte, lance le fondu puis change d'étage.
@@ -252,13 +269,29 @@ public class GameScreen extends ScreenAdapter {
             live = delta * death.effectsScale();
             worldDt = delta * death.worldScale();
         }
+        if (hitStop > 0f) {          // arrêt sur image : tout est figé sauf les effets
+            hitStop -= delta;
+            live = worldDt = 0f;
+        }
+        if (parrySlow > 0f) {        // ralenti du monde après un parry : le joueur garde la main
+            parrySlow -= delta;
+            worldDt *= PARRY_SLOW_SCALE;
+        }
         player.update(live, world);
         if (player.pollDashStart()) camera.shake(2.5f);
+        if (player.pollParrySuccess()) {
+            hitStop = PARRY_HIT_STOP;
+            parrySlow = PARRY_SLOW_TIME;
+            camera.shake(4f);
+        }
+        world.parryFx.update(delta);
         world.blood.update(live, world.bulletLayers);
         if (!player.isAlive() && Gdx.input.isKeyJustPressed(Input.Keys.R)) restart();
 
         if (worldDt > 0f) {
+            boolean wasAlive = player.isAlive();
             for (Enemy enemy : world.enemies) enemy.update(worldDt, world);
+            if (wasAlive && !player.isAlive()) death.start();   // tué au corps à corps
             updateBullets(worldDt);
         }
         camera.update(delta, player.getPosition(), mapLoader.getWidth(), mapLoader.getHeight());
@@ -268,7 +301,10 @@ public class GameScreen extends ScreenAdapter {
     private void updateBullets(float delta) {
         for (Bullet bullet : world.bullets) {
             bullet.update(delta, world.bulletLayers);
-            if (bullet.isAlive() && player.isAlive() && !player.isInvincible() && !godMode
+            if (bullet.isReflected()) {
+                hitEnemies(bullet);
+            } else if (bullet.isAlive() && player.isAlive() && !player.isInvincible() && !godMode
+
                     && bullet.getBounds().overlaps(player.getBounds())) {
                 Vector2 dir = bullet.getDirection();
                 player.hit(dir);
@@ -278,6 +314,20 @@ public class GameScreen extends ScreenAdapter {
             }
         }
         world.bullets.removeIf(bullet -> !bullet.isAlive());
+    }
+
+    /** Une balle renvoyée tue le premier ennemi qu'elle touche. */
+    private void hitEnemies(Bullet bullet) {
+        if (!bullet.isAlive()) return;
+        for (Enemy enemy : world.enemies) {
+            if (enemy.isAlive() && bullet.getBounds().overlaps(enemy.getBounds())) {
+                enemy.takeDamage();
+                Vector2 at = enemy.getBounds().getCenter(new Vector2());
+                world.blood.splatter(at, bullet.getDirection(), world.bulletLayers);
+                bullet.kill();
+                return;
+            }
+        }
     }
 
     /** Libère les ressources utilisées par la partie. */

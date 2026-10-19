@@ -46,12 +46,16 @@ public final class MapLoader implements Disposable {
     private final float width;
     private final float height;
 
+    private final Vector2 playerSpawn = new Vector2(100f, 100f);
+    private final List<Vector2> enemySpawns = new ArrayList<>();
+    private final List<Vector2> knightSpawns = new ArrayList<>();
+
+
     private final TiledMapTileLayer[] moveLayers;
     private final TiledMapTileLayer[] bulletLayers;
     private final TiledMapTileLayer[] sightLayers;
 
     private final Map<String, Vector2> entries = new HashMap<>();
-    private final List<Vector2> enemySpawns = new ArrayList<>();
     private final List<Door> doors = new ArrayList<>();
 
     /** Charge la carte par défaut (étage 1). */
@@ -91,25 +95,47 @@ public final class MapLoader implements Disposable {
                 + entries.keySet());
     }
 
-    /** Lit les entrées du joueur et les positions des gardes définies dans le calque Spawns. */
+    /**
+     * Lit les entrées du joueur et les positions des ennemis définies
+     * dans le calque Spawns.
+     *
+     * Noms réservés :
+     * - player_spawn : entrée par défaut du joueur ;
+     * - entry_xxx    : entrée accessible depuis une porte ;
+     * - skull_knight : apparition d'un Skull Knight ;
+     * - tout autre nom : apparition d'un ennemi classique.
+     */
     private void loadSpawns() {
         MapLayer spawnsLayer = map.getLayers().get("Spawns");
+
         if (spawnsLayer == null) {
-            Gdx.app.log("MAP", "Pas de calque 'Spawns' dans " + path + " : valeurs par défaut utilisées");
+            Gdx.app.log(
+                "MAP",
+                "Pas de calque 'Spawns' dans " + path
+                    + " : valeurs par défaut utilisées"
+            );
         } else {
             for (MapObject object : spawnsLayer.getObjects()) {
                 Vector2 center = centerOf(object.getProperties());
                 String name = object.getName();
 
-                if (DEFAULT_ENTRY.equals(name) || (name != null && name.startsWith(ENTRY_PREFIX))) {
+                if (DEFAULT_ENTRY.equals(name)
+                        || (name != null && name.startsWith(ENTRY_PREFIX))) {
+                    // Entrée du joueur, notamment pour les portes.
                     entries.put(name, center);
+                } else if ("skull_knight".equals(name)) {
+                    // Apparition d'un Skull Knight.
+                    knightSpawns.add(center);
                 } else {
+                    // Apparition d'un ennemi classique.
                     enemySpawns.add(center);
                 }
             }
         }
+
+        // Entrée de secours si player_spawn n'existe pas.
         if (!entries.containsKey(DEFAULT_ENTRY)) {
-            entries.put(DEFAULT_ENTRY, new Vector2(100f, 100f)); // valeur de secours
+            entries.put(DEFAULT_ENTRY, new Vector2(100f, 100f));
         }
     }
 
@@ -179,6 +205,11 @@ public final class MapLoader implements Disposable {
         }
         Gdx.app.log("MAP", "entrée demandée '" + name + "' -> position " + entry);
         return new Vector2(entry);
+    }
+
+    /** Positions de départ des Skull Knights (objets nommés « skull_knight » dans Tiled). */
+    public List<Vector2> getKnightSpawns() {
+        return Collections.unmodifiableList(knightSpawns);
     }
 
     /** Positions de départ des ennemis, exposées en lecture seule. */
