@@ -1,16 +1,54 @@
 {
-    "activeFile": "assets/maps/map1.tmx",
+    "activeFile": "assets/maps/etage_2.tmx",
     "expandedProjectPaths": [
-        "assets",
-        "core",
         "assets/maps",
-        "core/src",
+        ".",
         "core/src/ressources",
-        "."
+        "core",
+        "assets",
+        "core/src"
     ],
     "fileStates": {
         "/home/pololitos/Epitech/Jeu2DJava/jeudetuie.tsx": {
             "scaleInDock": 1
+        },
+        "assets/maps/Catacombes1.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "assets/maps/Cute1_walls.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "assets/maps/Donjon_wall.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "assets/maps/JeuMid.tsx": {
+            "scaleInDock": 1
+        },
+        "assets/maps/JeuMédiéval.tsx": {
+            "scaleInDock": 1
+        },
+        "assets/maps/Objets_gros.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "assets/maps/etage_1.tmx": {
+            "scale": 0.8319,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 560.1634811876428,
+                "y": 399.6874624353889
+            }
+        },
+        "assets/maps/etage_2.tmx": {
+            "scale": 0.9823,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 440.8021989208999,
+                "y": 416.8787539448233
+            }
         },
         "assets/maps/jeudetuie.tsx": {
             "scaleInDock": 1,
@@ -20,8 +58,8 @@
             "scale": 0.8866666666666666,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 240.22556390977445,
-                "y": 320.8646616541353
+                "x": 240.22556390977442,
+                "y": 159.58646616541353
             }
         },
         "assets/maps/test1.tmx": {
@@ -57,21 +95,40 @@
         }
     },
     "last.externalTilesetPath": "/home/pololitos/Epitech/Jeu2DJava/B-OOP-301-MPL-3-1-2dgame-3/assets/maps",
-    "last.imagePath": "/home/pololitos/Epitech/Jeu2DJava/B-OOP-301-MPL-3-1-2dgame-3/assets/Free Modern Pack ( Dev Essentials )",
+    "last.imagePath": "/home/pololitos/Epitech/Jeu2DJava/B-OOP-301-MPL-3-1-2dgame-3/assets/Top-Down_Retro_Interior",
+    "map.height": 50,
     "map.lastUsedFormat": "tmx",
     "map.orientation": "1",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 70,
     "openFiles": [
         "assets/maps/jeudetuie.tsx",
-        "assets/maps/map1.tmx"
+        "assets/maps/map1.tmx",
+        "assets/maps/etage_1.tmx",
+        "assets/maps/Donjon_wall.tsx",
+        "assets/maps/Cute1_walls.tsx",
+        "assets/maps/Objets_gros.tsx",
+        "assets/maps/etage_2.tmx"
     ],
     "project": "tilemap1.tiled-project",
     "recentFiles": [
         "assets/maps/jeudetuie.tsx",
         "assets/maps/map1.tmx",
+        "assets/maps/etage_1.tmx",
+        "assets/maps/Donjon_wall.tsx",
+        "assets/maps/Cute1_walls.tsx",
+        "assets/maps/Objets_gros.tsx",
+        "assets/maps/etage_2.tmx",
+        "assets/maps/Catacombes1.tsx",
         "jeudetuie.tsx",
         "assets/maps/test1.tmx",
         "core/src/ressources/test1.tmx",
         "test1.tmx"
     ],
-    "tileset.lastUsedFormat": "tsx"
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
 }
