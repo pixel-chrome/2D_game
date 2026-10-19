@@ -26,6 +26,7 @@ final class EnemyAnimations {
     private static final float FRAME_TIME_SHOOT = 0.08f;
     private static final float FRAME_TIME_DEATH = 0.08f;
     private static final float FRAME_TIME_WALK = 0.12f;
+    private static final float FRAME_TIME_RUN = 0.06f;
 
     private static Texture sheetTexture;
 
@@ -40,6 +41,9 @@ final class EnemyAnimations {
             new EnumMap<>(Direction.class);
 
     private static final Map<Direction, Animation<TextureRegion>> walkAnims =
+            new EnumMap<>(Direction.class);
+
+    private static final Map<Direction, Animation<TextureRegion>> runAnims =
             new EnumMap<>(Direction.class);
 
     private EnemyAnimations() {
@@ -161,6 +165,12 @@ final class EnemyAnimations {
                         Animation.PlayMode.LOOP
                 )
         );
+
+        // Course : mêmes images que la marche, jouées deux fois plus vite
+        for (Map.Entry<Direction, Animation<TextureRegion>> e : walkAnims.entrySet()) {
+            runAnims.put(e.getKey(), animation(
+                    FRAME_TIME_RUN, e.getValue().getKeyFrames(), Animation.PlayMode.LOOP));
+        }
     }
     private static TextureRegion[] frames(
             TextureRegion[][] grid,
@@ -243,7 +253,7 @@ final class EnemyAnimations {
             blue = 0.7f;
 
         } else if (enemy.isWalking()) {
-            Animation<TextureRegion> walk = walkAnims.get(direction);
+            Animation<TextureRegion> walk = (enemy.isRunning() ? runAnims : walkAnims).get(direction);
 
             frame = walk != null
                     ? walk.getKeyFrame(enemy.stateTime(), true)
@@ -323,6 +333,7 @@ final class EnemyAnimations {
 
         shootAnims.clear();
         walkAnims.clear();
+        runAnims.clear();
         idleAnims.clear();
 
         deathAnim = null;

@@ -27,6 +27,7 @@ public final class MapLoader implements Disposable {
     private final float height;
     private final Vector2 playerSpawn = new Vector2(100f, 100f);
     private final List<Vector2> enemySpawns = new ArrayList<>();
+    private final List<Vector2> knightSpawns = new ArrayList<>();
 
     /** Charge la carte, calcule ses dimensions et récupère les points d’apparition. */
     public MapLoader() {
@@ -63,6 +64,8 @@ public final class MapLoader implements Disposable {
 
             if ("player_spawn".equals(object.getName())) {
                 playerSpawn.set(x, y);
+            } else if ("skull_knight".equals(object.getName())) {
+                knightSpawns.add(new Vector2(x, y));
             } else {
                 enemySpawns.add(new Vector2(x, y));
             }
@@ -89,6 +92,11 @@ public final class MapLoader implements Disposable {
     public float getHeight() { return height; }
     /** Retourne une copie de la position de départ du joueur. */
     public Vector2 getPlayerSpawn() { return new Vector2(playerSpawn); }
+
+    /** Positions de départ des Skull Knights (objets nommés « skull_knight » dans Tiled). */
+    public List<Vector2> getKnightSpawns() {
+        return Collections.unmodifiableList(knightSpawns);
+    }
 
     /** Positions de départ des ennemis, exposées en lecture seule. */
     public List<Vector2> getEnemySpawns() {

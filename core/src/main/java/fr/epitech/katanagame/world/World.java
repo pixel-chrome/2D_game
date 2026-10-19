@@ -6,6 +6,7 @@ import fr.epitech.katanagame.entity.projectile.Bullet;
 import fr.epitech.katanagame.render.BloodEffects;
 
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
@@ -31,6 +32,15 @@ public class World {
     public final List<Bullet> bullets = new ArrayList<>();
     /** Sang et flash d'impact (mort du joueur). */
     public final BloodEffects blood = new BloodEffects();
+
+    /** Fait du bruit : les ennemis vivants à portée viennent voir (sauf la source). */
+    public void makeNoise(Vector2 at, float radius, Enemy source) {
+        for (Enemy enemy : enemies) {
+            if (enemy != source && enemy.getPosition().dst(at) <= radius) {
+                enemy.hearNoise(at);
+            }
+        }
+    }
 
     /** Initialise les références vers le joueur, le viewport et les calques de collision. */
     public World(Viewport viewport, Player player,

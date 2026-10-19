@@ -115,22 +115,22 @@
   <object id="1" name="player_spawn" x="579.397" y="760.909"/>
   <object id="2" x="205.554" y="656.329"/>
   <object id="3" x="197.139" y="506.07"/>
-  <object id="4" x="349.802" y="507.273"/>
+  <object id="4" name="skull_knight" x="349.802" y="507.273"/>
   <object id="5" x="199.543" y="367.833"/>
   <object id="6" x="472.413" y="348.6"/>
   <object id="7" x="300.517" y="417.117"/>
   <object id="8" x="323.356" y="121.409"/>
-  <object id="9" x="215.17" y="161.077"/>
+  <object id="9" name="skull_knight" x="215.17" y="161.077"/>
   <object id="10" x="411.107" y="231.999"/>
   <object id="11" x="601.034" y="128.621"/>
   <object id="12" x="891.934" y="94.9633"/>
   <object id="13" x="1031.37" y="108.186"/>
-  <object id="14" x="1032.58" y="233.201"/>
+  <object id="14" name="skull_knight" x="1032.58" y="233.201"/>
   <object id="15" x="1020.56" y="364.226"/>
   <object id="16" x="1026.57" y="504.868"/>
   <object id="17" x="846.256" y="306.527"/>
   <object id="18" x="890.732" y="524.101"/>
-  <object id="19" x="740.474" y="504.868"/>
+  <object id="19" name="skull_knight" x="740.474" y="504.868"/>
   <object id="20" x="949.633" y="634.692"/>
   <object id="21" x="845.053" y="645.51"/>
   <object id="22" x="760.909" y="402.693"/>

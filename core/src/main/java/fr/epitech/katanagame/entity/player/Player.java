@@ -21,6 +21,7 @@ public class Player extends Character implements Disposable {
     /** Durée du dash en secondes. */
     private static final float DASH_DURATION = 0.15f, DASH_COOLDOWN = 0.6f;
     static final float ATTACK_DURATION = 0.56f;
+    private static final float KILL_NOISE_RADIUS = 110f;   // un kill attire les gardes proches
     private static final float ATTACK_REACH = 20f, ATTACK_OFFSET = -12f;
     private static final float ATTACK_W = 30f, ATTACK_H = 24f;
 
@@ -110,6 +111,7 @@ public class Player extends Character implements Disposable {
                 if (!enemy.isAlive()) {
                     Vector2 at = enemy.getBounds().getCenter(new Vector2());
                     world.blood.splatter(at, at.cpy().sub(position), world.bulletLayers);
+                    world.makeNoise(at, KILL_NOISE_RADIUS, enemy);
                 }
             }
         }

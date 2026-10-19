@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Vector2;
 import fr.epitech.katanagame.entity.Character;
 import fr.epitech.katanagame.entity.player.Player;
 import fr.epitech.katanagame.entity.projectile.LaserAssets;
+import fr.epitech.katanagame.world.Collision;
 import fr.epitech.katanagame.world.World;
 
 /** Entité ennemie : gère l'IA, la vision, l'arme et le rendu. */
@@ -20,9 +21,13 @@ public class Enemy extends Character {
     private static final float FEET_W = 10f;
     private static final float FEET_H = 6f;
     private static final float FEET_OFFSET_Y = 10f;
+    /** Distance sous laquelle il s'arrête de courir pour tirer. */
+    /** Vitesse de course des tireurs (px/s). */
+    private static final float SHOOTER_RUN_SPEED = 70f;
+    private static final float FIRE_DISTANCE = 150f;
 
     /** Logique de comportement et de patrouille. */
-    private final EnemyAI ai;
+    protected final EnemyAI ai;
     /** Système de tir de l'ennemi. */
     private final EnemyWeapon weapon;
     /** Texture laser conservée par cet ennemi pendant toute la partie. */
@@ -33,22 +38,29 @@ public class Enemy extends Character {
 
     /** Initialise un ennemi, son IA, son arme et la couleur de son laser. */
     public Enemy(float x, float y) {
+        this(x, y, SHOOTER_RUN_SPEED, true);
+    }
+
+    /** Constructeur commun aux sous-classes : vitesse de course et présence d'une arme à distance. */
+    protected Enemy(float x, float y, float runSpeed, boolean ranged) {
         super(x, y, WIDTH, HEIGHT, FEET_W, FEET_H, FEET_OFFSET_Y);
         aim.set(0f, -1f);
-        laserTexture = LaserAssets.getRandomTexture();
-        ai = new EnemyAI(this, x, y);
+        laserTexture = ranged ? LaserAssets.getRandomTexture() : null;
+        ai = new EnemyAI(this, x, y, runSpeed);
         weapon = new EnemyWeapon(this);
     }
 
     /** Charge les ressources graphiques partagées des ennemis et des lasers. */
     public static void loadAssets() {
         EnemyAnimations.loadAssets();
+        SkullKnightAnimations.loadAssets();
         LaserAssets.loadAssets();
     }
 
     /** Libère les ressources graphiques partagées des ennemis et des lasers. */
     public static void disposeAssets() {
         EnemyAnimations.disposeAssets();
+        SkullKnightAnimations.disposeAssets();
         LaserAssets.disposeAssets();
     }
 
@@ -88,15 +100,19 @@ public class Enemy extends Character {
             return;
         }
 
-        if (!sees) {
-            // Plus de vue sur le joueur : il va au dernier endroit où il l'a vu.
+        // Il ne tire que s'il voit le joueur, qu'il est à portée et que les balles ne seraient pas bloquées.
+        boolean canShoot = sees
+                && position.dst(ai.lastKnown()) <= FIRE_DISTANCE
+                && Collision.hasLineOfSight(world.bulletLayers, position, target);
+        if (!canShoot && !(sees && weapon.isAttacking())) {
+            // Il fonce sur le joueur (ou sur le dernier endroit vu / entendu).
             weapon.stopAttacking();
             ai.chaseLastKnown(delta, world.moveLayers);
             return;
         }
         ai.stopWalking();
         aim.set(ai.lastKnown()).sub(position).nor();
-        weapon.updateAttack(delta, target, world.bullets);
+        weapon.updateAttack(delta, target, world);
         weapon.updateMotion(delta, world.moveLayers);
     }
 
@@ -185,6 +201,24 @@ public class Enemy extends Character {
         float charge = weapon.chargeProgress();
         float shot = weapon.shootProgress();
         return 1f - 0.08f * charge + 0.16f * shot;
+    }
+
+    /** Décalage entre le centre du sprite et le centre des pieds. */
+    Vector2 feetOffset() {
+        Rectangle feet = getFeetBounds();
+        return new Vector2(feet.x + feet.width / 2f - position.x, feet.y + feet.height / 2f - position.y);
+    }
+
+    /** L'ennemi entend un bruit à cet endroit et vient voir. */
+    public void hearNoise(Vector2 at) {
+        if (isAlive()) {
+            ai.hearNoise(at);
+        }
+    }
+
+    /** Indique si l'ennemi court vers sa cible. */
+    boolean isRunning() {
+        return ai.isRunning();
     }
 
     /** Indique si l'ennemi est en déplacement. */
