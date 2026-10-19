@@ -66,6 +66,12 @@ final class EnemyWeapon {
         recoilTimer = 0f;
     }
 
+    /** Casse l'attaque en cours (parry) et retarde le prochain tir. */
+    void stagger(float cooldownTime) {
+        stopAttacking();
+        cooldown = Math.max(cooldown, cooldownTime);
+    }
+
     /** Réinitialise l'effet visuel de tir. */
     void clearShootEffect() {
         shootTimer = 0f;

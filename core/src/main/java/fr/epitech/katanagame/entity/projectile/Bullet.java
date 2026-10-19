@@ -14,6 +14,7 @@ import java.util.Deque;
 public class Bullet {
     public static final float SPEED = 500f;
     private static final float RADIUS = 2f;
+    private static final float REFLECT_BOOST = 1.6f;
     private static final float LIFETIME = 3f;
     private static final float DRAW_WIDTH = 18f;
     private static final float DRAW_HEIGHT = 10f;
@@ -30,6 +31,7 @@ public class Bullet {
     private final Deque<Vector2> trail = new ArrayDeque<>();
     private float life = 0f;
     private boolean alive = true;
+    private boolean reflected;
 
     /** Crée un projectile à une position et dans une direction données. */
     public Bullet(Vector2 from, Vector2 direction, Texture texture) {
@@ -94,6 +96,24 @@ public class Bullet {
                 false,
                 false
         );
+    }
+
+    /** Renvoie le projectile (parry) : plus rapide, il blesse désormais les ennemis et plus le joueur. */
+    public void reflect(Vector2 direction) {
+        velocity.set(direction).nor().scl(SPEED * REFLECT_BOOST);
+        reflected = true;
+        life = 0f;
+        trail.clear();
+    }
+
+    /** Indique si le projectile a été renvoyé par le joueur. */
+    public boolean isReflected() {
+        return reflected;
+    }
+
+    /** Position actuelle du projectile. */
+    public Vector2 getPosition() {
+        return position;
     }
 
     /** Direction de déplacement (vecteur unitaire). */

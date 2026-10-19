@@ -20,6 +20,7 @@ public class Enemy extends Character {
     private static final float FEET_W = 10f;
     private static final float FEET_H = 6f;
     private static final float FEET_OFFSET_Y = 10f;
+    private static final float STUN_TIME = 0.7f, KNOCKBACK_SPEED = 260f, KNOCKBACK_DRAG = 7f;
 
     /** Logique de comportement et de patrouille. */
     private final EnemyAI ai;
@@ -30,6 +31,8 @@ public class Enemy extends Character {
 
     private float stateTime;
     private float deathTime;
+    private float stunTimer;
+    private final Vector2 knockback = new Vector2();
 
     /** Initialise un ennemi, son IA, son arme et la couleur de son laser. */
     public Enemy(float x, float y) {
@@ -57,6 +60,19 @@ public class Enemy extends Character {
         deathTime = 0f;
     }
 
+    /** Repoussé par un parry : l'attaque est interrompue et l'ennemi reste sonné un instant. */
+    public void parried(Vector2 dir) {
+        if (!isAlive()) return;
+        stunTimer = STUN_TIME;
+        knockback.set(dir).nor().scl(KNOCKBACK_SPEED);
+        weapon.stagger(STUN_TIME + 0.5f);
+    }
+
+    /** Indique si l'ennemi est sonné par un parry. */
+    public boolean isStunned() {
+        return stunTimer > 0f;
+    }
+
     @Override
     public void update(float delta, World world) {
         stateTime += delta;
@@ -65,6 +81,14 @@ public class Enemy extends Character {
             weapon.stopAttacking();
             weapon.clearShootEffect();
             ai.setSeesPlayer(false);
+            return;
+        }
+
+        if (stunTimer > 0f) {
+            stunTimer -= delta;
+            moveForAI(knockback.x * delta, knockback.y * delta, world.moveLayers);
+            knockback.scl(Math.max(0f, 1f - KNOCKBACK_DRAG * delta));
+            weapon.stopAttacking();
             return;
         }
 

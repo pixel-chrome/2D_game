@@ -39,6 +39,10 @@ public class GameScreen extends ScreenAdapter {
     /** Ralenti du temps (maintenir la touche RALENTI). */
     private final SlowMotion slowMo = new SlowMotion();
 
+    /** Arrêt sur image restant (s) après un parry réussi. */
+    private float hitStop;
+    private static final float PARRY_HIT_STOP = 0.09f;
+
     /** Charge la carte et prépare les éléments de la partie. */
     public GameScreen(Main game) {
         this.game = game;
@@ -80,6 +84,8 @@ public class GameScreen extends ScreenAdapter {
         death.reset();
         slowMo.reset();
         world.blood.clear();
+        world.parryFx.clear();
+        hitStop = 0f;
     }
 
     /** Prépare l’écran de jeu lorsqu’il devient actif. */
@@ -133,8 +139,17 @@ public class GameScreen extends ScreenAdapter {
             live = delta * death.effectsScale();
             worldDt = delta * death.worldScale();
         }
+        if (hitStop > 0f) {          // arrêt sur image : tout est figé sauf les effets
+            hitStop -= delta;
+            live = worldDt = 0f;
+        }
         player.update(live, world);
         if (player.pollDashStart()) camera.shake(2.5f);
+        if (player.pollParrySuccess()) {
+            hitStop = PARRY_HIT_STOP;
+            camera.shake(4f);
+        }
+        world.parryFx.update(delta);
         world.blood.update(live, world.bulletLayers);
         if (!player.isAlive() && Gdx.input.isKeyJustPressed(Input.Keys.R)) restart();
 
@@ -149,7 +164,9 @@ public class GameScreen extends ScreenAdapter {
     private void updateBullets(float delta) {
         for (Bullet bullet : world.bullets) {
             bullet.update(delta, world.bulletLayers);
-            if (bullet.isAlive() && player.isAlive() && !player.isInvincible()
+            if (bullet.isReflected()) {
+                hitEnemies(bullet);
+            } else if (bullet.isAlive() && player.isAlive() && !player.isInvincible()
                     && bullet.getBounds().overlaps(player.getBounds())) {
                 Vector2 dir = bullet.getDirection();
                 player.hit(dir);
@@ -159,6 +176,20 @@ public class GameScreen extends ScreenAdapter {
             }
         }
         world.bullets.removeIf(bullet -> !bullet.isAlive());
+    }
+
+    /** Une balle renvoyée tue le premier ennemi qu'elle touche. */
+    private void hitEnemies(Bullet bullet) {
+        if (!bullet.isAlive()) return;
+        for (Enemy enemy : world.enemies) {
+            if (enemy.isAlive() && bullet.getBounds().overlaps(enemy.getBounds())) {
+                enemy.takeDamage();
+                Vector2 at = enemy.getBounds().getCenter(new Vector2());
+                world.blood.splatter(at, bullet.getDirection(), world.bulletLayers);
+                bullet.kill();
+                return;
+            }
+        }
     }
 
     /** Libère les ressources utilisées par la partie. */

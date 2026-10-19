@@ -4,6 +4,7 @@ import fr.epitech.katanagame.entity.enemy.Enemy;
 import fr.epitech.katanagame.entity.player.Player;
 import fr.epitech.katanagame.entity.projectile.Bullet;
 import fr.epitech.katanagame.render.BloodEffects;
+import fr.epitech.katanagame.render.ParryEffects;
 
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -31,6 +32,8 @@ public class World {
     public final List<Bullet> bullets = new ArrayList<>();
     /** Sang et flash d'impact (mort du joueur). */
     public final BloodEffects blood = new BloodEffects();
+    /** Croissant, anneau et flash du parry. */
+    public final ParryEffects parryFx = new ParryEffects();
 
     /** Initialise les références vers le joueur, le viewport et les calques de collision. */
     public World(Viewport viewport, Player player,
