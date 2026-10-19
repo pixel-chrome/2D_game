@@ -3,6 +3,7 @@ package fr.epitech.katanagame.entity.enemy;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import fr.epitech.katanagame.entity.projectile.Bullet;
+import fr.epitech.katanagame.world.World;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ final class EnemyWeapon {
     private static final float VOLLEY_INTERVAL = 0.3f;
     private static final float WINDUP = 0.2f;
     private static final float FIRE_INTERVAL = 1.2f;
+    private static final float GUNSHOT_RADIUS = 260f;   // portée du bruit d'un tir
     private static final float SHOOT_EFFECT_TIME = 0.24f;
     private static final float CHARGE_ADVANCE_SPEED = 28f;
     private static final float RECOIL_SPEED = 78f;
@@ -77,6 +79,11 @@ final class EnemyWeapon {
         shootTimer = 0f;
     }
 
+    /** Indique si une séquence de tir est en cours (visée, salve ou recul). */
+    boolean isAttacking() {
+        return winding || volleysLeft > 0 || recoilTimer > 0f;
+    }
+
     /** Indique si l'arme est en phase de préparation. */
     boolean isWinding() {
         return winding;
@@ -118,11 +125,11 @@ final class EnemyWeapon {
     }
 
     /** Gère la canalisation, les salves et le délai entre les tirs. */
-    void updateAttack(float delta, Vector2 target, List<Bullet> bullets) {
+    void updateAttack(float delta, Vector2 target, World world) {
         if (volleysLeft > 0) {
             volleyTimer -= delta;
             if (volleyTimer <= 0f) {
-                fireVolley(bullets);
+                fireVolley(world);
                 volleysLeft--;
                 volleyTimer = VOLLEY_INTERVAL;
                 if (volleysLeft == 0) {
@@ -155,18 +162,19 @@ final class EnemyWeapon {
     }
 
     /** Crée une salve dans la direction annoncée pendant la canalisation. */
-    private void fireVolley(List<Bullet> bullets) {
+    private void fireVolley(World world) {
         float baseAngle = chargeDirection.angleDeg();
         int half = FAN_BULLETS / 2;
 
         for (int i = -half; i <= half; i++) {
             Vector2 dir = new Vector2(1f, 0f).setAngleDeg(baseAngle + i * FAN_SPREAD);
-            bullets.add(new Bullet(
+            world.bullets.add(new Bullet(
                     new Vector2(enemy.getPosition()),
                     dir,
                     enemy.getLaserTexture()
             ));
         }
+        world.makeNoise(enemy.getPosition(), GUNSHOT_RADIUS, enemy);
         shootTimer = SHOOT_EFFECT_TIME;
         recoilDirection.set(chargeDirection).scl(-1f);
         recoilTimer = RECOIL_DURATION;

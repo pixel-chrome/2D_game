@@ -17,22 +17,33 @@ final class EnemyAnimations {
     private static final String SPRITESHEET_PATH =
             "Pixel_Hot/Characters_Sprite_Sheet.png";
 
+    /** Idle dans les 4 directions : ligne 0 face, 1 côté droit, 2 dos. */
+    private static final String IDLE_SHEET_PATH = "Pixel_Hot/Enemy_Idle.png";
+
     static final int FRAME_SIZE = 32;
 
     private static final float FRAME_TIME_IDLE = 0.15f;
     private static final float FRAME_TIME_SHOOT = 0.08f;
     private static final float FRAME_TIME_DEATH = 0.08f;
     private static final float FRAME_TIME_WALK = 0.12f;
+    private static final float FRAME_TIME_RUN = 0.06f;
 
     private static Texture sheetTexture;
 
-    private static Animation<TextureRegion> idleAnim;
+    private static Texture idleTexture;
+
     private static Animation<TextureRegion> deathAnim;
+
+    private static final Map<Direction, Animation<TextureRegion>> idleAnims =
+            new EnumMap<>(Direction.class);
 
     private static final Map<Direction, Animation<TextureRegion>> shootAnims =
             new EnumMap<>(Direction.class);
 
     private static final Map<Direction, Animation<TextureRegion>> walkAnims =
+            new EnumMap<>(Direction.class);
+
+    private static final Map<Direction, Animation<TextureRegion>> runAnims =
             new EnumMap<>(Direction.class);
 
     private EnemyAnimations() {
@@ -56,11 +67,24 @@ final class EnemyAnimations {
                 FRAME_SIZE
         );
 
-        idleAnim = animation(
-                FRAME_TIME_IDLE,
-                frames(grid, 28, 4, false),
-                Animation.PlayMode.LOOP
+        idleTexture = new Texture(IDLE_SHEET_PATH);
+        idleTexture.setFilter(
+                Texture.TextureFilter.Nearest,
+                Texture.TextureFilter.Nearest
         );
+        TextureRegion[][] idleGrid = TextureRegion.split(
+                idleTexture,
+                FRAME_SIZE,
+                FRAME_SIZE
+        );
+        idleAnims.put(Direction.DOWN, animation(
+                FRAME_TIME_IDLE, frames(idleGrid, 0, 4, false), Animation.PlayMode.LOOP));
+        idleAnims.put(Direction.RIGHT, animation(
+                FRAME_TIME_IDLE, frames(idleGrid, 1, 4, false), Animation.PlayMode.LOOP));
+        idleAnims.put(Direction.LEFT, animation(
+                FRAME_TIME_IDLE, frames(idleGrid, 1, 4, true), Animation.PlayMode.LOOP));
+        idleAnims.put(Direction.UP, animation(
+                FRAME_TIME_IDLE, frames(idleGrid, 2, 4, false), Animation.PlayMode.LOOP));
 
         deathAnim = animation(
                 FRAME_TIME_DEATH,
@@ -141,6 +165,12 @@ final class EnemyAnimations {
                         Animation.PlayMode.LOOP
                 )
         );
+
+        // Course : mêmes images que la marche, jouées deux fois plus vite
+        for (Map.Entry<Direction, Animation<TextureRegion>> e : walkAnims.entrySet()) {
+            runAnims.put(e.getKey(), animation(
+                    FRAME_TIME_RUN, e.getValue().getKeyFrames(), Animation.PlayMode.LOOP));
+        }
     }
     private static TextureRegion[] frames(
             TextureRegion[][] grid,
@@ -177,7 +207,7 @@ final class EnemyAnimations {
     }
 
     static void draw(Enemy enemy, SpriteBatch batch) {
-        if (idleAnim == null) {
+        if (idleAnims.isEmpty()) {
             return;
         }
 
@@ -197,6 +227,7 @@ final class EnemyAnimations {
         Direction direction = enemy.getFacing();
 
         Animation<TextureRegion> shoot = shootAnims.get(direction);
+        Animation<TextureRegion> idleAnim = idleAnims.get(direction);
 
         TextureRegion frame;
         float red = 1f;
@@ -222,7 +253,7 @@ final class EnemyAnimations {
             blue = 0.7f;
 
         } else if (enemy.isWalking()) {
-            Animation<TextureRegion> walk = walkAnims.get(direction);
+            Animation<TextureRegion> walk = (enemy.isRunning() ? runAnims : walkAnims).get(direction);
 
             frame = walk != null
                     ? walk.getKeyFrame(enemy.stateTime(), true)
@@ -295,10 +326,16 @@ final class EnemyAnimations {
             sheetTexture = null;
         }
 
+        if (idleTexture != null) {
+            idleTexture.dispose();
+            idleTexture = null;
+        }
+
         shootAnims.clear();
         walkAnims.clear();
+        runAnims.clear();
+        idleAnims.clear();
 
-        idleAnim = null;
         deathAnim = null;
     }
 }

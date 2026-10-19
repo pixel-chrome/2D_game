@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import fr.epitech.katanagame.Main;
 import fr.epitech.katanagame.camera.GameCamera;
 import fr.epitech.katanagame.entity.enemy.Enemy;
+import fr.epitech.katanagame.entity.enemy.SkullKnight;
 import fr.epitech.katanagame.entity.player.Player;
 import fr.epitech.katanagame.entity.projectile.Bullet;
 import fr.epitech.katanagame.render.GameRenderer;
@@ -72,6 +73,9 @@ public class GameScreen extends ScreenAdapter {
         world.bullets.clear();
         for (Vector2 spawn : mapLoader.getEnemySpawns()) {
             world.enemies.add(new Enemy(spawn.x, spawn.y));
+        }
+        for (Vector2 spawn : mapLoader.getKnightSpawns()) {
+            world.enemies.add(new SkullKnight(spawn.x, spawn.y));
         }
     }
 
@@ -154,7 +158,9 @@ public class GameScreen extends ScreenAdapter {
         if (!player.isAlive() && Gdx.input.isKeyJustPressed(Input.Keys.R)) restart();
 
         if (worldDt > 0f) {
+            boolean wasAlive = player.isAlive();
             for (Enemy enemy : world.enemies) enemy.update(worldDt, world);
+            if (wasAlive && !player.isAlive()) death.start();   // tué au corps à corps
             updateBullets(worldDt);
         }
         camera.update(delta, player.getPosition(), mapLoader.getWidth(), mapLoader.getHeight());

@@ -1,12 +1,12 @@
 {
     "activeFile": "assets/maps/etage_2.tmx",
     "expandedProjectPaths": [
-        "assets/maps",
-        ".",
         "core/src/ressources",
         "core",
         "assets",
-        "core/src"
+        ".",
+        "core/src",
+        "assets/maps"
     ],
     "fileStates": {
         "/home/pololitos/Epitech/Jeu2DJava/jeudetuie.tsx": {
@@ -43,11 +43,11 @@
             }
         },
         "assets/maps/etage_2.tmx": {
-            "scale": 0.9823,
-            "selectedLayer": 1,
+            "scale": 0.8413,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 440.8021989208999,
-                "y": 416.8787539448233
+                "x": 510.51943420896225,
+                "y": 414.239866872697
             }
         },
         "assets/maps/jeudetuie.tsx": {
