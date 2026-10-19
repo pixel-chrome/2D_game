@@ -33,6 +33,7 @@ public class Enemy {
 
     // --- Sprites Pixel_Hot ---
     private static final String SPRITESHEET_PATH = "Pixel_Hot/Characters_Sprite_Sheet.png";
+    private static final String IDLE_SHEET_PATH = "Pixel_Hot/Enemy_Idle.png";  // 4 images : face / côté / dos
     private static final int FRAME_SIZE = 32;
     private static final float FRAME_TIME_IDLE = 0.15f;
     private static final float FRAME_TIME_SHOOT = 0.08f;
@@ -47,7 +48,8 @@ public class Enemy {
     private static final float LOSE_SIGHT_TIME = 1.5f; // temps avant de renoncer
 
     private static Texture sheetTexture;
-    private static Animation<TextureRegion> idleAnim;
+    private static Texture idleTexture;
+    private static final Map<Direction, Animation<TextureRegion>> idleAnims = new EnumMap<>(Direction.class);
     private static Animation<TextureRegion> deathAnim;
     private static final Map<Direction, Animation<TextureRegion>> shootAnims = new EnumMap<>(Direction.class);
 
@@ -90,33 +92,34 @@ public class Enemy {
 
         TextureRegion[][] grid = TextureRegion.split(sheetTexture, FRAME_SIZE, FRAME_SIZE);
 
-        // Idle avec arme (Ligne 28, colonnes 0 à 3)
-        TextureRegion[] idleFrames = new TextureRegion[4];
-        for (int i = 0; i < 4; i++) {
-            idleFrames[i] = grid[28][i];
-        }
-        idleAnim = new Animation<>(FRAME_TIME_IDLE, idleFrames);
-        idleAnim.setPlayMode(Animation.PlayMode.LOOP);
+        // Idle dans les 4 directions (Enemy_Idle.png : ligne 0 face, 1 côté droit, 2 dos)
+        idleTexture = new Texture(IDLE_SHEET_PATH);
+        idleTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        TextureRegion[][] idleGrid = TextureRegion.split(idleTexture, FRAME_SIZE, FRAME_SIZE);
+        idleAnims.put(Direction.DOWN, idleAnimation(idleGrid[0], false));
+        idleAnims.put(Direction.RIGHT, idleAnimation(idleGrid[1], false));
+        idleAnims.put(Direction.LEFT, idleAnimation(idleGrid[1], true));
+        idleAnims.put(Direction.UP, idleAnimation(idleGrid[2], false));
 
-        // Tir / visée vers la Droite (Ligne 7, colonnes 0 à 2)
+        // Tir / visée vers la Droite (Ligne 8, colonnes 0 à 2)
         TextureRegion[] shootRight = new TextureRegion[3];
         for (int i = 0; i < 3; i++) {
-            shootRight[i] = grid[7][i];
+            shootRight[i] = grid[8][i];
         }
         shootAnims.put(Direction.RIGHT, new Animation<>(FRAME_TIME_SHOOT, shootRight));
 
         // Tir / visée vers la Gauche (Ligne 7 inversée horizontalement)
         TextureRegion[] shootLeft = new TextureRegion[3];
         for (int i = 0; i < 3; i++) {
-            shootLeft[i] = new TextureRegion(grid[7][i]);
+            shootLeft[i] = new TextureRegion(grid[8][i]);
             shootLeft[i].flip(true, false);
         }
         shootAnims.put(Direction.LEFT, new Animation<>(FRAME_TIME_SHOOT, shootLeft));
 
-        // Tir / visée vers le Bas (Ligne 8, colonnes 0 à 2)
+        // Tir / visée vers le Bas (Ligne 7, colonnes 0 à 2)
         TextureRegion[] shootDown = new TextureRegion[3];
         for (int i = 0; i < 3; i++) {
-            shootDown[i] = grid[8][i];
+            shootDown[i] = grid[7][i];
         }
         shootAnims.put(Direction.DOWN, new Animation<>(FRAME_TIME_SHOOT, shootDown));
 
@@ -136,14 +139,29 @@ public class Enemy {
         deathAnim.setPlayMode(Animation.PlayMode.NORMAL);
     }
 
+    private static Animation<TextureRegion> idleAnimation(TextureRegion[] row, boolean flip) {
+        TextureRegion[] frames = new TextureRegion[4];
+        for (int i = 0; i < 4; i++) {
+            frames[i] = new TextureRegion(row[i]);
+            if (flip) frames[i].flip(true, false);
+        }
+        Animation<TextureRegion> anim = new Animation<>(FRAME_TIME_IDLE, frames);
+        anim.setPlayMode(Animation.PlayMode.LOOP);
+        return anim;
+    }
+
     /** À appeler dans Main.dispose(). */
     public static void disposeAssets() {
         if (sheetTexture != null) {
             sheetTexture.dispose();
             sheetTexture = null;
         }
+        if (idleTexture != null) {
+            idleTexture.dispose();
+            idleTexture = null;
+        }
         shootAnims.clear();
-        idleAnim = null;
+        idleAnims.clear();
         deathAnim = null;
     }
 
@@ -206,13 +224,19 @@ public class Enemy {
         }
 
         // Alerté : il fixe le joueur (ou le dernier endroit où il l'a vu)
-        aim.set(lastKnown).sub(position).nor();
-
-        if (!sees) {            // pas de tir à travers les murs
+        if (!sees) {            // pas de tir à travers les murs : il va au dernier endroit où il t'a vu
             winding = false;
             volleysLeft = 0;
+            Vector2 toLast = new Vector2(lastKnown).sub(position);
+            float dist = toLast.len();
+            if (dist > 2f) {
+                toLast.nor();
+                aim.set(toLast);
+                position.mulAdd(toLast, Math.min(dist, WALK_SPEED * delta));
+            }
             return;
         }
+        aim.set(lastKnown).sub(position).nor();
 
         if (volleysLeft > 0) {
             volleyTimer -= delta;
@@ -249,18 +273,14 @@ public class Enemy {
 
         if (shootTimer > 0f) {
             Animation<TextureRegion> anim = shootAnims.get(dir);
-            frame = anim != null ? anim.getKeyFrames()[1] : idleAnim.getKeyFrame(stateTime);
+            frame = anim != null ? anim.getKeyFrames()[1] : idleAnims.get(dir).getKeyFrame(stateTime);
         } else if (winding) {
             Animation<TextureRegion> anim = shootAnims.get(dir);
-            frame = anim != null ? anim.getKeyFrames()[0] : idleAnim.getKeyFrame(stateTime);
+            frame = anim != null ? anim.getKeyFrames()[0] : idleAnims.get(dir).getKeyFrame(stateTime);
             batch.setColor(1f, 0.7f, 0.7f, 1f);
         } else {
-            if (dir == Direction.DOWN && idleAnim != null) {
-                frame = idleAnim.getKeyFrame(stateTime);
-            } else {
-                Animation<TextureRegion> anim = shootAnims.get(dir);
-                frame = anim != null ? anim.getKeyFrames()[0] : (idleAnim != null ? idleAnim.getKeyFrame(stateTime) : null);
-            }
+            Animation<TextureRegion> anim = idleAnims.get(dir);
+            frame = anim != null ? anim.getKeyFrame(stateTime) : null;
         }
 
         if (frame != null) {
