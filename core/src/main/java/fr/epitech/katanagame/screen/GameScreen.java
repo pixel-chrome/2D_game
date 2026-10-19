@@ -13,6 +13,7 @@ import fr.epitech.katanagame.entity.projectile.Bullet;
 import fr.epitech.katanagame.render.GameRenderer;
 import fr.epitech.katanagame.render.ShadowRenderer;
 import fr.epitech.katanagame.settings.GameSettings;
+import fr.epitech.katanagame.ui.Crosshair;
 import fr.epitech.katanagame.world.MapLoader;
 import fr.epitech.katanagame.world.World;
 import com.badlogic.gdx.math.Vector2;
@@ -39,6 +40,9 @@ public class GameScreen extends ScreenAdapter {
 
     /** Ralenti du temps (maintenir la touche RALENTI). */
     private final SlowMotion slowMo = new SlowMotion();
+
+    /** Viseur affiché à la place du curseur. */
+    private final Crosshair crosshair = new Crosshair();
 
     /** Arrêt sur image restant (s) après un parry réussi. */
     private float hitStop;
@@ -101,6 +105,13 @@ public class GameScreen extends ScreenAdapter {
     @Override
     public void show() {
         Gdx.input.setInputProcessor(null); // Le joueur lit directement clavier et souris.
+        crosshair.apply();
+    }
+
+    /** Rend la flèche normale quand on quitte la partie (pause, game over). */
+    @Override
+    public void hide() {
+        Crosshair.restore();
     }
 
     /** Met à jour le viewport lors du redimensionnement. */
@@ -216,6 +227,8 @@ public class GameScreen extends ScreenAdapter {
     /** Libère les ressources utilisées par la partie. */
     @Override
     public void dispose() {
+        Crosshair.restore();
+        crosshair.dispose();
         renderer.dispose();
         player.dispose();
         mapLoader.dispose();
