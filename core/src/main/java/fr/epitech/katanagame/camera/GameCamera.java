@@ -16,7 +16,7 @@ public final class GameCamera {
     /** Vitesse de rapprochement de la caméra. */
     private static final float SMOOTHING = 8f;
     /** Intensité du décalage vers la souris. */
-    private static final float MOUSE_LOOK_AHEAD = 0.3f;
+    private static final float MOUSE_LOOK_AHEAD = 0.15f;
 
     /** Vitesse à laquelle la secousse s'éteint. */
     private static final float SHAKE_DECAY = 16f;
