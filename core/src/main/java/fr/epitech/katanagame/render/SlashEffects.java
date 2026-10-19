@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Effets de l'attaque du joueur : grand croissant blanc bordé de rouge, traits de vitesse pendant la fente,
+ * Effets de l'attaque du joueur : croissant blanc,
  * et à l'impact une double entaille en X sur l'ennemi avec étincelles.
  * Tout est en formes pleines, au-dessus des sprites.
  */
@@ -114,8 +114,6 @@ public final class SlashEffects {
             float t = c.age / CUT_TIME, grow = Math.min(1f, t * 5f), fade = 1f - t;
             float a = c.angle * MathUtils.degreesToRadians, len = CUT_LENGTH * grow;
             float dx = MathUtils.cos(a) * len, dy = MathUtils.sin(a) * len;
-            shapes.setColor(0.9f, 0.1f, 0.12f, fade);
-            shapes.rectLine(c.x - dx, c.y - dy, c.x + dx, c.y + dy, 4.5f * fade + 1f);
             shapes.setColor(1f, 1f, 1f, fade);
             shapes.rectLine(c.x - dx, c.y - dy, c.x + dx, c.y + dy, 2f * fade + 0.5f);
         }
@@ -126,20 +124,19 @@ public final class SlashEffects {
         }
     }
 
-    /** Croissant à deux couches (rouge dessous, blanc dessus) qui balaie l'arc puis s'efface. */
+    /** Croissant blanc qui balaie l'arc puis s'efface. */
     private void drawSlash(ShapeRenderer shapes) {
         if (slashAge >= SLASH_TIME) return;
         float t = slashAge / SLASH_TIME, head = Math.min(1f, t * 3f), alpha = 1f - t * t;
         float start = slashAngle - SLASH_SPAN / 2f;
-        for (int pass = 0; pass < 2; pass++) {
-            boolean core = pass == 1;
+        {
             for (int i = 0; i < ARC_SEGMENTS * head; i++) {
                 float k0 = (float) i / ARC_SEGMENTS, k1 = (float) (i + 1) / ARC_SEGMENTS;
                 float a0 = (start + SLASH_SPAN * k0) * MathUtils.degreesToRadians;
                 float a1 = (start + SLASH_SPAN * k1) * MathUtils.degreesToRadians;
                 float tail = Math.max(0f, k1 - t * 0.9f);                // l'arrière du croissant s'amincit
-                float width = (1.5f + 9f * MathUtils.sin(k1 * MathUtils.PI)) * (1f - t) * (core ? 0.55f : 1f) * (0.4f + 0.6f * (1f - tail));
-                if (core) shapes.setColor(1f, 1f, 1f, alpha); else shapes.setColor(0.95f, 0.15f, 0.15f, alpha * 0.9f);
+                float width = (1.5f + 9f * MathUtils.sin(k1 * MathUtils.PI)) * (1f - t) * 0.8f * (0.4f + 0.6f * (1f - tail));
+                shapes.setColor(1f, 1f, 1f, alpha);
                 shapes.rectLine(slashAt.x + MathUtils.cos(a0) * SLASH_RADIUS, slashAt.y + MathUtils.sin(a0) * SLASH_RADIUS,
                         slashAt.x + MathUtils.cos(a1) * SLASH_RADIUS, slashAt.y + MathUtils.sin(a1) * SLASH_RADIUS, width);
             }

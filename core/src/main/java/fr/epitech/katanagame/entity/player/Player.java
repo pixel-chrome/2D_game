@@ -30,8 +30,6 @@ public class Player extends Character implements Disposable {
     /** Animation complète du parry (ATTACK 2), fente vers l'avant au début, éclat blanc après un parry réussi. */
     static final float PARRY_ANIM = 0.32f;
     private static final float LUNGE_TIME = 0.09f, LUNGE_SPEED = 260f, FLASH_TIME = 0.14f;
-    /** Fente de l'attaque : durée, vitesse, et fenêtre pendant laquelle le sabre touche en avançant. */
-    private static final float ATTACK_LUNGE_TIME = 0.14f, ATTACK_LUNGE_SPEED = 340f;
     private static final float PARRY_RADIUS = 34f, PARRY_FORWARD = 14f, PARRY_MELEE_BONUS = 10f;
 
     private final PlayerAnimations animations = new PlayerAnimations();
@@ -42,8 +40,6 @@ public class Player extends Character implements Disposable {
     private float parryTimer, parryCooldown, parryAnim, flash;
     private boolean moving, dashStarted, parrySucceeded;
     private final Vector2 parryCenter = new Vector2();
-    private final Vector2 lungeDir = new Vector2();
-    private float lungeTimer;
     private boolean attackHit;
     private final Corpse corpse = new Corpse();
 
@@ -54,7 +50,7 @@ public class Player extends Character implements Disposable {
 
     @Override public void respawn(float x, float y) {
         super.respawn(x, y);
-        dashTimer = dashCooldown = attackTimer = parryTimer = parryCooldown = parryAnim = flash = lungeTimer = 0f;
+        dashTimer = dashCooldown = attackTimer = parryTimer = parryCooldown = parryAnim = flash = 0f;
         corpse.reset();
     }
 
@@ -104,7 +100,6 @@ public class Player extends Character implements Disposable {
         parryCooldown = Math.max(0f, parryCooldown - delta);
         parryAnim = Math.max(0f, parryAnim - delta);
         flash = Math.max(0f, flash - delta);
-        lungeTimer = Math.max(0f, lungeTimer - delta);
 
         Vector2 dir = PlayerInput.readMove();
         moving = !dir.isZero();
@@ -113,11 +108,7 @@ public class Player extends Character implements Disposable {
         handleDash(dir);
 
         if (isDashing()) move(dashDir.x * DASH_SPEED * delta, dashDir.y * DASH_SPEED * delta, world.moveLayers);
-        else if (lungeTimer > 0f) {
-            move(lungeDir.x * ATTACK_LUNGE_SPEED * delta, lungeDir.y * ATTACK_LUNGE_SPEED * delta, world.moveLayers);
-            world.slashFx.speedLine(position, lungeDir);
-            hitEnemies(world);                   // le sabre touche tout le long de la fente
-        } else if (isLunging()) move(aim.x * LUNGE_SPEED * delta, aim.y * LUNGE_SPEED * delta, world.moveLayers);
+        else if (isLunging()) move(aim.x * LUNGE_SPEED * delta, aim.y * LUNGE_SPEED * delta, world.moveLayers);
         else if (moving) move(dir.x * SPEED * delta, dir.y * SPEED * delta, world.moveLayers);
 
         if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT) && parryCooldown <= 0f && !isDashing()) startParry(world);
@@ -180,16 +171,14 @@ public class Player extends Character implements Disposable {
         }
     }
 
-    /** Déclenche l’attaque : fente vers la souris, croissant, puis vérifie les ennemis touchés. */
+    /** Déclenche l’attaque : croissant, puis vérifie les ennemis touchés. */
     private void attack(World world) {
         attackTimer = ATTACK_DURATION;
-        lungeTimer = ATTACK_LUNGE_TIME;
-        lungeDir.set(aim);
         world.slashFx.slash(new Vector2(position).mulAdd(aim, 10f), aim.angleDeg());
         hitEnemies(world);
     }
 
-    /** Frappe les ennemis dans la hitbox du coup (qui suit le joueur pendant la fente). */
+    /** Frappe les ennemis dans la hitbox du coup. */
     private void hitEnemies(World world) {
         attackBounds.set(position.x + aim.x * ATTACK_REACH + ATTACK_OFFSET,
                 position.y + aim.y * ATTACK_REACH + ATTACK_OFFSET, ATTACK_W, ATTACK_H);
