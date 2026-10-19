@@ -8,18 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Effets de l'attaque du joueur : croissant blanc,
- * et à l'impact une double entaille en X sur l'ennemi avec étincelles.
+ * Effets de l'attaque du joueur : à l'impact, une double entaille en X sur l'ennemi avec étincelles.
  * Tout est en formes pleines, au-dessus des sprites.
  */
 public final class SlashEffects {
-    private static final float SLASH_TIME = 0.24f, SLASH_SPAN = 190f, SLASH_RADIUS = 38f;
     private static final float LINE_TIME = 0.16f, CUT_TIME = 0.26f, CUT_LENGTH = 22f;
     private static final float SPARK_TIME = 0.3f;
-    private static final int ARC_SEGMENTS = 18, SPARKS = 14;
+    private static final int SPARKS = 14;
 
-    private final Vector2 slashAt = new Vector2();
-    private float slashAngle, slashAge = SLASH_TIME;
     private final List<Line> lines = new ArrayList<>();
     private final List<Cut> cuts = new ArrayList<>();
     private final List<Spark> sparks = new ArrayList<>();
@@ -40,13 +36,6 @@ public final class SlashEffects {
 
     private static final class Spark {
         float x, y, vx, vy, age;
-    }
-
-    /** Lance le croissant du coup en at, centré sur la direction angleDeg. */
-    public void slash(Vector2 at, float angleDeg) {
-        slashAt.set(at);
-        slashAngle = angleDeg;
-        slashAge = 0f;
     }
 
     /** Ajoute un trait de vitesse derrière le joueur (position at, direction de la fente dir). */
@@ -74,7 +63,6 @@ public final class SlashEffects {
 
     /** Fait avancer les effets (delta réel : ils continuent pendant l'arrêt sur image). */
     public void update(float delta) {
-        slashAge += delta;
         for (int i = lines.size() - 1; i >= 0; i--) {
             Line l = lines.get(i);
             l.age += delta;
@@ -98,12 +86,10 @@ public final class SlashEffects {
         lines.clear();
         cuts.clear();
         sparks.clear();
-        slashAge = SLASH_TIME;
     }
 
     /** Croissant, traits, entailles et étincelles (ShapeRenderer en mode Filled). */
     public void draw(ShapeRenderer shapes) {
-        drawSlash(shapes);
         for (Line l : lines) {
             float t = l.age / LINE_TIME, len = l.length * (1f - t);
             shapes.setColor(1f, 1f, 1f, 0.8f * (1f - t));
@@ -121,25 +107,6 @@ public final class SlashEffects {
             float t = s.age / SPARK_TIME;
             shapes.setColor(1f, 0.85f - 0.5f * t, 0.7f - 0.6f * t, 1f - t);
             shapes.rectLine(s.x, s.y, s.x - s.vx * 0.03f, s.y - s.vy * 0.03f, 1.8f * (1f - t) + 0.4f);
-        }
-    }
-
-    /** Croissant blanc qui balaie l'arc puis s'efface. */
-    private void drawSlash(ShapeRenderer shapes) {
-        if (slashAge >= SLASH_TIME) return;
-        float t = slashAge / SLASH_TIME, head = Math.min(1f, t * 3f), alpha = 1f - t * t;
-        float start = slashAngle - SLASH_SPAN / 2f;
-        {
-            for (int i = 0; i < ARC_SEGMENTS * head; i++) {
-                float k0 = (float) i / ARC_SEGMENTS, k1 = (float) (i + 1) / ARC_SEGMENTS;
-                float a0 = (start + SLASH_SPAN * k0) * MathUtils.degreesToRadians;
-                float a1 = (start + SLASH_SPAN * k1) * MathUtils.degreesToRadians;
-                float tail = Math.max(0f, k1 - t * 0.9f);                // l'arrière du croissant s'amincit
-                float width = (1.5f + 9f * MathUtils.sin(k1 * MathUtils.PI)) * (1f - t) * 0.8f * (0.4f + 0.6f * (1f - tail));
-                shapes.setColor(1f, 1f, 1f, alpha);
-                shapes.rectLine(slashAt.x + MathUtils.cos(a0) * SLASH_RADIUS, slashAt.y + MathUtils.sin(a0) * SLASH_RADIUS,
-                        slashAt.x + MathUtils.cos(a1) * SLASH_RADIUS, slashAt.y + MathUtils.sin(a1) * SLASH_RADIUS, width);
-            }
         }
     }
 }
