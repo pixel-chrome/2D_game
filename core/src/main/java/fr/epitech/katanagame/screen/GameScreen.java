@@ -42,7 +42,7 @@ public class GameScreen extends ScreenAdapter {
 
     /** Arrêt sur image restant (s) après un parry réussi. */
     private float hitStop;
-    private static final float PARRY_HIT_STOP = 0.09f;
+    private static final float PARRY_HIT_STOP = 0.09f, ATTACK_HIT_STOP = 0.06f;
     /** Ralenti du monde juste après un parry réussi (durée en s, échelle de temps). */
     private static final float PARRY_SLOW_TIME = 0.35f, PARRY_SLOW_SCALE = 0.3f;
     private float parrySlow;
@@ -92,6 +92,7 @@ public class GameScreen extends ScreenAdapter {
         slowMo.reset();
         world.blood.clear();
         world.parryFx.clear();
+        world.slashFx.clear();
         hitStop = 0f;
         parrySlow = 0f;
     }
@@ -162,7 +163,12 @@ public class GameScreen extends ScreenAdapter {
             parrySlow = PARRY_SLOW_TIME;
             camera.shake(4f);
         }
+        if (player.pollAttackHit()) {
+            hitStop = Math.max(hitStop, ATTACK_HIT_STOP);
+            camera.shake(3f);
+        }
         world.parryFx.update(delta);
+        world.slashFx.update(delta);
         world.blood.update(live, world.bulletLayers);
         if (!player.isAlive() && Gdx.input.isKeyJustPressed(Input.Keys.R)) restart();
 

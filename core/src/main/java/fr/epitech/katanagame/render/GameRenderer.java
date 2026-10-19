@@ -79,6 +79,7 @@ public final class GameRenderer implements Disposable {
         for (Enemy enemy : world.enemies) {
             enemy.drawAlert(shapes);
         }
+        world.slashFx.draw(shapes);
         world.parryFx.draw(shapes);
         // Flash d'impact par-dessus tout.
         world.blood.drawFlash(shapes, viewport.getCamera());
