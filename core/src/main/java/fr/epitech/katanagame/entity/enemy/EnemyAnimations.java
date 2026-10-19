@@ -6,11 +6,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import fr.epitech.katanagame.entity.Direction;
+import fr.epitech.katanagame.entity.DirectionalAnimation;
 
 import fr.epitech.katanagame.render.ShadowRenderer;
-
-import java.util.EnumMap;
-import java.util.Map;
 
 final class EnemyAnimations {
 
@@ -34,17 +32,7 @@ final class EnemyAnimations {
 
     private static Animation<TextureRegion> deathAnim;
 
-    private static final Map<Direction, Animation<TextureRegion>> idleAnims =
-            new EnumMap<>(Direction.class);
-
-    private static final Map<Direction, Animation<TextureRegion>> shootAnims =
-            new EnumMap<>(Direction.class);
-
-    private static final Map<Direction, Animation<TextureRegion>> walkAnims =
-            new EnumMap<>(Direction.class);
-
-    private static final Map<Direction, Animation<TextureRegion>> runAnims =
-            new EnumMap<>(Direction.class);
+    private static DirectionalAnimation idle, shoot, walk, run;
 
     private EnemyAnimations() {
     }
@@ -77,101 +65,13 @@ final class EnemyAnimations {
                 FRAME_SIZE,
                 FRAME_SIZE
         );
-        idleAnims.put(Direction.DOWN, animation(
-                FRAME_TIME_IDLE, frames(idleGrid, 0, 4, false), Animation.PlayMode.LOOP));
-        idleAnims.put(Direction.RIGHT, animation(
-                FRAME_TIME_IDLE, frames(idleGrid, 1, 4, false), Animation.PlayMode.LOOP));
-        idleAnims.put(Direction.LEFT, animation(
-                FRAME_TIME_IDLE, frames(idleGrid, 1, 4, true), Animation.PlayMode.LOOP));
-        idleAnims.put(Direction.UP, animation(
-                FRAME_TIME_IDLE, frames(idleGrid, 2, 4, false), Animation.PlayMode.LOOP));
-
-        deathAnim = animation(
-                FRAME_TIME_DEATH,
-                frames(grid, 3, 5, false),
-                Animation.PlayMode.NORMAL
-        );
-
-        // Animations de tir
-        shootAnims.put(
-                Direction.DOWN,
-                animation(
-                        FRAME_TIME_SHOOT,
-                        frames(grid, 7, 3, false),
-                        Animation.PlayMode.NORMAL
-                )
-        );
-
-        shootAnims.put(
-                Direction.RIGHT,
-                animation(
-                        FRAME_TIME_SHOOT,
-                        frames(grid, 8, 3, false),
-                        Animation.PlayMode.NORMAL
-                )
-        );
-
-        shootAnims.put(
-                Direction.LEFT,
-                animation(
-                        FRAME_TIME_SHOOT,
-                        frames(grid, 8, 3, true),
-                        Animation.PlayMode.NORMAL
-                )
-        );
-
-        shootAnims.put(
-                Direction.UP,
-                animation(
-                        FRAME_TIME_SHOOT,
-                        frames(grid, 9, 3, false),
-                        Animation.PlayMode.NORMAL
-                )
-        );
-
-        // Animations de déplacement
-        walkAnims.put(
-                Direction.DOWN,
-                animation(
-                        FRAME_TIME_WALK,
-                        frames(grid, 22, 8, false),
-                        Animation.PlayMode.LOOP
-                )
-        );
-
-        walkAnims.put(
-                Direction.RIGHT,
-                animation(
-                        FRAME_TIME_WALK,
-                        frames(grid, 23, 8, false),
-                        Animation.PlayMode.LOOP
-                )
-        );
-
-        walkAnims.put(
-                Direction.LEFT,
-                animation(
-                        FRAME_TIME_WALK,
-                        frames(grid, 23, 8, true),
-                        Animation.PlayMode.LOOP
-                )
-        );
-
-        walkAnims.put(
-                Direction.UP,
-                animation(
-                        FRAME_TIME_WALK,
-                        frames(grid, 24, 8, false),
-                        Animation.PlayMode.LOOP
-                )
-        );
-
-        // Course : mêmes images que la marche, jouées deux fois plus vite
-        for (Map.Entry<Direction, Animation<TextureRegion>> e : walkAnims.entrySet()) {
-            runAnims.put(e.getKey(), animation(
-                    FRAME_TIME_RUN, e.getValue().getKeyFrames(), Animation.PlayMode.LOOP));
-        }
+        idle = DirectionalAnimation.sideRight(idleGrid, 0, 1, 2, 4, FRAME_TIME_IDLE, Animation.PlayMode.LOOP);
+        deathAnim = animation(FRAME_TIME_DEATH, frames(grid, 3, 5, false), Animation.PlayMode.NORMAL);
+        shoot = DirectionalAnimation.sideRight(grid, 7, 8, 9, 3, FRAME_TIME_SHOOT, Animation.PlayMode.NORMAL);
+        walk = DirectionalAnimation.sideRight(grid, 22, 23, 24, 8, FRAME_TIME_WALK, Animation.PlayMode.LOOP);
+        run = walk.withFrameTime(FRAME_TIME_RUN);   // course : mêmes images que la marche, plus vite
     }
+
     private static TextureRegion[] frames(
             TextureRegion[][] grid,
             int row,
@@ -207,7 +107,7 @@ final class EnemyAnimations {
     }
 
     static void draw(ShooterEnemy enemy, SpriteBatch batch) {
-        if (idleAnims.isEmpty()) {
+        if (idle == null) {
             return;
         }
 
@@ -226,8 +126,8 @@ final class EnemyAnimations {
 
         Direction direction = enemy.getFacing();
 
-        Animation<TextureRegion> shoot = shootAnims.get(direction);
-        Animation<TextureRegion> idleAnim = idleAnims.get(direction);
+        Animation<TextureRegion> shootAnim = shoot.get(direction);
+        Animation<TextureRegion> idleAnim = idle.get(direction);
 
         TextureRegion frame;
         float red = 1f;
@@ -235,16 +135,16 @@ final class EnemyAnimations {
         float blue = 1f;
 
         if (enemy.shootTimer() > 0f) {
-            frame = shoot != null
-                    ? shoot.getKeyFrame(
+            frame = shootAnim != null
+                    ? shootAnim.getKeyFrame(
                             0.24f - enemy.shootTimer(),
                             false
                     )
                     : idleAnim.getKeyFrame(enemy.stateTime());
 
         } else if (enemy.isWinding()) {
-            frame = shoot != null
-                    ? shoot.getKeyFrames()[0]
+            frame = shootAnim != null
+                    ? shootAnim.getKeyFrames()[0]
                     : idleAnim.getKeyFrame(enemy.stateTime());
 
             // Teinte rouge pendant la préparation du tir.
@@ -253,15 +153,15 @@ final class EnemyAnimations {
             blue = 0.7f;
 
         } else if (enemy.isWalking()) {
-            Animation<TextureRegion> walk = (enemy.isRunning() ? runAnims : walkAnims).get(direction);
+            Animation<TextureRegion> moveAnim = (enemy.isRunning() ? run : walk).get(direction);
 
-            frame = walk != null
-                    ? walk.getKeyFrame(enemy.stateTime(), true)
+            frame = moveAnim != null
+                    ? moveAnim.getKeyFrame(enemy.stateTime(), true)
                     : idleAnim.getKeyFrame(enemy.stateTime());
 
         } else if (enemy.isAlerted()) {
-            frame = shoot != null
-                    ? shoot.getKeyFrames()[0]
+            frame = shootAnim != null
+                    ? shootAnim.getKeyFrames()[0]
                     : idleAnim.getKeyFrame(enemy.stateTime());
 
         } else {
@@ -331,10 +231,7 @@ final class EnemyAnimations {
             idleTexture = null;
         }
 
-        shootAnims.clear();
-        walkAnims.clear();
-        runAnims.clear();
-        idleAnims.clear();
+        idle = shoot = walk = run = null;
 
         deathAnim = null;
     }

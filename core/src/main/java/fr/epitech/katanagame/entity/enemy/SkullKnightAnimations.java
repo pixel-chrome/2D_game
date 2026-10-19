@@ -5,9 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import fr.epitech.katanagame.entity.Direction;
-
-import java.util.EnumMap;
-import java.util.Map;
+import fr.epitech.katanagame.entity.DirectionalAnimation;
 
 /**
  * Sprites du Skull Knight (assets/enemy/SkullKnight/skull knight.png).
@@ -25,9 +23,7 @@ final class SkullKnightAnimations {
     private static final float RUN_FRAME_TIME = 0.07f, IDLE_FRAME_TIME = 0.16f;
 
     private static Texture sheet;
-    private static final Map<Direction, Animation<TextureRegion>> run = new EnumMap<>(Direction.class);
-    private static final Map<Direction, Animation<TextureRegion>> idle = new EnumMap<>(Direction.class);
-    private static final Map<Direction, Animation<TextureRegion>> slash = new EnumMap<>(Direction.class);
+    private static DirectionalAnimation run, idle, slash;
 
     private SkullKnightAnimations() {}
 
@@ -38,32 +34,10 @@ final class SkullKnightAnimations {
         sheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         TextureRegion[][] grid = TextureRegion.split(sheet, FRAME_W, FRAME_H);
 
-        fill(run, grid, 0, 1, 2, RUN_FRAMES, RUN_FRAME_TIME, Animation.PlayMode.LOOP);
-        fill(idle, grid, 3, 4, 5, IDLE_FRAMES, IDLE_FRAME_TIME, Animation.PlayMode.LOOP);
-        // Coups : bas = ligne 6, haut = ligne 7, gauche = ligne 8
-        fill(slash, grid, 6, 8, 7, SLASH_FRAMES, SLASH_FRAME_TIME, Animation.PlayMode.NORMAL);
-    }
-
-    /** Remplit une animation pour les 4 directions à partir des lignes bas / gauche / haut. */
-    private static void fill(Map<Direction, Animation<TextureRegion>> target, TextureRegion[][] grid,
-                             int downRow, int leftRow, int upRow, int count,
-                             float frameTime, Animation.PlayMode mode) {
-        target.put(Direction.DOWN, animation(grid[downRow], count, frameTime, mode, false));
-        target.put(Direction.LEFT, animation(grid[leftRow], count, frameTime, mode, false));
-        target.put(Direction.RIGHT, animation(grid[leftRow], count, frameTime, mode, true));
-        target.put(Direction.UP, animation(grid[upRow], count, frameTime, mode, false));
-    }
-
-    private static Animation<TextureRegion> animation(TextureRegion[] row, int count, float frameTime,
-                                                      Animation.PlayMode mode, boolean flip) {
-        TextureRegion[] frames = new TextureRegion[count];
-        for (int i = 0; i < count; i++) {
-            frames[i] = new TextureRegion(row[i]);
-            if (flip) frames[i].flip(true, false);
-        }
-        Animation<TextureRegion> anim = new Animation<>(frameTime, frames);
-        anim.setPlayMode(mode);
-        return anim;
+        run = DirectionalAnimation.sideLeft(grid, 0, 1, 2, RUN_FRAMES, RUN_FRAME_TIME, Animation.PlayMode.LOOP);
+        idle = DirectionalAnimation.sideLeft(grid, 3, 4, 5, IDLE_FRAMES, IDLE_FRAME_TIME, Animation.PlayMode.LOOP);
+        // Coups : bas = ligne 6, gauche = ligne 8, haut = ligne 7
+        slash = DirectionalAnimation.sideLeft(grid, 6, 8, 7, SLASH_FRAMES, SLASH_FRAME_TIME, Animation.PlayMode.NORMAL);
     }
 
     /** Image du coup : préparation, gros arc (tenu un peu plus longtemps), puis dissipation. */
@@ -97,8 +71,6 @@ final class SkullKnightAnimations {
             sheet.dispose();
             sheet = null;
         }
-        run.clear();
-        idle.clear();
-        slash.clear();
+        run = idle = slash = null;
     }
 }
