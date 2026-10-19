@@ -43,6 +43,9 @@ public class GameScreen extends ScreenAdapter {
     /** Arrêt sur image restant (s) après un parry réussi. */
     private float hitStop;
     private static final float PARRY_HIT_STOP = 0.09f;
+    /** Ralenti du monde juste après un parry réussi (durée en s, échelle de temps). */
+    private static final float PARRY_SLOW_TIME = 0.35f, PARRY_SLOW_SCALE = 0.3f;
+    private float parrySlow;
 
     /** Charge la carte et prépare les éléments de la partie. */
     public GameScreen(Main game) {
@@ -90,6 +93,7 @@ public class GameScreen extends ScreenAdapter {
         world.blood.clear();
         world.parryFx.clear();
         hitStop = 0f;
+        parrySlow = 0f;
     }
 
     /** Prépare l’écran de jeu lorsqu’il devient actif. */
@@ -147,10 +151,15 @@ public class GameScreen extends ScreenAdapter {
             hitStop -= delta;
             live = worldDt = 0f;
         }
+        if (parrySlow > 0f) {        // ralenti du monde après un parry : le joueur garde la main
+            parrySlow -= delta;
+            worldDt *= PARRY_SLOW_SCALE;
+        }
         player.update(live, world);
         if (player.pollDashStart()) camera.shake(2.5f);
         if (player.pollParrySuccess()) {
             hitStop = PARRY_HIT_STOP;
+            parrySlow = PARRY_SLOW_TIME;
             camera.shake(4f);
         }
         world.parryFx.update(delta);

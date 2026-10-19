@@ -27,6 +27,9 @@ public class Player extends Character implements Disposable {
     private static final float ATTACK_W = 30f, ATTACK_H = 24f;
     /** Parry (clic droit) : fenêtre active, recharge, rayon et décalage de la zone devant le joueur. */
     private static final float PARRY_DURATION = 0.22f, PARRY_COOLDOWN = 0.45f;
+    /** Animation complète du parry (ATTACK 2), fente vers l'avant au début, éclat blanc après un parry réussi. */
+    static final float PARRY_ANIM = 0.32f;
+    private static final float LUNGE_TIME = 0.09f, LUNGE_SPEED = 260f, FLASH_TIME = 0.14f;
     private static final float PARRY_RADIUS = 34f, PARRY_FORWARD = 14f, PARRY_MELEE_BONUS = 10f;
 
     private final PlayerAnimations animations = new PlayerAnimations();
@@ -34,7 +37,7 @@ public class Player extends Character implements Disposable {
     private final Rectangle attackBounds = new Rectangle();
     private Direction dashFacing = Direction.DOWN;
     private float dashTimer, dashCooldown, attackTimer, stateTime;
-    private float parryTimer, parryCooldown;
+    private float parryTimer, parryCooldown, parryAnim, parryFlash;
     private boolean moving, dashStarted, parrySucceeded;
     private final Vector2 parryCenter = new Vector2();
     private final Corpse corpse = new Corpse();
@@ -46,7 +49,7 @@ public class Player extends Character implements Disposable {
 
     @Override public void respawn(float x, float y) {
         super.respawn(x, y);
-        dashTimer = dashCooldown = attackTimer = parryTimer = parryCooldown = 0f;
+        dashTimer = dashCooldown = attackTimer = parryTimer = parryCooldown = parryAnim = parryFlash = 0f;
         corpse.reset();
     }
 
@@ -94,6 +97,8 @@ public class Player extends Character implements Disposable {
         attackTimer = Math.max(0f, attackTimer - delta);
         parryTimer = Math.max(0f, parryTimer - delta);
         parryCooldown = Math.max(0f, parryCooldown - delta);
+        parryAnim = Math.max(0f, parryAnim - delta);
+        parryFlash = Math.max(0f, parryFlash - delta);
 
         Vector2 dir = PlayerInput.readMove();
         moving = !dir.isZero();
@@ -102,6 +107,7 @@ public class Player extends Character implements Disposable {
         handleDash(dir);
 
         if (isDashing()) move(dashDir.x * DASH_SPEED * delta, dashDir.y * DASH_SPEED * delta, world.moveLayers);
+        else if (isLunging()) move(aim.x * LUNGE_SPEED * delta, aim.y * LUNGE_SPEED * delta, world.moveLayers);
         else if (moving) move(dir.x * SPEED * delta, dir.y * SPEED * delta, world.moveLayers);
 
         if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT) && parryCooldown <= 0f && !isDashing()) startParry(world);
@@ -112,9 +118,14 @@ public class Player extends Character implements Disposable {
     /** Lance le parry : croissant visuel et début de la fenêtre où balles et ennemis sont repoussés. */
     private void startParry(World world) {
         parryTimer = PARRY_DURATION;
+        parryAnim = PARRY_ANIM;
+        attackTimer = 0f;
         parryCooldown = PARRY_COOLDOWN;
         world.parryFx.swing(parryZone(), aim.angleDeg());
     }
+
+    /** Petite fente vers l'avant au tout début du parry. */
+    private boolean isLunging() { return parryTimer > PARRY_DURATION - LUNGE_TIME; }
 
     /** Centre de la zone de parry, devant le joueur dans la direction de visée. */
     private Vector2 parryZone() {
@@ -141,7 +152,11 @@ public class Player extends Character implements Disposable {
                 hit = true;
             }
         }
-        parrySucceeded |= hit;
+        if (hit) {
+            parrySucceeded = true;
+            parryCooldown = 0f;          // un parry réussi se rejoue tout de suite
+            parryFlash = FLASH_TIME;
+        }
     }
 
     /** Déclenche un dash dans la direction choisie si possible. */
@@ -177,6 +192,7 @@ public class Player extends Character implements Disposable {
 
     @Override public void draw(SpriteBatch batch) {
         animations.draw(this, batch, stateTime, attackTimer, moving, isDashing(), dashFacing,
+                parryAnim > 0f ? PARRY_ANIM - parryAnim : -1f, parryFlash > 0f,
                 isAlive() ? null : corpse);
     }
 

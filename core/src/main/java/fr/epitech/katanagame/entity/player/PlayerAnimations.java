@@ -1,5 +1,6 @@
 package fr.epitech.katanagame.entity.player;
 
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -20,6 +21,8 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
     private static final int FRAME_H = 80;
 
     private static final float FRAME_TIME = 0.1f;
+    /** 8 images en Player.PARRY_ANIM secondes. */
+    private static final float PARRY_FRAME_TIME = 0.04f;
 
     /** Durée de la chute du corps à la mort. */
     private static final float FALL_TIME = 0.18f;
@@ -31,6 +34,10 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
             new EnumMap<>(Direction.class);
 
     private final Map<Direction, Animation<TextureRegion>> attack =
+            new EnumMap<>(Direction.class);
+
+    /** Animation du parry : le grand balayage de la feuille ATTACK 2. */
+    private final Map<Direction, Animation<TextureRegion>> parry =
             new EnumMap<>(Direction.class);
 
     private final List<Texture> textures = new ArrayList<>();
@@ -65,12 +72,28 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
                             Animation.PlayMode.NORMAL
                     )
             );
+            parry.put(
+                    direction,
+                    load(
+                            "Sprites/ATTACK 2/attack2_" + name + ".png",
+                            Animation.PlayMode.NORMAL,
+                            PARRY_FRAME_TIME
+                    )
+            );
         }
     }
 
     private Animation<TextureRegion> load(
             String path,
             Animation.PlayMode mode
+    ) {
+        return load(path, mode, FRAME_TIME);
+    }
+
+    private Animation<TextureRegion> load(
+            String path,
+            Animation.PlayMode mode,
+            float frameTime
     ) {
         Texture texture = new Texture(path);
         texture.setFilter(
@@ -84,7 +107,7 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
                 TextureRegion.split(texture, FRAME_W, FRAME_H);
 
         Animation<TextureRegion> animation =
-                new Animation<>(FRAME_TIME, grid[0]);
+                new Animation<>(frameTime, grid[0]);
 
         animation.setPlayMode(mode);
 
@@ -99,6 +122,8 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
             boolean moving,
             boolean dashing,
             Direction dashFacing,
+            float parryTime,
+            boolean parryFlash,
             Corpse corpse
     ) {
         if (corpse != null) {
@@ -109,7 +134,11 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
         Animation<TextureRegion> animation;
         float time = stateTime;
 
-        if (attackTimer > 0f) {
+        if (parryTime >= 0f) {
+            animation = parry.get(player.getFacing());
+            time = parryTime;
+
+        } else if (attackTimer > 0f) {
             animation = attack.get(player.getFacing());
             time = Player.ATTACK_DURATION - attackTimer;
 
@@ -155,7 +184,20 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
             if (horizontal) { sx = 1.18f; sy = 0.92f; } else { sx = 0.92f; sy = 1.14f; }
             batch.setColor(0.85f, 0.92f, 1f, 1f);
         }
+        // Parry : le corps s'étire d'abord dans le sens du coup puis revient à sa taille.
+        if (parryTime >= 0f) {
+            float k = Math.max(0f, 1f - parryTime / 0.16f);
+            boolean horizontal = player.getFacing() == Direction.LEFT || player.getFacing() == Direction.RIGHT;
+            sx = horizontal ? 1f + 0.2f * k : 1f - 0.08f * k;
+            sy = horizontal ? 1f - 0.08f * k : 1f + 0.2f * k;
+        }
         batch.draw(frame, x, y, FRAME_W / 2f, 0f, FRAME_W, FRAME_H, sx, sy, 0f);
+        if (parryFlash) {                       // éclat blanc par-dessus le sprite (mélange additif)
+            batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+            batch.setColor(1f, 1f, 1f, 0.75f);
+            batch.draw(frame, x, y, FRAME_W / 2f, 0f, FRAME_W, FRAME_H, sx, sy, 0f);
+            batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        }
 
         // Réinitialisation de la couleur pour les prochains sprites.
         batch.setColor(1f, 1f, 1f, 1f);
