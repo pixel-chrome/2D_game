@@ -72,9 +72,14 @@ public class Enemy extends Character {
         deathTime = 0f;
     }
 
-    /** Repoussé par un parry : l'attaque est interrompue et l'ennemi reste sonné un instant. */
-    public void parried(Vector2 dir) {
+    /**
+     * Repoussé par un parry venu de from : l'attaque est interrompue et l'ennemi reste sonné un instant.
+     * Même touché dans le dos, il se retourne et sait où est le joueur.
+     */
+    public void parried(Vector2 dir, Vector2 from) {
         if (!isAlive()) return;
+        ai.alertAt(from);
+        aim.set(from).sub(position).nor();
         stunTimer = STUN_TIME;
         knockback.set(dir).nor().scl(KNOCKBACK_SPEED);
         weapon.stagger(STUN_TIME + 0.5f);

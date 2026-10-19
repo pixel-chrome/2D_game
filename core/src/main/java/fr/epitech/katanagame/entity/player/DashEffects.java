@@ -15,10 +15,10 @@ import java.util.List;
 
 /**
  * Effets visuels du dash : images rémanentes, trait de lame et poussière au sol.
- * Durées calées sur l'invincibilité (0,15 s) : l'effet s'éteint avec elle.
+ * Durées calées sur l'invincibilité (0,12 s) : l'effet s'éteint avec elle.
  */
 final class DashEffects implements Disposable {
-    private static final float GHOST_LIFE = 0.15f, GHOST_STEP = 7f;
+    private static final float GHOST_LIFE = 0.12f, GHOST_STEP = 7f;
     private static final float STREAK_LIFE = 0.1f;
     private static final float DUST_LIFE = 0.32f;
     private static final int DUST_COUNT = 7;

@@ -18,9 +18,9 @@ public class Player extends Character implements Disposable {
     private static final float HITBOX_W = 20f, HITBOX_H = 28f;
     private static final float FEET_W = 12f, FEET_H = 8f, FEET_OFFSET_Y = 16f;
     /** Vitesse normale du joueur. */
-    private static final float SPEED = 200f, DASH_SPEED = 700f;
+    private static final float SPEED = 200f, DASH_SPEED = 460f;
     /** Durée du dash en secondes. */
-    private static final float DASH_DURATION = 0.15f, DASH_COOLDOWN = 0.6f;
+    private static final float DASH_DURATION = 0.12f, DASH_COOLDOWN = 0.75f;
     static final float ATTACK_DURATION = 0.56f;
     private static final float KILL_NOISE_RADIUS = 110f;   // un kill attire les gardes proches
     private static final float ATTACK_REACH = 20f, ATTACK_OFFSET = -12f;
@@ -32,6 +32,7 @@ public class Player extends Character implements Disposable {
     private static final float LUNGE_TIME = 0.09f, LUNGE_SPEED = 260f, FLASH_TIME = 0.14f;
     /** Fente du coup, et recharge entre deux attaques (pour ne pas les enchaîner en boucle). */
     private static final float ATTACK_LUNGE_TIME = 0.14f, ATTACK_LUNGE_SPEED = 340f, ATTACK_COOLDOWN = 0.5f;
+    private static final float PARRY_NOISE_RADIUS = 120f;
     private static final float PARRY_RADIUS = 34f, PARRY_FORWARD = 14f, PARRY_MELEE_BONUS = 10f;
 
     private final PlayerAnimations animations = new PlayerAnimations();
@@ -158,7 +159,8 @@ public class Player extends Character implements Disposable {
             if (!enemy.isAlive() || enemy.isStunned()) continue;
             Vector2 at = enemy.getBounds().getCenter(new Vector2());
             if (at.dst(zone) <= PARRY_RADIUS + PARRY_MELEE_BONUS) {
-                enemy.parried(at.cpy().sub(position));
+                enemy.parried(at.cpy().sub(position), position);
+                world.makeNoise(position, PARRY_NOISE_RADIUS, enemy);   // le bruit du choc attire les autres
                 world.parryFx.impact(at, aim);
                 hit = true;
             }
@@ -202,7 +204,10 @@ public class Player extends Character implements Disposable {
                 world.slashFx.hit(at, dir);
                 attackHit = true;
                 flash = FLASH_TIME;
-                if (!enemy.isAlive()) world.blood.splatter(at, dir, world.bulletLayers);
+                if (!enemy.isAlive()) {
+                    world.blood.splatter(at, dir, world.bulletLayers);
+                    world.makeNoise(at, KILL_NOISE_RADIUS, enemy);           // les gardes proches viennent voir
+                }
             }
         }
     }
