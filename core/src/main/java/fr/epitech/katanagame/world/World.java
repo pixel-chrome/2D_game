@@ -43,4 +43,10 @@ public class World {
         this.bulletLayers = bulletLayers;
         this.sightLayers = sightLayers;
     }
+    public boolean allEnemiesDead() {
+        for (Enemy e : enemies) {
+            if (e.isAlive()) return false;
+        }
+        return true;
+    }
 }

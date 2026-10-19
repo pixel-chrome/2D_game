@@ -11,9 +11,9 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
  */
 public final class ShadowRenderer {
 
-    private static final float ALPHA = 0.35f;
-    private static final float FLATTEN_Y = 0.40f;  // longueur de l'ombre (1 = aussi longue que le sprite)
-    private static final float SHEAR_X = 0.70f;    // inclinaison vers la droite (0 = droit vers le bas)
+    private static final float ALPHA = 0.25f;
+    private static final float FLATTEN_Y = 0.30f;  // longueur de l'ombre (1 = aussi longue que le sprite)
+    private static final float SHEAR_X = 0.80f;    // inclinaison vers la droite (0 = droit vers le bas)
 
     private static final float[] VERTICES = new float[20];   // 4 sommets x (x, y, couleur, u, v)
 
@@ -21,7 +21,7 @@ public final class ShadowRenderer {
 
     private ShadowRenderer() {}
 
-    /** À appeler une fois (ex : dans le constructeur de GameScreen). */
+    /** À appeler une fois, avant tout dessin d'ombre (ex : au début du constructeur de GameScreen). */
     public static void initialize() {
         if (shader != null) return;
 
@@ -59,19 +59,41 @@ public final class ShadowRenderer {
         }
     }
 
+    /** Le shader d'ombre, pour dessiner beaucoup de quads d'un coup avec drawQuad(). */
+    public static ShaderProgram getShader() {
+        requireInitialized();
+        return shader;
+    }
+
     /**
-     * À appeler AVANT de dessiner le sprite.
+     * Ombre d'un sprite (opacité par défaut). À appeler AVANT de dessiner le sprite.
      *
      * @param x,y,width,height rectangle où le sprite est dessiné (coin bas-gauche)
      * @param footY            Y monde de la ligne des pieds (ex : position.y - FEET_OFFSET_Y)
      */
     public static void draw(SpriteBatch batch, TextureRegion frame,
                             float x, float y, float width, float height, float footY) {
-        if (shader == null) {
-            throw new IllegalStateException("ShadowRenderer.initialize() doit être appelé avant draw().");
-        }
+        draw(batch, frame, x, y, width, height, footY, ALPHA);
+    }
 
-        float color = Color.toFloatBits(1f, 1f, 1f, ALPHA);
+    /** Pareil, avec une opacité choisie. */
+    public static void draw(SpriteBatch batch, TextureRegion frame,
+                            float x, float y, float width, float height, float footY, float alpha) {
+        requireInitialized();
+        ShaderProgram previous = batch.getShader();
+        batch.setShader(shader);                      // vide le batch avec l'ancien shader
+        drawQuad(batch, frame, x, y, width, height, footY, alpha);
+        batch.setShader(previous);                    // vide l'ombre avec le shader d'ombre
+    }
+
+    /**
+     * Dessine l'ombre SANS changer de shader : l'appelant a déjà fait
+     * batch.setShader(ShadowRenderer.getShader()). Évite un flush par tuile.
+     */
+    public static void drawQuad(SpriteBatch batch, TextureRegion frame,
+                                float x, float y, float width, float height,
+                                float footY, float alpha) {
+        float color = Color.toFloatBits(1f, 1f, 1f, alpha);
         float left = x, right = x + width, bottom = y, top = y + height;
 
         // Ordre des sommets : bas-gauche, haut-gauche, haut-droite, bas-droite
@@ -80,10 +102,7 @@ public final class ShadowRenderer {
         put(10, right, top,    color, frame.getU2(), frame.getV(),  footY);
         put(15, right, bottom, color, frame.getU2(), frame.getV2(), footY);
 
-        com.badlogic.gdx.graphics.glutils.ShaderProgram previous = batch.getShader();
-        batch.setShader(shader);                            // vide le batch avec l'ancien shader
         batch.draw(frame.getTexture(), VERTICES, 0, 20);
-        batch.setShader(previous);                          // vide l'ombre avec le shader d'ombre
     }
 
     /** Transforme un coin du sprite : miroir vertical autour des pieds + aplatissement + inclinaison. */
@@ -94,6 +113,12 @@ public final class ShadowRenderer {
         VERTICES[i + 2] = color;
         VERTICES[i + 3] = u;
         VERTICES[i + 4] = v;
+    }
+
+    private static void requireInitialized() {
+        if (shader == null) {
+            throw new IllegalStateException("ShadowRenderer.initialize() doit être appelé avant draw().");
+        }
     }
 
     public static void dispose() {

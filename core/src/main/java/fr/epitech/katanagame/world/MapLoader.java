@@ -9,32 +9,65 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Disposable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-/** Charge la carte Tiled et expose ses calques, dimensions et points d'apparition. */
+/**
+ * Charge une carte Tiled (un étage) et expose ses calques, dimensions,
+ * points d'apparition et portes.
+ *
+ * Calques attendus dans chaque .tmx :
+ *  - tuiles : "Mur", "Objets", "Chaises"
+ *  - objets "Spawns" : "player_spawn" (entrée par défaut), "entry_xxx" (arrivées par une porte),
+ *                      tout le reste = un garde
+ *  - objets "Doors" (optionnel) : rectangles avec les propriétés
+ *                      target_map (texte), target_entry (texte)
+ *                      et requires_clear (booléen, vrai par défaut)
+ */
 public final class MapLoader implements Disposable {
-    /** Chemin de la carte Tiled à charger. */
-    private static final String MAP_PATH = "maps/etage_1.tmx";
+    /** Nom de l'entrée par défaut du joueur dans le calque Spawns. */
+    public static final String DEFAULT_ENTRY = "player_spawn";
 
+    /** Carte chargée par le constructeur sans argument. */
+    private static final String DEFAULT_MAP_PATH = "maps/etage_1.tmx";
+    /** Les objets de Spawns dont le nom commence ainsi sont des arrivées par une porte, pas des gardes. */
+    private static final String ENTRY_PREFIX = "entry_";
+
+    private final String path;
     private final TiledMap map;
     private final OrthogonalTiledMapRenderer renderer;
     private final float width;
     private final float height;
-    private final Vector2 playerSpawn = new Vector2(100f, 100f);
-    private final List<Vector2> enemySpawns = new ArrayList<>();
 
-    /** Charge la carte, calcule ses dimensions et récupère les points d’apparition. */
+    private final TiledMapTileLayer[] moveLayers;
+    private final TiledMapTileLayer[] bulletLayers;
+    private final TiledMapTileLayer[] sightLayers;
+
+    private final Map<String, Vector2> entries = new HashMap<>();
+    private final List<Vector2> enemySpawns = new ArrayList<>();
+    private final List<Door> doors = new ArrayList<>();
+
+    /** Charge la carte par défaut (étage 1). */
     public MapLoader() {
+        this(DEFAULT_MAP_PATH);
+    }
+
+    /** Charge la carte donnée, calcule ses dimensions et récupère ses points d’apparition et ses portes. */
+    public MapLoader(String path) {
+        this.path = path;
+
         TmxMapLoader.Parameters params = new TmxMapLoader.Parameters();
         params.textureMinFilter = Texture.TextureFilter.Nearest;
         params.textureMagFilter = Texture.TextureFilter.Nearest;
 
-        map = new TmxMapLoader().load(MAP_PATH, params);
+        map = new TmxMapLoader().load(path, params);
         renderer = new OrthogonalTiledMapRenderer(map); // 1 unité = 1 pixel
 
         MapProperties properties = map.getProperties();
@@ -42,39 +75,85 @@ public final class MapLoader implements Disposable {
                 * properties.get("tilewidth", Integer.class);
         height = properties.get("height", Integer.class)
                 * properties.get("tileheight", Integer.class);
+
+        // Les calques sont vérifiés dès le chargement : une map mal préparée plante tout de suite, avec son nom.
+        TiledMapTileLayer walls = requireLayer("Mur");
+        TiledMapTileLayer objects = requireLayer("Objets");
+        TiledMapTileLayer chairs = requireLayer("Chaises");
+        moveLayers = new TiledMapTileLayer[] { walls, objects, chairs };
+        bulletLayers = new TiledMapTileLayer[] { walls, objects };
+        sightLayers = new TiledMapTileLayer[] { walls };
+
         loadSpawns();
+        loadDoors();
+        Gdx.app.log("MAP", path + " : " + width + "x" + height + " px, "
+                + enemySpawns.size() + " garde(s), " + doors.size() + " porte(s), entrées "
+                + entries.keySet());
     }
 
-    /** Lit les positions de départ définies dans le calque Spawns. */
+    /** Lit les entrées du joueur et les positions des gardes définies dans le calque Spawns. */
     private void loadSpawns() {
         MapLayer spawnsLayer = map.getLayers().get("Spawns");
         if (spawnsLayer == null) {
-            Gdx.app.log("MAP", "Pas de calque 'Spawns' dans la map : valeurs par défaut utilisées");
-            return;
-        }
+            Gdx.app.log("MAP", "Pas de calque 'Spawns' dans " + path + " : valeurs par défaut utilisées");
+        } else {
+            for (MapObject object : spawnsLayer.getObjects()) {
+                Vector2 center = centerOf(object.getProperties());
+                String name = object.getName();
 
-        for (MapObject object : spawnsLayer.getObjects()) {
-            MapProperties properties = object.getProperties();
-            // Tiled donne le coin bas-gauche : on récupère le centre de l'objet.
-            float x = properties.get("x", 0f, Float.class)
-                    + properties.get("width", 0f, Float.class) / 2f;
-            float y = properties.get("y", 0f, Float.class)
-                    + properties.get("height", 0f, Float.class) / 2f;
-
-            if ("player_spawn".equals(object.getName())) {
-                playerSpawn.set(x, y);
-            } else {
-                enemySpawns.add(new Vector2(x, y));
+                if (DEFAULT_ENTRY.equals(name) || (name != null && name.startsWith(ENTRY_PREFIX))) {
+                    entries.put(name, center);
+                } else {
+                    enemySpawns.add(center);
+                }
             }
         }
-        Gdx.app.log("MAP", "map " + width + "x" + height + " px, "
-                + enemySpawns.size() + " garde(s)");
+        if (!entries.containsKey(DEFAULT_ENTRY)) {
+            entries.put(DEFAULT_ENTRY, new Vector2(100f, 100f)); // valeur de secours
+        }
+    }
+
+    /** Lit les portes définies dans le calque Doors (facultatif). */
+    private void loadDoors() {
+        MapLayer doorsLayer = map.getLayers().get("Doors");
+        if (doorsLayer == null) return;
+
+        for (MapObject object : doorsLayer.getObjects()) {
+            MapProperties properties = object.getProperties();
+            String targetMap = properties.get("target_map", String.class);
+            if (targetMap == null || targetMap.isEmpty()) {
+                Gdx.app.error("MAP", "Porte sans 'target_map' ignorée dans " + path);
+                continue;
+            }
+            String targetEntry = properties.get("target_entry", String.class);
+            if (targetEntry == null || targetEntry.isEmpty()) {
+                Gdx.app.error("MAP", "Porte vers " + targetMap + " sans 'target_entry' : l'entrée par défaut ("
+                        + DEFAULT_ENTRY + ") sera utilisée");
+                targetEntry = DEFAULT_ENTRY;
+            }
+            boolean requiresClear = properties.get("requires_clear", true, Boolean.class);
+            Rectangle area = new Rectangle(
+                    properties.get("x", 0f, Float.class),
+                    properties.get("y", 0f, Float.class),
+                    properties.get("width", 0f, Float.class),
+                    properties.get("height", 0f, Float.class));
+            doors.add(new Door(area, targetMap, targetEntry, requiresClear));
+        }
+    }
+
+    /** Centre d'un objet Tiled (Tiled donne le coin bas-gauche ; pour un point, la taille vaut 0). */
+    private static Vector2 centerOf(MapProperties properties) {
+        float x = properties.get("x", 0f, Float.class)
+                + properties.get("width", 0f, Float.class) / 2f;
+        float y = properties.get("y", 0f, Float.class)
+                + properties.get("height", 0f, Float.class) / 2f;
+        return new Vector2(x, y);
     }
 
     /** Récupère un calque requis ou signale une erreur s’il manque. */
     private TiledMapTileLayer requireLayer(String name) {
         if (map.getLayers().get(name) == null) {
-            throw new IllegalStateException("Calque introuvable dans la map : " + name);
+            throw new IllegalStateException("Calque introuvable dans " + path + " : " + name);
         }
         return (TiledMapTileLayer) map.getLayers().get(name);
     }
@@ -87,30 +166,37 @@ public final class MapLoader implements Disposable {
     public float getWidth() { return width; }
     /** Retourne la hauteur de la carte en unités du monde. */
     public float getHeight() { return height; }
-    /** Retourne une copie de la position de départ du joueur. */
-    public Vector2 getPlayerSpawn() { return new Vector2(playerSpawn); }
+    /** Retourne une copie de la position de départ par défaut du joueur. */
+    public Vector2 getPlayerSpawn() { return getEntry(DEFAULT_ENTRY); }
+
+    /** Retourne une copie de la position d'une entrée (l'entrée par défaut si elle n'existe pas). */
+    public Vector2 getEntry(String name) {
+        Vector2 entry = entries.get(name);
+        if (entry == null) {
+            Gdx.app.error("MAP", "Entrée '" + name + "' introuvable dans " + path
+                    + " : entrée par défaut utilisée");
+            entry = entries.get(DEFAULT_ENTRY);
+        }
+        Gdx.app.log("MAP", "entrée demandée '" + name + "' -> position " + entry);
+        return new Vector2(entry);
+    }
 
     /** Positions de départ des ennemis, exposées en lecture seule. */
     public List<Vector2> getEnemySpawns() {
         return Collections.unmodifiableList(enemySpawns);
     }
 
+    /** Portes de la carte, exposées en lecture seule. */
+    public List<Door> getDoors() {
+        return Collections.unmodifiableList(doors);
+    }
+
     /** Retourne les calques qui bloquent le déplacement. */
-    public TiledMapTileLayer[] getMoveLayers() {
-        return new TiledMapTileLayer[] {
-                requireLayer("Mur"), requireLayer("Objets"), requireLayer("Chaises")
-        };
-    }
-
+    public TiledMapTileLayer[] getMoveLayers() { return moveLayers; }
     /** Retourne les calques qui bloquent les projectiles. */
-    public TiledMapTileLayer[] getBulletLayers() {
-        return new TiledMapTileLayer[] { requireLayer("Mur"), requireLayer("Objets") };
-    }
-
+    public TiledMapTileLayer[] getBulletLayers() { return bulletLayers; }
     /** Retourne les calques qui bloquent la ligne de vue. */
-    public TiledMapTileLayer[] getSightLayers() {
-        return new TiledMapTileLayer[] { requireLayer("Mur") };
-    }
+    public TiledMapTileLayer[] getSightLayers() { return sightLayers; }
 
     /** Libère le renderer et la carte chargée. */
     @Override
