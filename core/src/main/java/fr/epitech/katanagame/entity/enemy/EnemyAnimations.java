@@ -206,7 +206,7 @@ final class EnemyAnimations {
         return animation;
     }
 
-    static void draw(Enemy enemy, SpriteBatch batch) {
+    static void draw(ShooterEnemy enemy, SpriteBatch batch) {
         if (idleAnims.isEmpty()) {
             return;
         }
@@ -272,7 +272,7 @@ final class EnemyAnimations {
     }
 
     private static void drawFrame(
-            Enemy enemy,
+            ShooterEnemy enemy,
             SpriteBatch batch,
             TextureRegion frame,
             float red,

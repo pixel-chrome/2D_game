@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import fr.epitech.katanagame.Main;
 import fr.epitech.katanagame.camera.GameCamera;
 import fr.epitech.katanagame.entity.enemy.Enemy;
+import fr.epitech.katanagame.entity.enemy.ShooterEnemy;
 import fr.epitech.katanagame.entity.enemy.SkullKnight;
 import fr.epitech.katanagame.entity.player.Player;
 import fr.epitech.katanagame.entity.projectile.Bullet;
@@ -79,7 +80,7 @@ public class GameScreen extends ScreenAdapter {
         world.enemies.clear();
         world.bullets.clear();
         for (Vector2 spawn : mapLoader.getEnemySpawns()) {
-            world.enemies.add(new Enemy(spawn.x, spawn.y));
+            world.enemies.add(new ShooterEnemy(spawn.x, spawn.y));
         }
         for (Vector2 spawn : mapLoader.getKnightSpawns()) {
             world.enemies.add(new SkullKnight(spawn.x, spawn.y));
