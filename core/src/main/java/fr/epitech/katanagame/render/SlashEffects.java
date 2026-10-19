@@ -11,7 +11,7 @@ import java.util.List;
  * Effets de l'attaque du joueur : à l'impact, une double entaille en X sur l'ennemi avec étincelles.
  * Tout est en formes pleines, au-dessus des sprites.
  */
-public final class SlashEffects {
+public final class SlashEffects implements ShapeEffect {
     private static final float LINE_TIME = 0.16f, CUT_TIME = 0.26f, CUT_LENGTH = 22f;
     private static final float SPARK_TIME = 0.3f;
     private static final int SPARKS = 14;
@@ -62,7 +62,7 @@ public final class SlashEffects {
     }
 
     /** Fait avancer les effets (delta réel : ils continuent pendant l'arrêt sur image). */
-    public void update(float delta) {
+    @Override public void update(float delta) {
         for (int i = lines.size() - 1; i >= 0; i--) {
             Line l = lines.get(i);
             l.age += delta;
@@ -82,14 +82,14 @@ public final class SlashEffects {
         }
     }
 
-    public void clear() {
+    @Override public void clear() {
         lines.clear();
         cuts.clear();
         sparks.clear();
     }
 
     /** Croissant, traits, entailles et étincelles (ShapeRenderer en mode Filled). */
-    public void draw(ShapeRenderer shapes) {
+    @Override public void draw(ShapeRenderer shapes) {
         for (Line l : lines) {
             float t = l.age / LINE_TIME, len = l.length * (1f - t);
             shapes.setColor(1f, 1f, 1f, 0.8f * (1f - t));

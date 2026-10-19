@@ -5,6 +5,7 @@ import fr.epitech.katanagame.entity.player.Player;
 import fr.epitech.katanagame.entity.projectile.Bullet;
 import fr.epitech.katanagame.render.BloodEffects;
 import fr.epitech.katanagame.render.ParryEffects;
+import fr.epitech.katanagame.render.ShapeEffect;
 import fr.epitech.katanagame.render.SlashEffects;
 
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
@@ -38,6 +39,8 @@ public class World {
     public final ParryEffects parryFx = new ParryEffects();
     /** Croissant, traits de vitesse et entailles de l'attaque. */
     public final SlashEffects slashFx = new SlashEffects();
+    /** Effets dessinés au-dessus des sprites, dans l'ordre. */
+    public final List<ShapeEffect> effects = List.of(slashFx, parryFx);
 
     /** Fait du bruit : les ennemis vivants à portée viennent voir (sauf la source). */
     public void makeNoise(Vector2 at, float radius, Enemy source) {

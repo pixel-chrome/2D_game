@@ -10,11 +10,12 @@ import fr.epitech.katanagame.entity.enemy.Enemy;
 import fr.epitech.katanagame.entity.enemy.ShooterEnemy;
 import fr.epitech.katanagame.entity.enemy.SkullKnight;
 import fr.epitech.katanagame.entity.player.Player;
-import fr.epitech.katanagame.entity.projectile.Bullet;
 import fr.epitech.katanagame.render.GameRenderer;
 import fr.epitech.katanagame.render.ShadowRenderer;
+import fr.epitech.katanagame.render.ShapeEffect;
 import fr.epitech.katanagame.settings.GameSettings;
 import fr.epitech.katanagame.ui.Crosshair;
+import fr.epitech.katanagame.world.BulletSystem;
 import fr.epitech.katanagame.world.MapLoader;
 import fr.epitech.katanagame.world.World;
 import com.badlogic.gdx.math.Vector2;
@@ -45,12 +46,10 @@ public class GameScreen extends ScreenAdapter {
     /** Viseur affiché à la place du curseur. */
     private final Crosshair crosshair = new Crosshair();
 
-    /** Arrêt sur image restant (s) après un parry réussi. */
-    private float hitStop;
-    private static final float PARRY_HIT_STOP = 0.09f, ATTACK_HIT_STOP = 0.06f;
-    /** Ralenti du monde juste après un parry réussi (durée en s, échelle de temps). */
-    private static final float PARRY_SLOW_TIME = 0.35f, PARRY_SLOW_SCALE = 0.3f;
-    private float parrySlow;
+    /** Arrêt sur image et ralenti après un coup ou un parry qui touche. */
+    private final HitStop hitStop = new HitStop();
+    /** Projectiles : déplacement et impacts. */
+    private final BulletSystem bullets;
 
     /** Charge la carte et prépare les éléments de la partie. */
     public GameScreen(Main game) {
@@ -65,6 +64,7 @@ public class GameScreen extends ScreenAdapter {
                 mapLoader.getBulletLayers(),
                 mapLoader.getSightLayers());
         renderer = new GameRenderer(mapLoader.getRenderer());
+        bullets = new BulletSystem(world, death::start);
 
         Vector2 spawn = mapLoader.getPlayerSpawn();
         player.respawn(spawn.x, spawn.y);
@@ -96,10 +96,8 @@ public class GameScreen extends ScreenAdapter {
         death.reset();
         slowMo.reset();
         world.blood.clear();
-        world.parryFx.clear();
-        world.slashFx.clear();
-        hitStop = 0f;
-        parrySlow = 0f;
+        for (ShapeEffect effect : world.effects) effect.clear();
+        hitStop.reset();
     }
 
     /** Prépare l’écran de jeu lorsqu’il devient actif. */
@@ -160,27 +158,19 @@ public class GameScreen extends ScreenAdapter {
             live = delta * death.effectsScale();
             worldDt = delta * death.worldScale();
         }
-        if (hitStop > 0f) {          // arrêt sur image : tout est figé sauf les effets
-            hitStop -= delta;
-            live = worldDt = 0f;
-        }
-        if (parrySlow > 0f) {        // ralenti du monde après un parry : le joueur garde la main
-            parrySlow -= delta;
-            worldDt *= PARRY_SLOW_SCALE;
-        }
+        if (hitStop.isFrozen(delta)) live = worldDt = 0f;   // tout est figé sauf les effets
+        else worldDt *= hitStop.worldScale(delta);          // ralenti après un parry : le joueur garde la main
         player.update(live, world);
         if (player.pollDashStart()) camera.shake(2.5f);
         if (player.pollParrySuccess()) {
-            hitStop = PARRY_HIT_STOP;
-            parrySlow = PARRY_SLOW_TIME;
+            hitStop.onParry();
             camera.shake(4f);
         }
         if (player.pollAttackHit()) {
-            hitStop = Math.max(hitStop, ATTACK_HIT_STOP);
+            hitStop.onAttackHit();
             camera.shake(3f);
         }
-        world.parryFx.update(delta);
-        world.slashFx.update(delta);
+        for (ShapeEffect effect : world.effects) effect.update(delta);
         world.blood.update(live, world.bulletLayers);
         if (!player.isAlive() && Gdx.input.isKeyJustPressed(Input.Keys.R)) restart();
 
@@ -188,41 +178,9 @@ public class GameScreen extends ScreenAdapter {
             boolean wasAlive = player.isAlive();
             for (Enemy enemy : world.enemies) enemy.update(worldDt, world);
             if (wasAlive && !player.isAlive()) death.start();   // tué au corps à corps
-            updateBullets(worldDt);
+            bullets.update(worldDt);
         }
         camera.update(delta, player.getPosition(), mapLoader.getWidth(), mapLoader.getHeight());
-    }
-
-    /** Déplace les projectiles et gère leurs collisions. */
-    private void updateBullets(float delta) {
-        for (Bullet bullet : world.bullets) {
-            bullet.update(delta, world.bulletLayers);
-            if (bullet.isReflected()) {
-                hitEnemies(bullet);
-            } else if (bullet.isAlive() && player.isAlive() && !player.isInvincible()
-                    && bullet.getBounds().overlaps(player.getBounds())) {
-                Vector2 dir = bullet.getDirection();
-                player.hit(dir);
-                world.blood.burst(player.getBounds().getCenter(new Vector2()), dir, world.bulletLayers);
-                death.start();
-                bullet.kill();
-            }
-        }
-        world.bullets.removeIf(bullet -> !bullet.isAlive());
-    }
-
-    /** Une balle renvoyée tue le premier ennemi qu'elle touche. */
-    private void hitEnemies(Bullet bullet) {
-        if (!bullet.isAlive()) return;
-        for (Enemy enemy : world.enemies) {
-            if (enemy.isAlive() && bullet.getBounds().overlaps(enemy.getBounds())) {
-                enemy.takeDamage();
-                Vector2 at = enemy.getBounds().getCenter(new Vector2());
-                world.blood.splatter(at, bullet.getDirection(), world.bulletLayers);
-                bullet.kill();
-                return;
-            }
-        }
     }
 
     /** Libère les ressources utilisées par la partie. */

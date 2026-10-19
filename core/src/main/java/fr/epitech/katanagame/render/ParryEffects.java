@@ -13,7 +13,7 @@ import java.util.List;
  * puis à l'impact un anneau de choc, des étincelles et un flash blanc.
  * Tout est en formes pleines, au-dessus des sprites.
  */
-public final class ParryEffects {
+public final class ParryEffects implements ShapeEffect {
     private static final float SWING_TIME = 0.2f, SWING_SPAN = 150f, SWING_RADIUS = 30f;
     private static final float RING_TIME = 0.3f, RING_MAX = 46f;
     private static final float SPARK_TIME = 0.28f, FLASH_DECAY = 9f;
@@ -60,7 +60,7 @@ public final class ParryEffects {
     }
 
     /** Fait avancer les effets (delta réel : ils continuent pendant l'arrêt sur image). */
-    public void update(float delta) {
+    @Override public void update(float delta) {
         swingAge += delta;
         flash = Math.max(0f, flash - FLASH_DECAY * delta);
         for (int i = rings.size() - 1; i >= 0; i--) {
@@ -77,7 +77,7 @@ public final class ParryEffects {
         }
     }
 
-    public void clear() {
+    @Override public void clear() {
         rings.clear();
         sparks.clear();
         swingAge = SWING_TIME;
@@ -85,7 +85,7 @@ public final class ParryEffects {
     }
 
     /** Croissant, anneaux et étincelles (ShapeRenderer en mode Filled). */
-    public void draw(ShapeRenderer shapes) {
+    @Override public void draw(ShapeRenderer shapes) {
         drawSwing(shapes);
         for (Ring r : rings) {
             float t = r.age / RING_TIME, radius = RING_MAX * (1f - (1f - t) * (1f - t));
