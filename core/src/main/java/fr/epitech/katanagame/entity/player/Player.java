@@ -30,8 +30,8 @@ public class Player extends Character implements Disposable {
     /** Animation complète du parry (ATTACK 2), fente vers l'avant au début, éclat blanc après un parry réussi. */
     static final float PARRY_ANIM = 0.32f;
     private static final float LUNGE_TIME = 0.09f, LUNGE_SPEED = 260f, FLASH_TIME = 0.14f;
-    /** Petit élan du coup : court et avec recharge, pour ne pas pouvoir l'enchaîner en boucle. */
-    private static final float ATTACK_LUNGE_TIME = 0.09f, ATTACK_LUNGE_SPEED = 220f, ATTACK_LUNGE_COOLDOWN = 0.9f;
+    /** Fente du coup, et recharge entre deux attaques (pour ne pas les enchaîner en boucle). */
+    private static final float ATTACK_LUNGE_TIME = 0.14f, ATTACK_LUNGE_SPEED = 340f, ATTACK_COOLDOWN = 0.5f;
     private static final float PARRY_RADIUS = 34f, PARRY_FORWARD = 14f, PARRY_MELEE_BONUS = 10f;
 
     private final PlayerAnimations animations = new PlayerAnimations();
@@ -43,7 +43,7 @@ public class Player extends Character implements Disposable {
     private boolean moving, dashStarted, parrySucceeded;
     private final Vector2 parryCenter = new Vector2();
     private final Vector2 lungeDir = new Vector2();
-    private float lungeTimer, lungeCooldown;
+    private float lungeTimer, attackCooldown;
     private boolean attackHit;
     private final Corpse corpse = new Corpse();
 
@@ -54,7 +54,7 @@ public class Player extends Character implements Disposable {
 
     @Override public void respawn(float x, float y) {
         super.respawn(x, y);
-        dashTimer = dashCooldown = attackTimer = parryTimer = parryCooldown = parryAnim = flash = lungeTimer = lungeCooldown = 0f;
+        dashTimer = dashCooldown = attackTimer = parryTimer = parryCooldown = parryAnim = flash = lungeTimer = attackCooldown = 0f;
         corpse.reset();
     }
 
@@ -105,7 +105,7 @@ public class Player extends Character implements Disposable {
         parryAnim = Math.max(0f, parryAnim - delta);
         flash = Math.max(0f, flash - delta);
         lungeTimer = Math.max(0f, lungeTimer - delta);
-        lungeCooldown = Math.max(0f, lungeCooldown - delta);
+        attackCooldown = Math.max(0f, attackCooldown - delta);
 
         Vector2 dir = PlayerInput.readMove();
         moving = !dir.isZero();
@@ -116,13 +116,14 @@ public class Player extends Character implements Disposable {
         if (isDashing()) move(dashDir.x * DASH_SPEED * delta, dashDir.y * DASH_SPEED * delta, world.moveLayers);
         else if (lungeTimer > 0f) {
             move(lungeDir.x * ATTACK_LUNGE_SPEED * delta, lungeDir.y * ATTACK_LUNGE_SPEED * delta, world.moveLayers);
-            hitEnemies(world);                   // le sabre touche aussi pendant l'élan
+            world.slashFx.speedLine(position, lungeDir);
+            hitEnemies(world);                   // le sabre touche tout le long de la fente
         } else if (isLunging()) move(aim.x * LUNGE_SPEED * delta, aim.y * LUNGE_SPEED * delta, world.moveLayers);
         else if (moving) move(dir.x * SPEED * delta, dir.y * SPEED * delta, world.moveLayers);
 
         if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT) && parryCooldown <= 0f && !isDashing()) startParry(world);
         if (isParrying()) deflect(world);
-        else if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) attack(world);
+        else if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT) && attackCooldown <= 0f) attack(world);
     }
 
     /** Lance le parry : croissant visuel et début de la fenêtre où balles et ennemis sont repoussés. */
@@ -180,14 +181,12 @@ public class Player extends Character implements Disposable {
         }
     }
 
-    /** Déclenche l’attaque : petit élan (si rechargé), puis vérifie les ennemis touchés. */
+    /** Déclenche l’attaque : fente vers la souris, puis vérifie les ennemis touchés. */
     private void attack(World world) {
         attackTimer = ATTACK_DURATION;
-        if (lungeCooldown <= 0f) {
-            lungeTimer = ATTACK_LUNGE_TIME;
-            lungeCooldown = ATTACK_LUNGE_COOLDOWN;
-            lungeDir.set(aim);
-        }
+        attackCooldown = ATTACK_COOLDOWN;
+        lungeTimer = ATTACK_LUNGE_TIME;
+        lungeDir.set(aim);
         hitEnemies(world);
     }
 
