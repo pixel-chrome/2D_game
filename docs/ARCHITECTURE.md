@@ -93,7 +93,7 @@ Une case non vide d'un calque de collision est solide ; sortir de la carte est c
 ./gradlew lwjgl3:run          # lancer le jeu
 ./gradlew lwjgl3:jar          # jar exécutable → lwjgl3/build/libs
 ./gradlew core:javadoc        # Javadoc → core/build/docs/javadoc/index.html
-./gradlew test                # tests unitaires (voir TESTS.md)
+./gradlew core:test core:jacocoTestReport   # tests + couverture (voir TESTS.md)
 ./gradlew clean build
 ```
 
@@ -107,5 +107,5 @@ Raccourcis en jeu utiles au développement : `F1` (hitbox), `F2` (mode dieu) ; `
 | Audio | volumes réglables mais aucun son joué. |
 | Premier étage en dur | `GameScreen.FIRST_MAP = "maps/etage_1.tmx"` ; la suite est pilotée par les portes de chaque carte. |
 | `ScreenFade` | est dans le dossier `world/` mais déclare `package …render` : à harmoniser. |
-| Tests | aucun pour l'instant. |
+| Tests | 89 tests unitaires sur la logique pure (≈ 15 % de lignes au total, le rendu n'est pas testé) : voir TESTS.md. |
 | Assets | le dossier `assets/` contient beaucoup de packs non utilisés (taille du dépôt). |
