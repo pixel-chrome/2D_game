@@ -393,6 +393,22 @@ classDiagram
         +SlashEffects slashFx
         +List~ShapeEffect~ effects
         +makeNoise(at, radius, source) void
+        +allEnemiesDead() boolean
+    }
+
+    class Door {
+        -Rectangle area
+        -String targetMap
+        -String targetEntry
+        -boolean requiresClear
+        +isTouchedBy(rect) boolean
+        +requiresClear() boolean
+    }
+
+    class ScreenFade {
+        +start(duration, onBlack) void
+        +update(delta) void
+        +draw() void
     }
 
     class MapLoader {
@@ -406,6 +422,8 @@ classDiagram
         +getPlayerSpawn() Vector2
         +getEnemySpawns() List
         +getKnightSpawns() List
+        +getEntry(name) Vector2
+        +getDoors() List~Door~
         +dispose() void
     }
 
@@ -449,6 +467,9 @@ classDiagram
     }
 
     World o-- Player
+    MapLoader o-- Door : portes de l'étage
+    GameScreen --> ScreenFade : fondu entre étages
+    GameScreen ..> Door : updateDoors
     World o-- Enemy
     World o-- Bullet
     MapLoader ..> World : fournit les calques
@@ -498,7 +519,12 @@ classDiagram
         -GameRenderer renderer
         -BulletSystem bullets
         -boolean debug
+        -boolean godMode
+        -String currentEntry
         +restart() void
+        -loadLevel(path, entry) void
+        -enterLevel(entry) void
+        -updateDoors() void
         +render(delta) void
         +drawFrame() void
         +updateEffects(delta) void
@@ -605,6 +631,15 @@ classDiagram
         +render(world, player, viewport, debug, charge, intensity) void
         +dispose() void
     }
+    class MapShadows {
+        +draw(batch) void
+    }
+    class DoorIndicator {
+        +prepare(world) void
+        +drawFloor(shapes) void
+        +drawIcons(shapes) void
+        +drawText(batch, playerPos) void
+    }
     class SlowMoEffects {
         ~drawBar(...) void
         ~drawOverlay(intensity) void
@@ -622,6 +657,8 @@ classDiagram
     ShapeEffect <|.. SlashEffects
     ShapeEffect <|.. ParryEffects
     GameRenderer *-- SlowMoEffects
+    GameRenderer o-- MapShadows : ombres de la carte
+    GameRenderer *-- DoorIndicator
     GameRenderer ..> World : lit
     GameRenderer ..> DebugRenderer
     GameRenderer ..> ShapeEffect : pour chaque effet
@@ -632,7 +669,7 @@ classDiagram
 
 **Ordre de dessin** dans `GameRenderer.render` (du dessous au dessus) :
 
-1. carte Tiled → 2. sang au sol → 3. cônes de vision → 4. points de charge des tireurs →
+1. carte Tiled (+ ombres de la carte) → 2. sang au sol → 3. cônes de vision → 4. points de charge des tireurs →
 5. sprites (ennemis puis joueur) → 6. lasers → 7. indicateurs d'alerte + `ShapeEffect` + flashs →
 8. jauge et voile de ralenti → 9. hitbox de debug (si `F1`).
 

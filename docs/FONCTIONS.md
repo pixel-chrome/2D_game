@@ -43,25 +43,37 @@ Clic sur **JOUER** → `Gdx.app.postRunnable` (jamais détruire un `Stage` penda
 
 ```
 GameScreen.<init>
-├─ new MapLoader
-│  ├─ TmxMapLoader.load("maps/etage_1.tmx")
-│  └─ loadSpawns                                 (player_spawn / skull_knight / autres → tireurs)
-├─ new GameCamera
-├─ new Player
-├─ new World(viewport, player, moveLayers, bulletLayers, sightLayers)
-│  └─ MapLoader.getMoveLayers / getBulletLayers / getSightLayers → requireLayer
-├─ new GameRenderer(mapLoader.getRenderer)
-├─ new BulletSystem(world, death::start)
-├─ Player.respawn(spawn)  →  camera.centerOn
+├─ new GameCamera ; new Player                   (les mêmes pour tous les étages)
 ├─ Enemy.loadAssets
 │  ├─ EnemyAnimations.loadAssets
 │  ├─ SkullKnightAnimations.loadAssets
 │  └─ LaserAssets.loadAssets
 ├─ ShadowRenderer.initialize
-└─ spawnEnemies
-   ├─ new ShooterEnemy(x, y)  *                  (un par objet Tiled sans nom)
-   │  └─ Enemy.<init> → new EnemyAI ; LaserAssets.getRandomTexture ; new EnemyWeapon
-   └─ new SkullKnight(x, y)  *
+└─ loadLevel(FIRST_MAP, "player_spawn")           → voir ci-dessous
+
+GameScreen.loadLevel(path, entryName)            (premier étage, puis chaque passage de porte)
+├─ new MapLoader(path)
+│  ├─ TmxMapLoader.load
+│  └─ loadSpawns / loadDoors                      (entrées entry_xxx, gardes, portes)
+├─ new MapShadows(calques d'ombre, taille de la carte)     (ombres pré-calculées)
+├─ libère l'ancien GameRenderer, MapShadows, MapLoader
+├─ new World(...) ; new BulletSystem(world, death::start)
+├─ new GameRenderer(renderer de carte, portes, ombres)
+└─ enterLevel(entryName)
+   ├─ MapLoader.getEntry → Player.respawn
+   ├─ spawnEnemies
+   │  ├─ new ShooterEnemy(x, y)  *                 (un par objet Spawns sans nom)
+   │  │  └─ Enemy.<init> → new EnemyAI ; LaserAssets.getRandomTexture ; new EnemyWeapon
+   │  └─ new SkullKnight(x, y)  *
+   ├─ camera.centerOn ; DeathSequence/SlowMotion/HitStop.reset ; BloodEffects.clear
+   └─ doorsLocked = true                           (le joueur doit d'abord quitter la zone d'arrivée)
+
+GameScreen.updateDoors                            (chaque image, hors fondu)
+├─ une Door touche Player.getFeetBounds ? sinon doorsLocked = false
+├─ doorsLocked ? return
+├─ Door.requiresClear ∧ ¬World.allEnemiesDead ? return        (porte verrouillée)
+└─ ScreenFade.start(0,4 s, () -> loadLevel(door.targetMap, door.targetEntry))
+   └─ ScreenFade.update : noir complet → exécute loadLevel → rallume
 ```
 
 ---
@@ -71,6 +83,7 @@ GameScreen.<init>
 ```
 GameScreen.render(delta)
 ├─ ESC ? → game.setScreen(new PauseScreen(game, this)) ; return
+├─ ScreenFade actif ? → la partie est figée (mais dessinée) ; sinon :
 ├─ GameScreen.update(delta)
 │  ├─ SlowMotion.update(delta, wantsSlow)
 │  ├─ live = delta × SlowMotion.playerScale ; worldDt = delta × SlowMotion.worldScale
@@ -89,7 +102,9 @@ GameScreen.render(delta)
 │  │  └─ BulletSystem.update(worldDt)                                → §5
 │  └─ GameCamera.update(delta, playerPos, mapW, mapH)
 ├─ joueur mort et DeathSequence.isOver ? → setScreen(new GameOverScreen) ; return
-├─ F1 ? → debug = !debug
+├─ updateDoors                                                       → §1
+├─ ScreenFade.update                                                 (peut changer d'étage)
+├─ F1 ? → debug = !debug ; F2 ? → godMode (Player.setGodMode)
 └─ drawFrame → GameRenderer.render(...)                              → §7
 ```
 
@@ -337,12 +352,13 @@ GameOverScreen.render
 └─ level.drawFrame                             (image de la partie en dessous)
 
 GameScreen.restart                              (touche R, « Recommencer », Game Over)
-├─ MapLoader.getPlayerSpawn → Player.respawn
-│  └─ Ability.reset *  ; Corpse.reset
-├─ spawnEnemies                                 (vide les listes, recrée tous les gardes)
-├─ GameCamera.centerOn
-├─ DeathSequence.reset ; SlowMotion.reset ; HitStop.reset
-└─ BloodEffects.clear ; ShapeEffect.clear *
+└─ enterLevel(currentEntry)                     (recommence l'étage courant, à son entrée)
+   ├─ MapLoader.getEntry → Player.respawn
+   │  └─ Ability.reset *  ; Corpse.reset
+   ├─ spawnEnemies                              (vide les listes, recrée tous les gardes)
+   ├─ GameCamera.centerOn
+   ├─ DeathSequence.reset ; SlowMotion.reset ; HitStop.reset
+   └─ BloodEffects.clear ; ShapeEffect.clear *
 
 PauseScreen
 ├─ show  : Crosshair.restore (flèche normale)
@@ -385,8 +401,8 @@ GameSettings.pressed / justPressed(Action)      ← lu par PlayerInput.readMove 
 | | `EnemyAI`, `EnemyVision`, `EnemyWeapon`, `Stun` | briques de comportement |
 | | `EnemyAnimations`, `SkullKnightAnimations` | rendu |
 | `entity.projectile` | `Bullet`, `LaserAssets` | laser et ses textures |
-| `world` | `World`, `MapLoader`, `Collision`, `Pathfinder`, `BulletSystem` | état, carte, collisions, A\*, balles |
-| `render` | `GameRenderer`, `ShapeEffect`, `SlashEffects`, `ParryEffects`, `BloodEffects`, `SlowMoEffects`, `ShadowRenderer`, `DebugRenderer` | rendu |
+| `world` | `World`, `MapLoader`, `Door`, `ScreenFade`, `Collision`, `Pathfinder`, `BulletSystem` | état, carte, portes, fondu, collisions, A\*, balles |
+| `render` | `GameRenderer`, `ShapeEffect`, `SlashEffects`, `ParryEffects`, `BloodEffects`, `SlowMoEffects`, `ShadowRenderer`, `MapShadows`, `DoorIndicator`, `DebugRenderer` | rendu |
 | `screen` | `GameScreen`, `MainMenuScreen`, `PauseScreen`, `GameOverScreen`, `SettingsScreen` | écrans |
 | | `HitStop`, `SlowMotion`, `DeathSequence` | échelles de temps |
 | `ui` | `Theme`, `FilmOverlay`, `MenuBackground`, `Crosshair` | interface |

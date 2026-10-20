@@ -21,6 +21,7 @@ on esquive (dash), on dévie les tirs (parry), on tranche, et on ralentit le tem
 | Pause / menu | `Échap` |
 | Recommencer | `R` ou `Entrée` (écran Game Over) |
 | Hitbox de debug | `F1` |
+| Mode dieu (test) | `F2` |
 
 ## Documentation
 
@@ -37,7 +38,7 @@ on esquive (dash), on dévie les tirs (parry), on tranche, et on ralentit le tem
 
 ## État
 
-Un niveau, deux types d'ennemis, trois capacités + ralenti, IA avec A\*. Pas encore : audio, boss final, enchaînement de niveaux, tests automatisés
+Trois cartes enchaînées par des portes (étage 1, étage 2, arène du boss vide), deux types d'ennemis, trois capacités + ralenti, IA avec A\*. Pas encore : audio, boss final, enchaînement de niveaux, tests automatisés
 (voir le GDD §10).
 
 ---

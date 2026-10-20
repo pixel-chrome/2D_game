@@ -51,9 +51,10 @@ Recommencer est volontairement instantané : l'échec doit coûter quelques seco
 | Pause | `Échap` | non |
 | Recommencer (écran Game Over) | `R` ou `Entrée` (`Échap` = menu) | non |
 | Afficher / cacher les hitbox | `F1` | non |
+| Mode dieu (ne pas mourir, pour tester) | `F2` | non |
 
 Les touches remappables sont sauvegardées entre deux lancements (`GameSettings`, préférences libGDX).
-Le mode debug (hitbox) est **activé par défaut** pendant le développement (`GameScreen.debug = true`).
+Le mode debug (hitbox, `F1`) est désactivé par défaut. Le mode dieu (`F2`) reste actif d'un étage à l'autre.
 
 ## 5. Le joueur
 
@@ -120,7 +121,14 @@ et sa séquence d'attaque est annulée (le tireur ne peut plus tirer avant 1,2 s
   - `player_spawn` → joueur ;
   - `skull_knight` → chevalier ;
   - tout autre objet → tireur.
-- Étage actuel : carte de 70 × 50 tuiles (1120 × 800 px), 1 joueur, 4 chevaliers et 19 tireurs. `etage_2.tmx` existe mais n'est pas encore branché.
+- Étage actuel : carte de 70 × 50 tuiles (1120 × 800 px), 1 joueur, 4 chevaliers et 19 tireurs. 
+- **Étages enchaînés** : chaque carte (`etage_1.tmx` → `etage_2.tmx` → `boss.tmx`) contient un calque d'objets `Doors`.
+  Une porte (`Door`) a une carte cible (`target_map`), une entrée d'arrivée (`target_entry`) et un drapeau `requires_clear` (vrai par défaut) :
+  **la porte reste verrouillée tant qu'un ennemi est vivant**. Le passage se fait par un fondu au noir (`ScreenFade`).
+  Un cadenas ou une flèche, et le texte « SORTIE », indiquent l'état de chaque porte (`DoorIndicator`).
+- Les arrivées sont des objets `entry_xxx` du calque `Spawns` ; `player_spawn` est l'entrée par défaut (et celle du redémarrage : on recommence **l'étage courant**).
+- `boss.tmx` existe (arène avec son entrée depuis l'étage précédent) mais ne contient pas encore de boss.
+- Ombres des murs et décors pré-calculées une fois par étage (`MapShadows`).
 
 ## 8. Interface
 
@@ -157,12 +165,12 @@ menus, paramètres persistants, effets de rendu.
 
 - **Audio** : les réglages de volume existent (`GameSettings.musicVolume/sfxVolume`) mais aucun son n'est joué.
 - **Boss final** dans la dernière pièce : préparé dans la conception, pas implémenté → voir [`BOSS.md`](BOSS.md).
-- **Progression de niveaux** : `MapLoader` charge toujours `maps/etage_1.tmx` ; pas d'écran de victoire.
+- **Écran de victoire** : la dernière carte (`boss.tmx`) n'a pas de fin ; rien ne se passe à la mort du futur boss.
 - **Tests automatisés** : aucun pour l'instant → voir [`TESTS.md`](TESTS.md).
 
 ## 11. Évolutions prévues
 
 1. Boss final (dernière pièce) — [`BOSS.md`](BOSS.md).
-2. Enchaînement des étages (`etage_2.tmx`) et écran de victoire.
+2. Écran de victoire et éventuellement plus d'étages.
 3. Audio (musique + effets) branché sur les réglages existants.
 4. Suite de tests unitaires sur la logique pure (collision, A\*, minuteurs, IA).
