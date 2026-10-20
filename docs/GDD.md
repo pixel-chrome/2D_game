@@ -166,7 +166,7 @@ menus, paramètres persistants, effets de rendu.
 - **Audio** : les réglages de volume existent (`GameSettings.musicVolume/sfxVolume`) mais aucun son n'est joué.
 - **Boss final** dans la dernière pièce : préparé dans la conception, pas implémenté → voir [`BOSS.md`](BOSS.md).
 - **Écran de victoire** : la dernière carte (`boss.tmx`) n'a pas de fin ; rien ne se passe à la mort du futur boss.
-- **Tests automatisés** : aucun pour l'instant → voir [`TESTS.md`](TESTS.md).
+- **Tests** : unitaires sur la logique pure seulement ; rendu, menus et joueur non testés → voir [`TESTS.md`](TESTS.md).
 
 ## 11. Évolutions prévues
 

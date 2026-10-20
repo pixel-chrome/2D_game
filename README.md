@@ -33,12 +33,12 @@ on esquive (dash), on dévie les tirs (parry), on tranche, et on ralentit le tem
 | [`docs/PATTERNS.md`](docs/PATTERNS.md) | principes OOP / SOLID et design patterns, avec renvois au code |
 | [`docs/FONCTIONS.md`](docs/FONCTIONS.md) | arbres d'appels de fonctions |
 | [`docs/BOSS.md`](docs/BOSS.md) | préparation du boss final (conception, pas encore codé) |
-| [`docs/TESTS.md`](docs/TESTS.md) | stratégie de tests et liste de contrôle manuelle |
+| [`docs/TESTS.md`](docs/TESTS.md) | tests unitaires (89), couverture, écarts, liste de contrôle manuelle |
 | Javadoc | `./gradlew core:javadoc` → `core/build/docs/javadoc/index.html` |
 
 ## État
 
-Trois cartes enchaînées par des portes (étage 1, étage 2, arène du boss vide), deux types d'ennemis, trois capacités + ralenti, IA avec A\*. Pas encore : audio, boss final, enchaînement de niveaux, tests automatisés
+Trois cartes enchaînées par des portes (étage 1, étage 2, arène du boss vide), deux types d'ennemis, trois capacités + ralenti, IA avec A\*. Pas encore : audio, boss final
 (voir le GDD §10).
 
 ---
