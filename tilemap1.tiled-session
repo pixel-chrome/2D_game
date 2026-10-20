@@ -1,11 +1,11 @@
 {
-    "activeFile": "assets/maps/etage_2.tmx",
+    "activeFile": "assets/maps/Objets_gros.tsx",
     "expandedProjectPaths": [
         "assets/maps",
-        "core/src/ressources",
         "assets",
-        ".",
         "core/src",
+        "core/src/ressources",
+        ".",
         "core"
     ],
     "fileStates": {
@@ -46,15 +46,11 @@
             }
         },
         "assets/maps/etage_1.tmx": {
-            "expandedObjectLayers": [
-                7,
-                6
-            ],
             "scale": 2,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 803.5,
-                "y": 197.75
+                "x": 571,
+                "y": 435.75
             }
         },
         "assets/maps/etage_2.tmx": {
@@ -128,7 +124,8 @@
         "assets/maps/Donjon_wall.tsx",
         "assets/maps/Cute1_walls.tsx",
         "assets/maps/Objets_gros.tsx",
-        "assets/maps/etage_2.tmx"
+        "assets/maps/etage_2.tmx",
+        "assets/maps/boss.tmx"
     ],
     "project": "tilemap1.tiled-project",
     "recentFiles": [
@@ -137,13 +134,13 @@
         "assets/maps/etage_1.tmx",
         "assets/maps/Donjon_wall.tsx",
         "assets/maps/Cute1_walls.tsx",
-        "assets/maps/Objets_gros.tsx",
+        "assets/maps/boss.tmx",
         "assets/maps/etage_2.tmx",
+        "assets/maps/Objets_gros.tsx",
         "assets/maps/Catacombes1.tsx",
         "jeudetuie.tsx",
         "assets/maps/test1.tmx",
-        "core/src/ressources/test1.tmx",
-        "test1.tmx"
+        "core/src/ressources/test1.tmx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {
