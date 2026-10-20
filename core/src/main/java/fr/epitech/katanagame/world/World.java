@@ -23,6 +23,7 @@ import java.util.List;
 public class World {
     /** Viewport de la partie. */
     public final Viewport viewport;
+    /** Calques qui bloquent les corps (joueur et gardes). */
     public final TiledMapTileLayer[] moveLayers;     // bloquent les corps (joueur + gardes)
     /** Calques qui bloquent les projectiles. */
     public final TiledMapTileLayer[] bulletLayers;   // bloquent les balles
@@ -31,7 +32,9 @@ public class World {
 
     /** Joueur contrôlé par l’utilisateur. */
     public final Player player;
+    /** Ennemis de la partie, vivants ou morts. */
     public final List<Enemy> enemies = new ArrayList<>();
+    /** Projectiles en vol. */
     public final List<Bullet> bullets = new ArrayList<>();
     /** Sang et flash d'impact (mort du joueur). */
     public final BloodEffects blood = new BloodEffects();
@@ -42,7 +45,13 @@ public class World {
     /** Effets dessinés au-dessus des sprites, dans l'ordre. */
     public final List<ShapeEffect> effects = List.of(slashFx, parryFx);
 
-    /** Fait du bruit : les ennemis vivants à portée viennent voir (sauf la source). */
+    /**
+     * Fait du bruit : les ennemis vivants à portée viennent voir (sauf la source).
+     *
+     * @param at position du bruit
+     * @param radius rayon d'audition (px)
+     * @param source ennemi à l'origine du bruit (jamais alerté), ou null
+     */
     public void makeNoise(Vector2 at, float radius, Enemy source) {
         for (Enemy enemy : enemies) {
             if (enemy != source && enemy.getPosition().dst(at) <= radius) {
@@ -51,7 +60,15 @@ public class World {
         }
     }
 
-    /** Initialise les références vers le joueur, le viewport et les calques de collision. */
+    /**
+     * Initialise les références vers le joueur, le viewport et les calques de collision.
+     *
+     * @param viewport viewport de la partie
+     * @param player joueur
+     * @param moveLayers calques bloquant les corps
+     * @param bulletLayers calques bloquant les projectiles
+     * @param sightLayers calques bloquant la vue
+     */
     public World(Viewport viewport, Player player,
                  TiledMapTileLayer[] moveLayers,
                  TiledMapTileLayer[] bulletLayers,

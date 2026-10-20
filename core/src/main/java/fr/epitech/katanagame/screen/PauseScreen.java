@@ -28,6 +28,12 @@ public class PauseScreen extends ScreenAdapter {
     private final Stage stage = new Stage(new FitViewport(MenuBackground.W, MenuBackground.H));
     private boolean leaving = false;
 
+    /**
+     * Crée le menu de pause par-dessus une partie figée.
+     *
+     * @param game jeu qui possède l'écran
+     * @param level partie mise en pause
+     */
     public PauseScreen(Main game, GameScreen level) {
         this.game = game;
         this.level = level;

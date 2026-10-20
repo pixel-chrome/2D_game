@@ -22,12 +22,25 @@ public final class GameRenderer implements Disposable {
     /** Renderer de la carte Tiled, fourni par le chargeur de carte. */
     private final OrthogonalTiledMapRenderer mapRenderer;
 
-    /** Prépare le rendu en utilisant le renderer de la carte fourni. */
+    /**
+     * Prépare le rendu en utilisant le renderer de la carte fourni.
+     *
+     * @param mapRenderer renderer de la carte Tiled
+     */
     public GameRenderer(OrthogonalTiledMapRenderer mapRenderer) {
         this.mapRenderer = mapRenderer;
     }
 
-    /** Dessine la carte, les personnages, les projectiles et les éléments de débogage. */
+    /**
+     * Dessine la carte, les personnages, les projectiles et les éléments de débogage.
+     *
+     * @param world monde à dessiner
+     * @param player joueur
+     * @param viewport viewport de la partie
+     * @param debug afficher les hitbox
+     * @param slowCharge jauge de ralenti (0 à 1)
+     * @param slowIntensity intensité du ralenti (0 à 1)
+     */
     public void render(World world, Player player, Viewport viewport, boolean debug,
                        float slowCharge, float slowIntensity) {
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);

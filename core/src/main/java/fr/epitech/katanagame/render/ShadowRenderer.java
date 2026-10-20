@@ -62,8 +62,13 @@ public final class ShadowRenderer {
     /**
      * À appeler AVANT de dessiner le sprite.
      *
-     * @param x,y,width,height rectangle où le sprite est dessiné (coin bas-gauche)
-     * @param footY            Y monde de la ligne des pieds (ex : position.y - FEET_OFFSET_Y)
+     * @param batch  batch déjà ouvert
+     * @param frame  image du sprite dont on projette l'ombre
+     * @param x      abscisse du coin bas-gauche du sprite
+     * @param y      ordonnée du coin bas-gauche du sprite
+     * @param width  largeur du sprite
+     * @param height hauteur du sprite
+     * @param footY  Y monde de la ligne des pieds (ex : position.y - FEET_OFFSET_Y)
      */
     public static void draw(SpriteBatch batch, TextureRegion frame,
                             float x, float y, float width, float height, float footY) {
@@ -96,6 +101,7 @@ public final class ShadowRenderer {
         VERTICES[i + 4] = v;
     }
 
+    /** Libère le shader d'ombre. */
     public static void dispose() {
         if (shader != null) {
             shader.dispose();

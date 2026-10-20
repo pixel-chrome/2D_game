@@ -39,6 +39,13 @@ public class SettingsScreen extends ScreenAdapter {
     private GameSettings.Action waiting = null;
     private boolean consumedKey = false;   // la touche vient d'être prise par le réglage : pas de retour
 
+    /**
+     * Construit l'écran des paramètres.
+     *
+     * @param game jeu qui possède l'écran
+     * @param backdrop partie à afficher derrière (null : fond du menu)
+     * @param onBack action à lancer au retour
+     */
     public SettingsScreen(Main game, GameScreen backdrop, Runnable onBack) {
         this.game = game;
         this.backdrop = backdrop;

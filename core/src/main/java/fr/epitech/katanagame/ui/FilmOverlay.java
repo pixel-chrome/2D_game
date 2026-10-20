@@ -21,6 +21,7 @@ public class FilmOverlay implements Disposable {
     private final Texture white;
     private final Texture vignette;
 
+    /** Crée les textures du voile et de la vignette. */
     public FilmOverlay() {
         Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pm.setColor(Color.WHITE);
@@ -50,8 +51,12 @@ public class FilmOverlay implements Disposable {
     }
 
     /**
-     * @param dim           voile noir (0 = aucun, 0.6 = pause)
+     * Dessine le voile sombre puis la vignette.
+     *
+     * @param dim voile noir (0 = aucun, 0.6 = pause)
      * @param vignetteAlpha intensité de la vignette (0 à 1)
+     * @param delta temps écoulé (s)
+     * @param projection matrice de projection des menus
      */
     public void draw(float delta, Matrix4 projection, float dim, float vignetteAlpha) {
         batch.setProjectionMatrix(projection);

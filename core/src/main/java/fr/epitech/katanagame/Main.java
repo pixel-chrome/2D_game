@@ -25,6 +25,9 @@ public class Main extends Game {
     /** Fond animé partagé par les menus. */
     public MenuBackground background;
 
+    /** Crée le jeu ; les ressources sont chargées dans {@link #create()}. */
+    public Main() {}
+
     /** Initialise les paramètres, les ressources communes et le menu principal. */
     @Override
     public void create() {
@@ -35,7 +38,11 @@ public class Main extends Game {
         setScreen(new MainMenuScreen(this));
     }
 
-    /** Change d'écran et libère l'ancien. */
+    /**
+     * Change d'écran et libère l'ancien.
+     *
+     * @param next écran à afficher
+     */
     public void switchTo(Screen next) {
         Screen old = getScreen();
         setScreen(next);

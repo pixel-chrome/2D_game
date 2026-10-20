@@ -41,7 +41,11 @@ public class Player extends Character implements Disposable {
         corpse.reset();
     }
 
-    /** Touché par un tir venant dans la direction dir : le corps sera projeté dans ce sens. */
+    /**
+     * Touché par un tir venant dans la direction dir : le corps sera projeté dans ce sens.
+     *
+     * @param dir direction du coup reçu
+     */
     public void hit(Vector2 dir) {
         if (!isAlive() || isInvincible()) return;
         corpse.fall(dir);
@@ -53,22 +57,46 @@ public class Player extends Character implements Disposable {
     /** Éclat blanc sur le sprite (coup ou parry qui touche). */
     void flash() { flash = FLASH_TIME; }
 
-    /** Direction (normalisée) du dernier dash. */
+    /**
+     * Direction (normalisée) du dernier dash.
+     *
+     * @return la direction du dernier dash
+     */
     public Vector2 getDashDir() { return dash.direction(); }
 
-    /** Vrai une seule fois par dash, au moment où il démarre (secousse de caméra). */
+    /**
+     * Vrai une seule fois par dash, au moment où il démarre (secousse de caméra).
+     *
+     * @return vrai si un dash vient de démarrer
+     */
     public boolean pollDashStart() { return dash.pollStart(); }
 
-    /** Vrai une seule fois par parry réussi (arrêt sur image, secousse de caméra). */
+    /**
+     * Vrai une seule fois par parry réussi (arrêt sur image, secousse de caméra).
+     *
+     * @return vrai si un parry vient de réussir
+     */
     public boolean pollParrySuccess() { return parry.pollSuccess(); }
 
-    /** Vrai une seule fois par coup qui touche (arrêt sur image, secousse de caméra). */
+    /**
+     * Vrai une seule fois par coup qui touche (arrêt sur image, secousse de caméra).
+     *
+     * @return vrai si un coup vient de toucher
+     */
     public boolean pollAttackHit() { return melee.pollHit(); }
 
-    /** Indique si la fenêtre de parry est active. */
+    /**
+     * Indique si la fenêtre de parry est active.
+     *
+     * @return vrai pendant la fenêtre de parry
+     */
     public boolean isParrying() { return parry.isActive(); }
 
-    /** Indique si le dash est en cours. */
+    /**
+     * Indique si le dash est en cours.
+     *
+     * @return vrai pendant le dash
+     */
     public boolean isDashing() { return dash.isActive(); }
 
     @Override public void update(float delta, World world) {
@@ -105,7 +133,11 @@ public class Player extends Character implements Disposable {
         return null;
     }
 
-    /** Hitbox de l'attaque, visible uniquement pendant son animation. */
+    /**
+     * Hitbox de l'attaque, visible uniquement pendant son animation.
+     *
+     * @return la hitbox du coup, ou null hors animation
+     */
     public Rectangle getAttackBounds() { return melee.bounds(); }
 
     @Override public void draw(SpriteBatch batch) {

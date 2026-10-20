@@ -82,40 +82,80 @@ public final class MapLoader implements Disposable {
         return (TiledMapTileLayer) map.getLayers().get(name);
     }
 
-    /** Retourne la carte Tiled chargée. */
+    /**
+     * Retourne la carte Tiled chargée.
+     *
+     * @return la carte Tiled
+     */
     public TiledMap getMap() { return map; }
-    /** Retourne le renderer associé à la carte. */
+    /**
+     * Retourne le renderer associé à la carte.
+     *
+     * @return le renderer de la carte
+     */
     public OrthogonalTiledMapRenderer getRenderer() { return renderer; }
-    /** Retourne la largeur de la carte en unités du monde. */
+    /**
+     * Retourne la largeur de la carte en unités du monde.
+     *
+     * @return la largeur de la carte (px)
+     */
     public float getWidth() { return width; }
-    /** Retourne la hauteur de la carte en unités du monde. */
+    /**
+     * Retourne la hauteur de la carte en unités du monde.
+     *
+     * @return la hauteur de la carte (px)
+     */
     public float getHeight() { return height; }
-    /** Retourne une copie de la position de départ du joueur. */
+    /**
+     * Retourne une copie de la position de départ du joueur.
+     *
+     * @return une copie de la position de départ
+     */
     public Vector2 getPlayerSpawn() { return new Vector2(playerSpawn); }
 
-    /** Positions de départ des Skull Knights (objets nommés « skull_knight » dans Tiled). */
+    /**
+     * Positions de départ des Skull Knights (objets nommés « skull_knight » dans Tiled).
+     *
+     * @return une liste en lecture seule
+     */
     public List<Vector2> getKnightSpawns() {
         return Collections.unmodifiableList(knightSpawns);
     }
 
-    /** Positions de départ des ennemis, exposées en lecture seule. */
+    /**
+     * Positions de départ des ennemis, exposées en lecture seule.
+     *
+     * @return une liste en lecture seule
+     */
     public List<Vector2> getEnemySpawns() {
         return Collections.unmodifiableList(enemySpawns);
     }
 
-    /** Retourne les calques qui bloquent le déplacement. */
+    /**
+     * Retourne les calques qui bloquent le déplacement.
+     *
+     * @return les calques Mur, Objets et Chaises
+     */
     public TiledMapTileLayer[] getMoveLayers() {
         return new TiledMapTileLayer[] {
                 requireLayer("Mur"), requireLayer("Objets"), requireLayer("Chaises")
         };
     }
 
-    /** Retourne les calques qui bloquent les projectiles. */
+    /**
+     * Retourne les calques qui bloquent les projectiles.
+     *
+     * @return les calques Mur et Objets
+     */
     public TiledMapTileLayer[] getBulletLayers() {
         return new TiledMapTileLayer[] { requireLayer("Mur"), requireLayer("Objets") };
     }
 
-    /** Retourne les calques qui bloquent la ligne de vue. */
+    /**
+     * Retourne les calques qui bloquent la ligne de vue.
+     *
+     * @return le calque Mur
+     */
     public TiledMapTileLayer[] getSightLayers() {
         return new TiledMapTileLayer[] { requireLayer("Mur") };
     }

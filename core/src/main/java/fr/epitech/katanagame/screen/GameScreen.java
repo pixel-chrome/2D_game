@@ -51,7 +51,11 @@ public class GameScreen extends ScreenAdapter {
     /** Projectiles : déplacement et impacts. */
     private final BulletSystem bullets;
 
-    /** Charge la carte et prépare les éléments de la partie. */
+    /**
+     * Charge la carte et prépare les éléments de la partie.
+     *
+     * @param game jeu qui possède l'écran
+     */
     public GameScreen(Main game) {
         this.game = game;
         mapLoader = new MapLoader();
@@ -143,7 +147,11 @@ public class GameScreen extends ScreenAdapter {
         renderer.render(world, player, camera.getViewport(), debug, slowMo.getCharge(), slowMo.getIntensity());
     }
 
-    /** Fait vivre le corps et le sang pendant l'écran de game over. */
+    /**
+     * Fait vivre le corps et le sang pendant l'écran de game over.
+     *
+     * @param delta temps réel écoulé (s)
+     */
     public void updateEffects(float delta) {
         player.update(delta, world);
         world.blood.update(delta, world.bulletLayers);

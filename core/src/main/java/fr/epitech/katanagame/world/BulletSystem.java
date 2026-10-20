@@ -11,12 +11,22 @@ public final class BulletSystem {
     /** Appelé quand le joueur est tué par une balle. */
     private final Runnable onPlayerKilled;
 
+    /**
+     * Associe le système au monde et à l'action à lancer quand le joueur meurt.
+     *
+     * @param world monde contenant les projectiles
+     * @param onPlayerKilled appelé quand une balle tue le joueur
+     */
     public BulletSystem(World world, Runnable onPlayerKilled) {
         this.world = world;
         this.onPlayerKilled = onPlayerKilled;
     }
 
-    /** Déplace les projectiles et gère leurs collisions. */
+    /**
+     * Déplace les projectiles et gère leurs collisions.
+     *
+     * @param delta temps écoulé (s)
+     */
     public void update(float delta) {
         for (Bullet bullet : world.bullets) {
             bullet.update(delta, world.bulletLayers);

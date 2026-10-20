@@ -11,10 +11,21 @@ import com.badlogic.gdx.math.Vector2;
 public abstract class Character extends Entity {
     private static final float MAX_STEP = 4f;   // pas de déplacement max (px) pour ne pas traverser les murs
 
+    /** Direction de visée (vecteur unitaire). */
     protected final Vector2 aim = new Vector2(1, 0);
     private boolean alive = true;
 
-    /** Initialise les dimensions et la position du personnage. */
+    /**
+     * Initialise les dimensions et la position du personnage.
+     *
+     * @param x abscisse initiale
+     * @param y ordonnée initiale
+     * @param width largeur du corps
+     * @param height hauteur du corps
+     * @param feetW largeur des pieds
+     * @param feetH hauteur des pieds
+     * @param feetOffsetY décalage centre du sprite → centre des pieds
+     */
     protected Character(float x, float y, float width, float height,
                         float feetW, float feetH, float feetOffsetY) {
         super(x, y, width, height, feetW, feetH, feetOffsetY);
@@ -22,12 +33,20 @@ public abstract class Character extends Entity {
 
     // --- Vie ---
 
-    /** Indique si le personnage est vivant. */
+    /**
+     * Indique si le personnage est vivant.
+     *
+     * @return vrai tant que le personnage n'est pas mort
+     */
     public boolean isAlive() {
         return alive;
     }
 
-    /** Indique si le personnage ignore les dégâts. */
+    /**
+     * Indique si le personnage ignore les dégâts.
+     *
+     * @return vrai si les dégâts sont ignorés (faux par défaut)
+     */
     public boolean isInvincible() {
         return false;
     }
@@ -39,7 +58,12 @@ public abstract class Character extends Entity {
         onDeath();
     }
 
-    /** Remet le personnage en vie à une position donnée. */
+    /**
+     * Remet le personnage en vie à une position donnée.
+     *
+     * @param x abscisse de réapparition
+     * @param y ordonnée de réapparition
+     */
     public void respawn(float x, float y) {
         position.set(x, y);
         alive = true;
@@ -50,12 +74,20 @@ public abstract class Character extends Entity {
 
     // --- Visée ---
 
-    /** Retourne le vecteur de visée du personnage. */
+    /**
+     * Retourne le vecteur de visée du personnage.
+     *
+     * @return le vecteur de visée (modifiable)
+     */
     public Vector2 getAim() {
         return aim;
     }
 
-    /** Retourne la direction correspondant à la visée. */
+    /**
+     * Retourne la direction correspondant à la visée.
+     *
+     * @return la direction de sprite la plus proche de la visée
+     */
     public Direction getFacing() {
         return Direction.of(aim);
     }
@@ -64,6 +96,10 @@ public abstract class Character extends Entity {
 
     /**
      * Déplace le personnage par petits pas, axe par axe (pour glisser le long des murs).
+     *
+     * @param dx déplacement en x
+     * @param dy déplacement en y
+     * @param solids calques qui bloquent le déplacement
      * @return false si un mur l'a bloqué
      */
     protected boolean move(float dx, float dy, TiledMapTileLayer[] solids) {
