@@ -22,7 +22,7 @@ final class EnemyWeapon {
     private static final float RECOIL_SPEED = 78f;
     private static final float RECOIL_DURATION = 0.12f;
 
-    private final Enemy enemy;
+    private final ShooterEnemy enemy;
     private final Vector2 lastTarget = new Vector2();
     private final Vector2 playerVel = new Vector2();
     private final Vector2 chargeDirection = new Vector2(0f, -1f);
@@ -38,7 +38,7 @@ final class EnemyWeapon {
     private int volleysLeft;
 
     /** Associe un système de tir à un ennemi. */
-    EnemyWeapon(Enemy enemy) {
+    EnemyWeapon(ShooterEnemy enemy) {
         this.enemy = enemy;
     }
 

@@ -21,23 +21,22 @@ public class SkullKnight extends Enemy {
     private static final float ATTACK_COOLDOWN = 0.6f;
     private static final float LUNGE_SPEED = 70f;
 
-    private float time;
     private float attackTime = -1f;     // < 0 : n'attaque pas
     private boolean hitDone;
     private float cooldown;
 
     /** Crée un chevalier à la position donnée. */
     public SkullKnight(float x, float y) {
-        super(x, y, RUN_SPEED, false);
+        super(x, y, RUN_SPEED);
     }
 
     @Override
-    public void update(float delta, World world) {
-        time += delta;
-        if (!isAlive()) return;
+    protected void tick(float delta) {
         cooldown = Math.max(0f, cooldown - delta);
-        if (updateStun(delta, world)) return;
+    }
 
+    @Override
+    protected void think(float delta, World world) {
         Player player = world.player;
         Rectangle pb = player.getBounds();
         Vector2 target = new Vector2(pb.x + pb.width / 2f, pb.y + pb.height / 2f);
@@ -120,11 +119,6 @@ public class SkullKnight extends Enemy {
         SkullKnightAnimations.draw(this, batch, 1f, winding ? 0.7f : 1f, winding ? 0.7f : 1f);
     }
 
-    @Override
-    public void drawCharge(ShapeRenderer shapes) {
-        // pas de point de visée : il n'a pas d'arme à distance
-    }
-
     /** Temps d'attaque écoulé, négatif s'il n'attaque pas. */
     float attackTime() {
         return attackTime;
@@ -132,6 +126,6 @@ public class SkullKnight extends Enemy {
 
     /** Temps écoulé pour les animations. */
     float time() {
-        return time;
+        return stateTime();
     }
 }

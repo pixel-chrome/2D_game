@@ -95,7 +95,11 @@ final class EnemyAI {
 
     /** Un bruit (tir, mort) attire l'ennemi, sauf s'il a déjà le joueur en vue. */
     void hearNoise(Vector2 at) {
-        if (seesPlayer) return;
+        if (!seesPlayer) alertAt(at);
+    }
+
+    /** Alerte l'ennemi et lui indique où aller, même s'il ne voit pas le joueur. */
+    void alertAt(Vector2 at) {
         alerted = true;
         alertTimer = LOSE_SIGHT_TIME;
         walking = false;

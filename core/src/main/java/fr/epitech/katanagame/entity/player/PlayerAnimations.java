@@ -123,7 +123,7 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
             boolean dashing,
             Direction dashFacing,
             float parryTime,
-            boolean parryFlash,
+            boolean flash,
             Corpse corpse
     ) {
         if (corpse != null) {
@@ -140,7 +140,7 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
 
         } else if (attackTimer > 0f) {
             animation = attack.get(player.getFacing());
-            time = Player.ATTACK_DURATION - attackTimer;
+            time = MeleeAttack.DURATION - attackTimer;
 
         } else if (dashing) {
             animation = run.get(dashFacing);
@@ -191,8 +191,14 @@ final class PlayerAnimations implements com.badlogic.gdx.utils.Disposable {
             sx = horizontal ? 1f + 0.2f * k : 1f - 0.08f * k;
             sy = horizontal ? 1f - 0.08f * k : 1f + 0.2f * k;
         }
+        if (parryTime < 0f && attackTimer > 0f) {   // coup : étirement dans le sens de la fente, puis retour à la taille
+            float k = Math.max(0f, 1f - (MeleeAttack.DURATION - attackTimer) / 0.18f);
+            boolean horizontal = player.getFacing() == Direction.LEFT || player.getFacing() == Direction.RIGHT;
+            sx = horizontal ? 1f + 0.28f * k : 1f - 0.1f * k;
+            sy = horizontal ? 1f - 0.1f * k : 1f + 0.28f * k;
+        }
         batch.draw(frame, x, y, FRAME_W / 2f, 0f, FRAME_W, FRAME_H, sx, sy, 0f);
-        if (parryFlash) {                       // éclat blanc par-dessus le sprite (mélange additif)
+        if (flash) {                       // éclat blanc par-dessus le sprite (mélange additif)
             batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
             batch.setColor(1f, 1f, 1f, 0.75f);
             batch.draw(frame, x, y, FRAME_W / 2f, 0f, FRAME_W, FRAME_H, sx, sy, 0f);

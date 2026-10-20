@@ -3,28 +3,37 @@ package fr.epitech.katanagame.screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Vector2;
 import fr.epitech.katanagame.Main;
 import fr.epitech.katanagame.camera.GameCamera;
 import fr.epitech.katanagame.entity.enemy.Enemy;
+import fr.epitech.katanagame.entity.enemy.ShooterEnemy;
 import fr.epitech.katanagame.entity.enemy.SkullKnight;
 import fr.epitech.katanagame.entity.player.Player;
-import fr.epitech.katanagame.entity.projectile.Bullet;
 import fr.epitech.katanagame.render.GameRenderer;
+import fr.epitech.katanagame.render.MapShadows;
 import fr.epitech.katanagame.render.ScreenFade;
 import fr.epitech.katanagame.render.ShadowRenderer;
+import fr.epitech.katanagame.render.ShapeEffect;
 import fr.epitech.katanagame.settings.GameSettings;
+import fr.epitech.katanagame.ui.Crosshair;
+import fr.epitech.katanagame.world.BulletSystem;
 import fr.epitech.katanagame.world.Door;
 import fr.epitech.katanagame.world.MapLoader;
 import fr.epitech.katanagame.world.World;
-import fr.epitech.katanagame.render.MapShadows;
-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /** Coordonne la partie : étage courant, mise à jour, changement d'étage, écrans de pause et de game over. */
 public class GameScreen extends ScreenAdapter {
     private static final String FIRST_MAP = "maps/etage_1.tmx";
     /** Durée de chaque moitié du fondu (noircir, puis éclaircir). */
     private static final float FADE_TIME = 0.4f;
+    /** Calques de tuiles qui projettent une ombre (ceux qui n'existent pas dans une map sont ignorés). */
+    private static final String[] SHADOW_LAYERS = { "Mur", "Chaises", "Objets", "Petits Objets" };
 
     private final Main game;
     /** Caméra de la partie. */
@@ -37,14 +46,22 @@ public class GameScreen extends ScreenAdapter {
     private final DeathSequence death = new DeathSequence();
     /** Ralenti du temps (maintenir la touche RALENTI). */
     private final SlowMotion slowMo = new SlowMotion();
+    /** Viseur affiché à la place du curseur. */
+    private final Crosshair crosshair = new Crosshair();
+    /** Arrêt sur image et ralenti après un coup ou un parry qui touche. */
+    private final HitStop hitStop = new HitStop();
 
     // --- Étage courant : remplacés à chaque changement d'étage ---
     /** Charge la carte et ses calques. */
     private MapLoader mapLoader;
+    /** Ombres des murs et objets de l'étage. */
+    private MapShadows mapShadows;
     /** État partagé par les entités. */
     private World world;
     /** Gère le dessin de la partie. */
     private GameRenderer renderer;
+    /** Projectiles : déplacement et impacts (lié au World de l'étage). */
+    private BulletSystem bullets;
     /** Entrée par laquelle le joueur est arrivé (sert au restart). */
     private String currentEntry;
     /** Vrai tant que le joueur n'a pas quitté la zone d'arrivée (évite de repartir aussitôt). */
@@ -55,17 +72,8 @@ public class GameScreen extends ScreenAdapter {
 
     /** Mode dieu (F2) : le joueur ne peut plus mourir. Reste actif d'un étage à l'autre. */
     private boolean godMode = false;
-    /** Pour gérer les ombres */
-    private MapShadows mapShadows;
 
-    /** Arrêt sur image restant (s) après un parry réussi. */
-    private float hitStop;
-    private static final float PARRY_HIT_STOP = 0.09f;
-    /** Ralenti du monde juste après un parry réussi (durée en s, échelle de temps). */
-    private static final float PARRY_SLOW_TIME = 0.35f, PARRY_SLOW_SCALE = 0.3f;
-    private float parrySlow;
-
-    /** Charge la carte et prépare les éléments de la partie. */
+    /** Prépare les éléments de la partie et charge le premier étage. */
     public GameScreen(Main game) {
         this.game = game;
         camera = new GameCamera();
@@ -87,56 +95,57 @@ public class GameScreen extends ScreenAdapter {
         // 1. Charger la nouvelle carte avant de détruire l'ancienne
         MapLoader next = new MapLoader(path);
 
-        // 2. Récupérer les couches qui projettent des ombres
-        TiledMapTileLayer[] shadowLayers = {
-            (TiledMapTileLayer) next.getMap().getLayers().get("Mur"),
-            (TiledMapTileLayer) next.getMap().getLayers().get("Chaises"),
-            (TiledMapTileLayer) next.getMap().getLayers().get("Objets"),
-            (TiledMapTileLayer) next.getMap().getLayers().get("Petits Objets")
-        };
-
-        // 3. Créer les ombres du nouveau niveau
+        // 2. Créer les ombres du nouveau niveau
         MapShadows nextShadows = new MapShadows(
-            shadowLayers,
-            (int) next.getWidth(),
-            (int) next.getHeight()
+                shadowLayersOf(next),
+                (int) next.getWidth(),
+                (int) next.getHeight()
         );
 
-        // 4. Libérer les ressources de l'ancien niveau
+        // 3. Libérer les ressources de l'ancien niveau
         if (renderer != null) {
             renderer.dispose();
         }
-
         if (mapShadows != null) {
             mapShadows.dispose();
         }
-
         if (mapLoader != null) {
             mapLoader.dispose();
         }
 
-        // 5. Remplacer l'ancien niveau par le nouveau
+        // 4. Remplacer l'ancien niveau par le nouveau
         mapLoader = next;
         mapShadows = nextShadows;
 
-        // 6. Recréer le monde
+        // 5. Recréer le monde, les projectiles et le renderer
         world = new World(
-            camera.getViewport(),
-            player,
-            mapLoader.getMoveLayers(),
-            mapLoader.getBulletLayers(),
-            mapLoader.getSightLayers()
+                camera.getViewport(),
+                player,
+                mapLoader.getMoveLayers(),
+                mapLoader.getBulletLayers(),
+                mapLoader.getSightLayers()
         );
-
-        // 7. Créer le renderer avec les nouvelles ombres
+        bullets = new BulletSystem(world, death::start);
         renderer = new GameRenderer(
-            mapLoader.getRenderer(),
-            mapLoader.getDoors(),
-            mapShadows
+                mapLoader.getRenderer(),
+                mapLoader.getDoors(),
+                mapShadows
         );
 
-        // 8. Placer le joueur et créer les ennemis
+        // 6. Placer le joueur et créer les ennemis
         enterLevel(entryName);
+    }
+
+    /** Calques de tuiles de la carte qui projettent une ombre (les calques absents sont ignorés). */
+    private static TiledMapTileLayer[] shadowLayersOf(MapLoader map) {
+        List<TiledMapTileLayer> layers = new ArrayList<>();
+        for (String name : SHADOW_LAYERS) {
+            MapLayer layer = map.getMap().getLayers().get(name);
+            if (layer instanceof TiledMapTileLayer) {
+                layers.add((TiledMapTileLayer) layer);
+            }
+        }
+        return layers.toArray(new TiledMapTileLayer[0]);
     }
 
     /** Place le joueur à l'entrée donnée et (re)crée les ennemis de l'étage. */
@@ -149,6 +158,8 @@ public class GameScreen extends ScreenAdapter {
         death.reset();
         slowMo.reset();
         world.blood.clear();
+        for (ShapeEffect effect : world.effects) effect.clear();
+        hitStop.reset();
         doorsLocked = true;
     }
 
@@ -157,7 +168,7 @@ public class GameScreen extends ScreenAdapter {
         world.enemies.clear();
         world.bullets.clear();
         for (Vector2 spawn : mapLoader.getEnemySpawns()) {
-            world.enemies.add(new Enemy(spawn.x, spawn.y));
+            world.enemies.add(new ShooterEnemy(spawn.x, spawn.y));
         }
         for (Vector2 spawn : mapLoader.getKnightSpawns()) {
             world.enemies.add(new SkullKnight(spawn.x, spawn.y));
@@ -166,13 +177,8 @@ public class GameScreen extends ScreenAdapter {
 
     /** Recommence l'étage courant (touche R ou « Recommencer » de la pause). */
     public void restart() {
-    enterLevel(currentEntry);
-
-    // Réinitialisation des effets du parry
-    world.parryFx.clear();
-    hitStop = 0f;
-    parrySlow = 0f;
-}
+        enterLevel(currentEntry);
+    }
 
     /**
      * Si le joueur touche une porte ouverte, lance le fondu puis change d'étage.
@@ -208,6 +214,13 @@ public class GameScreen extends ScreenAdapter {
     @Override
     public void show() {
         Gdx.input.setInputProcessor(null); // Le joueur lit directement clavier et souris.
+        crosshair.apply();
+    }
+
+    /** Rend la flèche normale quand on quitte la partie (pause, game over). */
+    @Override
+    public void hide() {
+        Crosshair.restore();
     }
 
     /** Met à jour le viewport lors du redimensionnement. */
@@ -239,6 +252,7 @@ public class GameScreen extends ScreenAdapter {
         if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) debug = !debug;
         if (Gdx.input.isKeyJustPressed(Input.Keys.F2)) {
             godMode = !godMode;
+            player.setGodMode(godMode);
             Gdx.app.log("GOD", godMode ? "mode dieu activé" : "mode dieu désactivé");
         }
         drawFrame();
@@ -269,22 +283,19 @@ public class GameScreen extends ScreenAdapter {
             live = delta * death.effectsScale();
             worldDt = delta * death.worldScale();
         }
-        if (hitStop > 0f) {          // arrêt sur image : tout est figé sauf les effets
-            hitStop -= delta;
-            live = worldDt = 0f;
-        }
-        if (parrySlow > 0f) {        // ralenti du monde après un parry : le joueur garde la main
-            parrySlow -= delta;
-            worldDt *= PARRY_SLOW_SCALE;
-        }
+        if (hitStop.isFrozen(delta)) live = worldDt = 0f;   // tout est figé sauf les effets
+        else worldDt *= hitStop.worldScale(delta);          // ralenti après un parry : le joueur garde la main
         player.update(live, world);
         if (player.pollDashStart()) camera.shake(2.5f);
         if (player.pollParrySuccess()) {
-            hitStop = PARRY_HIT_STOP;
-            parrySlow = PARRY_SLOW_TIME;
+            hitStop.onParry();
             camera.shake(4f);
         }
-        world.parryFx.update(delta);
+        if (player.pollAttackHit()) {
+            hitStop.onAttackHit();
+            camera.shake(3f);
+        }
+        for (ShapeEffect effect : world.effects) effect.update(delta);
         world.blood.update(live, world.bulletLayers);
         if (!player.isAlive() && Gdx.input.isKeyJustPressed(Input.Keys.R)) restart();
 
@@ -292,47 +303,16 @@ public class GameScreen extends ScreenAdapter {
             boolean wasAlive = player.isAlive();
             for (Enemy enemy : world.enemies) enemy.update(worldDt, world);
             if (wasAlive && !player.isAlive()) death.start();   // tué au corps à corps
-            updateBullets(worldDt);
+            bullets.update(worldDt);
         }
         camera.update(delta, player.getPosition(), mapLoader.getWidth(), mapLoader.getHeight());
-    }
-
-    /** Déplace les projectiles et gère leurs collisions. */
-    private void updateBullets(float delta) {
-        for (Bullet bullet : world.bullets) {
-            bullet.update(delta, world.bulletLayers);
-            if (bullet.isReflected()) {
-                hitEnemies(bullet);
-            } else if (bullet.isAlive() && player.isAlive() && !player.isInvincible() && !godMode
-
-                    && bullet.getBounds().overlaps(player.getBounds())) {
-                Vector2 dir = bullet.getDirection();
-                player.hit(dir);
-                world.blood.burst(player.getBounds().getCenter(new Vector2()), dir, world.bulletLayers);
-                death.start();
-                bullet.kill();
-            }
-        }
-        world.bullets.removeIf(bullet -> !bullet.isAlive());
-    }
-
-    /** Une balle renvoyée tue le premier ennemi qu'elle touche. */
-    private void hitEnemies(Bullet bullet) {
-        if (!bullet.isAlive()) return;
-        for (Enemy enemy : world.enemies) {
-            if (enemy.isAlive() && bullet.getBounds().overlaps(enemy.getBounds())) {
-                enemy.takeDamage();
-                Vector2 at = enemy.getBounds().getCenter(new Vector2());
-                world.blood.splatter(at, bullet.getDirection(), world.bulletLayers);
-                bullet.kill();
-                return;
-            }
-        }
     }
 
     /** Libère les ressources utilisées par la partie. */
     @Override
     public void dispose() {
+        Crosshair.restore();
+        crosshair.dispose();
         renderer.dispose();
         player.dispose();
         mapLoader.dispose();
