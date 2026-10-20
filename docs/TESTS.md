@@ -15,6 +15,8 @@ n'ont besoin que de `Vector2`, `Rectangle`, `MathUtils` et `TiledMapTileLayer` (
 | 1 | `Collision` | `isSolid` (dedans / hors carte), `overlapsSolid`, `hasLineOfSight` avec un mur au milieu | facile (grille construite en test) |
 | 1 | `Pathfinder` | ligne droite → liste vide ; mur entre les deux → chemin qui le contourne ; cible emmurée → `null` ; `MAX_EXPANSIONS` borne le coût | facile |
 | 1 | `HitStop`, `SlowMotion`, `DeathSequence` | durées, échelles de temps, jauge qui se vide/se recharge, `reset()` | triviale |
+| 1 | `Door` | `isTouchedBy`, `requiresClear` | triviale |
+| 2 | `World.allEnemiesDead` | vrai sans ennemi vivant, faux sinon | facile |
 | 2 | `Stun` | recul freiné, fin après `TIME`, `isActive` | facile (sous-classe de test d'`Enemy`) |
 | 2 | `Character` | un coup = mort ; `isInvincible` bloque ; `respawn` ; `move` bloqué par un mur et glisse | facile (sous-classe de test) |
 | 2 | `EnemyAI` | alerte après `canSee`, perte d'alerte après 1,5 s, `hearNoise` ignoré si le joueur est vu, `alertAt` | moyenne (dépend d'`Enemy`) |
@@ -112,6 +114,7 @@ Liste de contrôle à rejouer avant chaque livraison :
 - [ ] Clic droit : un laser parré repart et tue un garde ; un chevalier parré est repoussé et sonné, même touché dans le dos.
 - [ ] Les gardes accourent au bruit d'un kill/tir, contournent les murs (A\*).
 - [ ] Mort : séquence ralentie → Game Over ; `R` / `Entrée` relance, `Échap` va au menu.
+- [ ] Portes : verrouillées (cadenas) tant qu'un garde vit, ouvertes ensuite ; fondu au noir ; on arrive à la bonne entrée de l'étage suivant ; `R` recommence l'étage courant.
 - [ ] Pause : image figée, Reprendre / Recommencer / Paramètres / Menu fonctionnent.
 - [ ] Paramètres : remappage d'une touche → persiste après relance ; plein écran.
 - [ ] Redimensionner la fenêtre : le rendu reste net, ratio préservé.

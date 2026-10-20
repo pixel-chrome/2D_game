@@ -83,7 +83,7 @@ Autre effet à vérifier : `MeleeAttack.strike` fait `world.makeNoise(...)` seul
 
 ### 3.3 `MapLoader` et la création des ennemis
 
-`GameScreen.spawnEnemies()` fait `new ShooterEnemy` / `new SkullKnight` en dur, et `MapLoader` classe tout objet non reconnu comme tireur.
+`GameScreen.spawnEnemies()` (appelée par `enterLevel` à chaque étage) fait `new ShooterEnemy` / `new SkullKnight` en dur, et `MapLoader` classe tout objet non reconnu comme tireur.
 Pour le boss (et tout futur ennemi), introduire une **fabrique** :
 
 ```java
@@ -163,11 +163,12 @@ Voir [`UML.md §11`](UML.md#11-extension-prévue--boss-final).
 ## 5. La pièce du boss
 
 1. **Déclencheur** : `BossRoom` surveille l'entrée du joueur dans une zone (objet Tiled `boss_trigger`).
-2. **Verrouillage** : une couche de tuiles `Porte` incluse dès le départ dans `moveLayers` (et `bulletLayers`), **vide** au départ.
+2. **Existant** : `boss.tmx` est déjà dans le projet et on y arrive par une porte (`Door`, entrée `entry_from_etage_1`). Le fondu, le verrouillage `requires_clear` et le redémarrage sur l'entrée de l'étage courant (`GameScreen.restart`) sont donc **déjà faits**.
+3. **Verrouillage de l'arène** : une couche de tuiles `Porte` incluse dès le départ dans `moveLayers` (et `bulletLayers`), **vide** au départ.
    `BossRoom` y pose des cellules pour fermer la salle (`layer.setCell`) : collisions et rendu suivent sans autre code, car `MapLoader` rend déjà les calques.
-3. **Combat** : musique/ambiance (quand l'audio existera), barre de vie.
-4. **Victoire** : à la mort du boss, déverrouille, puis `VictoryScreen`.
-5. **Échec / recommencer** : `GameScreen.restart` recrée le boss et rouvre la porte (`BossRoom.reset()`).
+4. **Combat** : musique/ambiance (quand l'audio existera), barre de vie.
+5. **Victoire** : à la mort du boss, déverrouille, puis `VictoryScreen`.
+6. **Échec / recommencer** : `GameScreen.restart()` appelle `enterLevel`, qui recrée les ennemis via `spawnEnemies` ; le boss y sera recréé, et `BossRoom.reset()` rouvrira l'arène.
 
 ## 6. Plan d'implémentation conseillé
 
@@ -188,4 +189,4 @@ Voir [`UML.md §11`](UML.md#11-extension-prévue--boss-final).
 - Le boss peut-il être tué en un coup après un parry réussi (style *Katana Zero*) plutôt que par PV ?
 - Combien de gardes invoqués, et de quel type ?
 - Y a-t-il un checkpoint juste avant le boss (recommencer depuis la porte) ou on recommence l'étage ?
-- Où est la dernière pièce : dans `etage_1.tmx` ou dans `etage_2.tmx` ?
+- L'arène est `boss.tmx` (déjà créée, vide pour l'instant). Y a-t-il une porte de sortie après le boss, ou la victoire est-elle immédiate ?

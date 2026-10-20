@@ -68,11 +68,11 @@ create()  ──►  MainMenuScreen ──JOUER──► GameScreen ◄───
 | Textures laser (`LaserAssets`) | `Enemy.loadAssets` | `Enemy.disposeAssets` |
 
 Règle de projet : toute classe qui possède une ressource native implémente `Disposable`.
-Attention : `GameScreen` recharge les assets ennemis à chaque création (`Enemy.loadAssets` dans le constructeur) ; ils sont libérés à son `dispose`.
+`GameScreen` charge les assets ennemis une fois à sa création. À chaque changement d'étage (`loadLevel`), la carte, ses ombres (`MapShadows`) et le `GameRenderer` de l'ancien étage sont libérés avant d'installer ceux du nouveau ; le `Player` et la caméra restent les mêmes.
 
 ## 6. Données de niveau (Tiled)
 
-`assets/maps/etage_1.tmx` — 70 × 50 tuiles de 16 px.
+`assets/maps/etage_1.tmx` (70 × 50 tuiles de 16 px), `etage_2.tmx`, `boss.tmx`. Chaque carte suit le même contrat, vérifié par `MapLoader`.
 
 | Calque | Type | Rôle |
 |---|---|---|
@@ -81,7 +81,8 @@ Attention : `GameScreen` recharge les assets ennemis à chaque création (`Enemy
 | `Objets` | tuiles | bloque corps et balles (pas la vue) |
 | `Chaises` | tuiles | bloque les corps seulement |
 | `Petits Objets` | tuiles | décor, sans collision |
-| `Spawns` | objets | `player_spawn`, `skull_knight`, tout autre objet = tireur |
+| `Spawns` | objets | `player_spawn` (entrée par défaut), `entry_xxx` (arrivée par une porte), `skull_knight`, tout autre objet = tireur |
+| `Doors` | objets | rectangles : `target_map`, `target_entry`, `requires_clear` (vrai par défaut) |
 
 Une case non vide d'un calque de collision est solide ; sortir de la carte est considéré comme solide.
 `MapLoader.requireLayer` lève une `IllegalStateException` si un calque obligatoire manque (échec rapide plutôt que bug silencieux).
@@ -96,7 +97,7 @@ Une case non vide d'un calque de collision est solide ; sortir de la carte est c
 ./gradlew clean build
 ```
 
-Raccourcis en jeu utiles au développement : `F1` (hitbox) ; `R` après la mort.
+Raccourcis en jeu utiles au développement : `F1` (hitbox), `F2` (mode dieu) ; `R` après la mort.
 
 ## 8. Dette technique connue
 
@@ -104,7 +105,7 @@ Raccourcis en jeu utiles au développement : `F1` (hitbox) ; `R` après la mort.
 |---|---|
 | Version de Java | `build.gradle` déclare `sourceCompatibility = 8`, mais `World` utilise `List.of` (Java 9). À corriger : passer à 17 ou remplacer. |
 | Audio | volumes réglables mais aucun son joué. |
-| Un seul niveau | `MapLoader.MAP_PATH` est une constante. |
-| `GameScreen.debug` | `true` par défaut (hitbox visibles au lancement). |
+| Premier étage en dur | `GameScreen.FIRST_MAP = "maps/etage_1.tmx"` ; la suite est pilotée par les portes de chaque carte. |
+| `ScreenFade` | est dans le dossier `world/` mais déclare `package …render` : à harmoniser. |
 | Tests | aucun pour l'instant. |
 | Assets | le dossier `assets/` contient beaucoup de packs non utilisés (taille du dépôt). |
