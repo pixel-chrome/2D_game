@@ -11,7 +11,14 @@ public final class Collision {
     /** Empêche l’instanciation de cette classe utilitaire. */
     private Collision() {}
 
-    /** Vrai si le point (px, py) est dans une case non vide d'une des couches (ou hors de la map). */
+    /**
+     * Vrai si le point (px, py) est dans une case non vide d'une des couches (ou hors de la map).
+     *
+     * @param layers calques à tester
+     * @param px abscisse (px)
+     * @param py ordonnée (px)
+     * @return vrai si le point est dans un obstacle
+     */
     public static boolean isSolid(TiledMapTileLayer[] layers, float px, float py) {
         int tx = (int) Math.floor(px / TILE_SIZE);
         int ty = (int) Math.floor(py / TILE_SIZE);
@@ -22,7 +29,14 @@ public final class Collision {
         return false;
     }
 
-    /** Vrai si aucun mur ne se trouve sur la ligne entre 'from' et 'to'. */
+    /**
+     * Vrai si aucun mur ne se trouve sur la ligne entre 'from' et 'to'.
+     *
+     * @param layers calques qui bloquent
+     * @param from point de départ
+     * @param to point d'arrivée
+     * @return vrai si la ligne est dégagée
+     */
     public static boolean hasLineOfSight(TiledMapTileLayer[] layers, Vector2 from, Vector2 to) {
         float dist = from.dst(to);
         int steps = (int) Math.ceil(dist / 4f);   // on teste un point tous les 4 px
@@ -34,7 +48,13 @@ public final class Collision {
         }
         return true;
     }
-    /** Vrai si le rectangle touche une case non vide d'une des couches (ou sort de la map). */
+    /**
+     * Vrai si le rectangle touche une case non vide d'une des couches (ou sort de la map).
+     *
+     * @param layers calques à tester
+     * @param r rectangle à tester
+     * @return vrai si le rectangle touche un obstacle
+     */
     public static boolean overlapsSolid(TiledMapTileLayer[] layers, Rectangle r) {
         int x0 = (int) Math.floor(r.x / TILE_SIZE);
         int x1 = (int) Math.floor((r.x + r.width) / TILE_SIZE);

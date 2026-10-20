@@ -19,7 +19,9 @@ import com.badlogic.gdx.utils.Disposable;
  * Tout est dessiné en code. Coordonnées logiques : 960 x 540.
  */
 public class MenuBackground implements Disposable {
+    /** Largeur logique des menus. */
     public static final float W = 960f;
+    /** Hauteur logique des menus. */
     public static final float H = 540f;
 
     private static final Color SKY_TOP = Color.valueOf("090b0f");
@@ -60,6 +62,11 @@ public class MenuBackground implements Disposable {
     // repère du katana (rotation autour de la garde)
     private float kc = 1f, ks = 0f;
 
+    /**
+     * Prépare le fond animé.
+     *
+     * @param film voile et vignette partagés
+     */
     public MenuBackground(FilmOverlay film) {
         this.film = film;
 
@@ -81,7 +88,12 @@ public class MenuBackground implements Disposable {
         softTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
     }
 
-    /** À appeler à chaque frame, avant de dessiner l'interface. */
+    /**
+     * À appeler à chaque frame, avant de dessiner l'interface.
+     *
+     * @param delta temps écoulé (s)
+     * @param projection matrice de projection des menus
+     */
     public void render(float delta, Matrix4 projection) {
         time += delta;
         Gdx.gl.glEnable(GL20.GL_BLEND);

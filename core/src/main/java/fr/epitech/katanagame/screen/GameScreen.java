@@ -73,7 +73,11 @@ public class GameScreen extends ScreenAdapter {
     /** Mode dieu (F2) : le joueur ne peut plus mourir. Reste actif d'un étage à l'autre. */
     private boolean godMode = false;
 
-    /** Prépare les éléments de la partie et charge le premier étage. */
+    /**
+     * Prépare les éléments de la partie et charge le premier étage.
+     *
+     * @param game jeu qui possède l'écran
+     */
     public GameScreen(Main game) {
         this.game = game;
         camera = new GameCamera();
@@ -264,7 +268,11 @@ public class GameScreen extends ScreenAdapter {
         renderer.render(world, player, camera.getViewport(), debug, slowMo.getCharge(), slowMo.getIntensity(), godMode);
     }
 
-    /** Fait vivre le corps et le sang pendant l'écran de game over. */
+    /**
+     * Fait vivre le corps et le sang pendant l'écran de game over.
+     *
+     * @param delta temps réel écoulé (s)
+     */
     public void updateEffects(float delta) {
         player.update(delta, world);
         world.blood.update(delta, world.bulletLayers);

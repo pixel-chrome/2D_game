@@ -34,6 +34,8 @@ public final class LaserAssets {
 
     /**
      * Retourne une texture laser choisie aléatoirement.
+     *
+     * @return une texture de laser
      */
     public static Texture getRandomTexture() {
         loadAssets();

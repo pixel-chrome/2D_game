@@ -25,7 +25,12 @@ public class SkullKnight extends Enemy {
     private boolean hitDone;
     private float cooldown;
 
-    /** Crée un chevalier à la position donnée. */
+    /**
+     * Crée un chevalier à la position donnée.
+     *
+     * @param x abscisse initiale
+     * @param y ordonnée initiale
+     */
     public SkullKnight(float x, float y) {
         super(x, y, RUN_SPEED);
     }

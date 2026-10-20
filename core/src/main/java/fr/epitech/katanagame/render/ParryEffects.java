@@ -35,14 +35,27 @@ public final class ParryEffects implements ShapeEffect {
         float x, y, vx, vy, age;
     }
 
-    /** Lance le croissant du parry depuis at, orienté vers angleDeg (direction de visée). */
+    /** Crée des effets de parry vides. */
+    public ParryEffects() {}
+
+    /**
+     * Lance le croissant du parry depuis at, orienté vers angleDeg (direction de visée).
+     *
+     * @param at centre du balayage
+     * @param angleDeg angle de visée (degrés)
+     */
     public void swing(Vector2 at, float angleDeg) {
         swingAt.set(at);
         swingAngle = angleDeg;
         swingAge = 0f;
     }
 
-    /** Impact d'un parry réussi en at : anneau, étincelles dans la direction dir et flash. */
+    /**
+     * Impact d'un parry réussi en at : anneau, étincelles dans la direction dir et flash.
+     *
+     * @param at point d'impact
+     * @param dir direction du choc
+     */
     public void impact(Vector2 at, Vector2 dir) {
         rings.add(new Ring(at.x, at.y));
         float base = dir.isZero() ? 0f : dir.angleDeg();
@@ -99,7 +112,12 @@ public final class ParryEffects implements ShapeEffect {
         }
     }
 
-    /** Flash blanc sur toute la vue. */
+    /**
+     * Flash blanc sur toute la vue.
+     *
+     * @param shapes Le ShapeRenderer, déjà ouvert en mode Filled.
+     * @param camera caméra de la partie
+     */
     public void drawFlash(ShapeRenderer shapes, Camera camera) {
         if (flash <= 0f) return;
         shapes.setColor(1f, 1f, 1f, Math.min(1f, flash));

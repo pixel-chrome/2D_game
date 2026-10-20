@@ -37,13 +37,22 @@ public final class DoorIndicator implements Disposable {
     private float time = 0f;
     private int remaining = 0;   // gardes encore vivants
 
+    /**
+     * Crée l'indicateur des portes d'un étage.
+     *
+     * @param doors portes de l'étage
+     */
     public DoorIndicator(List<Door> doors) {
         this.doors = doors;
         font.getData().setScale(TEXT_SCALE);
         font.getRegion().getTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
     }
 
-    /** À appeler une fois par image, avant les méthodes de dessin. */
+    /**
+     * À appeler une fois par image, avant les méthodes de dessin.
+     *
+     * @param world monde de l'étage
+     */
     public void prepare(World world) {
         time += Gdx.graphics.getDeltaTime();
         remaining = 0;
@@ -56,7 +65,11 @@ public final class DoorIndicator implements Disposable {
         return door.requiresClear() && remaining > 0;
     }
 
-    /** Voile coloré sur la zone de la porte (à dessiner SOUS les personnages, shapes en mode Filled). */
+    /**
+     * Voile coloré sur la zone de la porte (à dessiner SOUS les personnages, shapes en mode Filled).
+     *
+     * @param shapes Le ShapeRenderer, déjà ouvert en mode Filled.
+     */
     public void drawFloor(ShapeRenderer shapes) {
         float pulse = 0.5f + 0.5f * MathUtils.sin(time * 4f);
         for (Door door : doors) {
@@ -67,7 +80,11 @@ public final class DoorIndicator implements Disposable {
         }
     }
 
-    /** Cadenas ou flèche au-dessus de la porte (shapes en mode Filled). */
+    /**
+     * Cadenas ou flèche au-dessus de la porte (shapes en mode Filled).
+     *
+     * @param shapes Le ShapeRenderer, déjà ouvert en mode Filled.
+     */
     public void drawIcons(ShapeRenderer shapes) {
         for (Door door : doors) {
             Rectangle area = door.getArea();
@@ -82,7 +99,12 @@ public final class DoorIndicator implements Disposable {
         }
     }
 
-    /** Texte au-dessus de la porte, seulement quand le joueur est proche (SpriteBatch déjà démarré). */
+    /**
+     * Texte au-dessus de la porte, seulement quand le joueur est proche (SpriteBatch déjà démarré).
+     *
+     * @param batch batch déjà ouvert
+     * @param playerPosition position du joueur
+     */
     public void drawText(SpriteBatch batch, Vector2 playerPosition) {
         for (Door door : doors) {
             Rectangle area = door.getArea();

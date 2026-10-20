@@ -36,7 +36,13 @@ public final class GameRenderer implements Disposable {
     // création des ombres de la map
     private final MapShadows mapShadows;
 
-    /** Prépare le rendu en utilisant le renderer et les portes de la carte fournis. */
+    /**
+     * Prépare le rendu en utilisant le renderer et les portes de la carte fournis.
+     *
+     * @param mapRenderer renderer de la carte Tiled
+     * @param doors portes de l'étage
+     * @param mapShadows ombres pré-calculées de la carte
+     */
     public GameRenderer(
         OrthogonalTiledMapRenderer mapRenderer,
         List<Door> doors,
@@ -47,7 +53,17 @@ public final class GameRenderer implements Disposable {
         this.doorIndicator = new DoorIndicator(doors);
     }
 
-    /** Dessine la carte, les personnages, les projectiles et les éléments de débogage. */
+    /**
+     * Dessine la carte, les personnages, les projectiles et les éléments de débogage. *
+     *
+     * @param world monde à dessiner
+     * @param player joueur
+     * @param viewport viewport de la partie
+     * @param debug afficher les hitbox
+     * @param slowCharge jauge de ralenti (0 à 1)
+     * @param slowIntensity intensité du ralenti (0 à 1)
+     * @param godMode afficher le halo du mode dieu
+     */
     public void render(World world, Player player, Viewport viewport, boolean debug,
                        float slowCharge, float slowIntensity, boolean godMode) {
         time += Gdx.graphics.getDeltaTime();

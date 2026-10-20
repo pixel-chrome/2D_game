@@ -38,14 +38,27 @@ public final class SlashEffects implements ShapeEffect {
         float x, y, vx, vy, age;
     }
 
-    /** Ajoute un trait de vitesse derrière le joueur (position at, direction de la fente dir). */
+    /** Crée des effets de coup vides. */
+    public SlashEffects() {}
+
+    /**
+     * Ajoute un trait de vitesse derrière le joueur (position at, direction de la fente dir).
+     *
+     * @param at position du joueur
+     * @param dir direction de la fente
+     */
     public void speedLine(Vector2 at, Vector2 dir) {
         float side = MathUtils.random(-9f, 9f);
         Vector2 n = new Vector2(-dir.y, dir.x).scl(side);
         lines.add(new Line(at.x + n.x - dir.x * 6f, at.y + n.y - dir.y * 6f, -dir.x, -dir.y, MathUtils.random(18f, 40f)));
     }
 
-    /** Impact sur un ennemi en at : entaille en X dans la direction dir et étincelles. */
+    /**
+     * Impact sur un ennemi en at : entaille en X dans la direction dir et étincelles.
+     *
+     * @param at point d'impact
+     * @param dir direction du coup
+     */
     public void hit(Vector2 at, Vector2 dir) {
         float base = dir.isZero() ? 0f : dir.angleDeg();
         cuts.add(new Cut(at.x, at.y, base + 45f));

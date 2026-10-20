@@ -23,29 +23,43 @@ import com.badlogic.gdx.utils.Disposable;
  * Tout est généré en code, aucun fichier d'image n'est nécessaire.
  */
 public class Theme implements Disposable {
+    /** Noir presque pur (fond). */
     public static final Color INK   = Color.valueOf("0b0c0e");
+    /** Gris cendre (texte secondaire). */
     public static final Color ASH   = Color.valueOf("7d8084");
+    /** Blanc os (texte principal). */
     public static final Color BONE  = Color.valueOf("dcd8cc");
+    /** Rouge sang (accent). */
     public static final Color BLOOD = Color.valueOf("9b1c1c");
 
     /** Les polices sont générées en 2x puis réduites de moitié : nettes même en plein écran. */
     private static final float FONT_SCALE = 0.5f;
     private static final String CHARS = FreeTypeFontGenerator.DEFAULT_CHARS + "éèêëàâäçùûüôöîïÉÈÀÇœ°";
 
+    /** Police du texte courant. */
     public final BitmapFont font;
+    /** Petite police (indications). */
     public final BitmapFont smallFont;
+    /** Grande police (titres). */
     public final BitmapFont titleFont;
 
+    /** Style des boutons de menu. */
     public final TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
+    /** Style du texte courant. */
     public final Label.LabelStyle labelStyle;
+    /** Style des titres. */
     public final Label.LabelStyle titleStyle;
+    /** Style des indications. */
     public final Label.LabelStyle hintStyle;
+    /** Style des curseurs de volume. */
     public final Slider.SliderStyle sliderStyle;
+    /** Style des cases à cocher. */
     public final CheckBox.CheckBoxStyle checkStyle;
 
     private final Texture whiteTex;
     private final TextureRegion white;
 
+    /** Génère les polices, les styles et la texture blanche. */
     public Theme() {
         Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pm.setColor(Color.WHITE);
@@ -105,7 +119,13 @@ public class Theme implements Disposable {
         return f;
     }
 
-    /** Bouton de menu : texte aligné à gauche (ou centré). */
+    /**
+     * Bouton de menu : texte aligné à gauche (ou centré).
+     *
+     * @param text texte du bouton
+     * @param centered vrai pour centrer le texte, faux pour l'aligner à gauche
+     * @return le bouton
+     */
     public TextButton button(String text, boolean centered) {
         TextButton b = new TextButton(text, buttonStyle);
         b.getLabel().setAlignment(centered ? Align.center : Align.left);
@@ -113,7 +133,12 @@ public class Theme implements Disposable {
         return b;
     }
 
-    /** "LAME D'AUBE" devient "L A M E   D ' A U B E" : un titre aéré, plus cinématographique. */
+    /**
+     * "LAME D'AUBE" devient "L A M E   D ' A U B E" : un titre aéré, plus cinématographique.
+     *
+     * @param s texte à aérer
+     * @return le texte avec une espace entre chaque lettre
+     */
     public static String spaced(String s) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {

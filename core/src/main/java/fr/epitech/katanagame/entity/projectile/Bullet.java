@@ -12,6 +12,7 @@ import java.util.Deque;
 
 /** Représente un projectile laser, son déplacement et sa traînée visuelle. */
 public class Bullet {
+    /** Vitesse d'un laser (px/s). */
     public static final float SPEED = 500f;
     private static final float RADIUS = 2f;
     private static final float REFLECT_BOOST = 1.6f;
@@ -33,14 +34,25 @@ public class Bullet {
     private boolean alive = true;
     private boolean reflected;
 
-    /** Crée un projectile à une position et dans une direction données. */
+    /**
+     * Crée un projectile à une position et dans une direction données.
+     *
+     * @param from position de départ
+     * @param direction direction du tir
+     * @param texture texture du laser
+     */
     public Bullet(Vector2 from, Vector2 direction, Texture texture) {
         position.set(from);
         velocity.set(direction).nor().scl(SPEED);
         this.texture = texture;
     }
 
-    /** Déplace le projectile, mémorise sa trajectoire et vérifie les collisions. */
+    /**
+     * Déplace le projectile, mémorise sa trajectoire et vérifie les collisions.
+     *
+     * @param delta temps écoulé (s)
+     * @param walls calques qui arrêtent le laser
+     */
     public void update(float delta, TiledMapTileLayer[] walls) {
         position.mulAdd(velocity, delta);
         life += delta;
@@ -56,7 +68,11 @@ public class Bullet {
         }
     }
 
-    /** Dessine la traînée lumineuse puis le laser dans sa direction de déplacement. */
+    /**
+     * Dessine la traînée lumineuse puis le laser dans sa direction de déplacement.
+     *
+     * @param batch batch déjà ouvert
+     */
     public void draw(SpriteBatch batch) {
         float angle = velocity.angleDeg() + 180f;
         int index = 0;
@@ -98,7 +114,11 @@ public class Bullet {
         );
     }
 
-    /** Renvoie le projectile (parry) : plus rapide, il blesse désormais les ennemis et plus le joueur. */
+    /**
+     * Renvoie le projectile (parry) : plus rapide, il blesse désormais les ennemis et plus le joueur.
+     *
+     * @param direction nouvelle direction
+     */
     public void reflect(Vector2 direction) {
         velocity.set(direction).nor().scl(SPEED * REFLECT_BOOST);
         reflected = true;
@@ -106,28 +126,48 @@ public class Bullet {
         trail.clear();
     }
 
-    /** Indique si le projectile a été renvoyé par le joueur. */
+    /**
+     * Indique si le projectile a été renvoyé par le joueur.
+     *
+     * @return vrai si le joueur l'a renvoyé
+     */
     public boolean isReflected() {
         return reflected;
     }
 
-    /** Position actuelle du projectile. */
+    /**
+     * Position actuelle du projectile.
+     *
+     * @return la position (modifiable)
+     */
     public Vector2 getPosition() {
         return position;
     }
 
-    /** Direction de déplacement (vecteur unitaire). */
+    /**
+     * Direction de déplacement (vecteur unitaire).
+     *
+     * @return une copie du vecteur unitaire de déplacement
+     */
     public Vector2 getDirection() {
         return new Vector2(velocity).nor();
     }
 
-    /** Retourne la hitbox actuelle du projectile. */
+    /**
+     * Retourne la hitbox actuelle du projectile.
+     *
+     * @return la hitbox, recalculée à chaque appel
+     */
     public Rectangle getBounds() {
         bounds.set(position.x - RADIUS, position.y - RADIUS, RADIUS * 2f, RADIUS * 2f);
         return bounds;
     }
 
-    /** Indique si le projectile est encore actif. */
+    /**
+     * Indique si le projectile est encore actif.
+     *
+     * @return vrai tant que le projectile existe
+     */
     public boolean isAlive() {
         return alive;
     }

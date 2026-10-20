@@ -11,6 +11,9 @@ import com.badlogic.gdx.utils.Disposable;
  * puis l'écran se rallume.
  */
 public final class ScreenFade implements Disposable {
+    /** Crée un fondu inactif. */
+    public ScreenFade() {}
+
     private enum Phase { NONE, FADING_OUT, FADING_IN }
 
     private static final float MAX_DELTA = 1f / 30f;   // un chargement long ne doit pas "manger" le fondu
@@ -36,10 +39,20 @@ public final class ScreenFade implements Disposable {
         this.time = 0f;
     }
 
+    /**
+     * Indique si un fondu est en cours.
+     *
+     * @return vrai pendant le fondu
+     */
     public boolean isActive() {
         return phase != Phase.NONE;
     }
 
+    /**
+     * Fait avancer le fondu.
+     *
+     * @param delta temps réel écoulé (s)
+     */
     public void update(float delta) {
         if (phase == Phase.NONE) return;
 

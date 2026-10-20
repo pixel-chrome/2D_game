@@ -59,7 +59,11 @@ public final class ShadowRenderer {
         }
     }
 
-    /** Le shader d'ombre, pour dessiner beaucoup de quads d'un coup avec drawQuad(). */
+    /**
+     * Le shader d'ombre, pour dessiner beaucoup de quads d'un coup avec drawQuad().
+     *
+     * @return le shader d'ombre (après initialize())
+     */
     public static ShaderProgram getShader() {
         requireInitialized();
         return shader;
@@ -68,15 +72,31 @@ public final class ShadowRenderer {
     /**
      * Ombre d'un sprite (opacité par défaut). À appeler AVANT de dessiner le sprite.
      *
-     * @param x,y,width,height rectangle où le sprite est dessiné (coin bas-gauche)
-     * @param footY            Y monde de la ligne des pieds (ex : position.y - FEET_OFFSET_Y)
+     * @param batch  batch déjà ouvert
+     * @param frame  image du sprite dont on projette l'ombre
+     * @param x      abscisse du coin bas-gauche du sprite
+     * @param y      ordonnée du coin bas-gauche du sprite
+     * @param width  largeur du sprite
+     * @param height hauteur du sprite
+     * @param footY  Y monde de la ligne des pieds (ex : position.y - FEET_OFFSET_Y)
      */
     public static void draw(SpriteBatch batch, TextureRegion frame,
                             float x, float y, float width, float height, float footY) {
         draw(batch, frame, x, y, width, height, footY, ALPHA);
     }
 
-    /** Pareil, avec une opacité choisie. */
+    /**
+     * Pareil, avec une opacité choisie.
+     *
+     * @param batch  batch déjà ouvert
+     * @param frame  image du sprite dont on projette l'ombre
+     * @param x      abscisse du coin bas-gauche du sprite
+     * @param y      ordonnée du coin bas-gauche du sprite
+     * @param width  largeur du sprite
+     * @param height hauteur du sprite
+     * @param footY  Y monde de la ligne des pieds
+     * @param alpha  opacité de l'ombre (0 à 1)
+     */
     public static void draw(SpriteBatch batch, TextureRegion frame,
                             float x, float y, float width, float height, float footY, float alpha) {
         requireInitialized();
@@ -89,6 +109,15 @@ public final class ShadowRenderer {
     /**
      * Dessine l'ombre SANS changer de shader : l'appelant a déjà fait
      * batch.setShader(ShadowRenderer.getShader()). Évite un flush par tuile.
+     *
+     * @param batch  batch déjà ouvert
+     * @param frame  image du sprite dont on projette l'ombre
+     * @param x      abscisse du coin bas-gauche du sprite
+     * @param y      ordonnée du coin bas-gauche du sprite
+     * @param width  largeur du sprite
+     * @param height hauteur du sprite
+     * @param footY  Y monde de la ligne des pieds
+     * @param alpha  opacité de l'ombre (0 à 1)
      */
     public static void drawQuad(SpriteBatch batch, TextureRegion frame,
                                 float x, float y, float width, float height,
@@ -121,6 +150,7 @@ public final class ShadowRenderer {
         }
     }
 
+    /** Libère le shader d'ombre. */
     public static void dispose() {
         if (shader != null) {
             shader.dispose();

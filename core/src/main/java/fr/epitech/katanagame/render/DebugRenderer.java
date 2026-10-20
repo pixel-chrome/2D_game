@@ -11,7 +11,13 @@ import fr.epitech.katanagame.world.World;
 public final class DebugRenderer {
     private DebugRenderer() { }
 
-    /** Dessine les hitbox du joueur, des ennemis et des projectiles. */
+    /**
+     * Dessine les hitbox du joueur, des ennemis et des projectiles.
+     *
+     * @param shapes le ShapeRenderer (fermé en entrée)
+     * @param world monde à afficher
+     * @param player joueur
+     */
     public static void draw(ShapeRenderer shapes, World world, Player player) {
         shapes.begin(ShapeRenderer.ShapeType.Line);
 
