@@ -1,6 +1,7 @@
 package fr.epitech.katanagame.screen;
 
 import fr.epitech.katanagame.Main;
+import fr.epitech.katanagame.audio.Jukebox;
 import fr.epitech.katanagame.settings.GameSettings;
 import fr.epitech.katanagame.ui.Theme;
 import fr.epitech.katanagame.ui.MenuBackground;
@@ -55,7 +56,10 @@ public class SettingsScreen extends ScreenAdapter {
         Label title = new Label(Theme.spaced("PARAMETRES"), t.titleStyle);
 
         Label musicValue = new Label("", t.labelStyle);
-        Slider music = volumeSlider(GameSettings.musicVolume, musicValue, v -> GameSettings.musicVolume = v);
+        Slider music = volumeSlider(GameSettings.musicVolume, musicValue, v -> {
+            GameSettings.musicVolume = v;
+            Jukebox.refreshVolume();
+        });
         Label sfxValue = new Label("", t.labelStyle);
         Slider sfx = volumeSlider(GameSettings.sfxVolume, sfxValue, v -> GameSettings.sfxVolume = v);
 

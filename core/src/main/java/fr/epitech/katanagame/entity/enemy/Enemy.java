@@ -7,6 +7,7 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.Character;
 import fr.epitech.katanagame.entity.projectile.LaserAssets;
 import fr.epitech.katanagame.world.World;
@@ -98,6 +99,7 @@ public abstract class Enemy extends Character {
     @Override
     protected void onDeath() {
         deathTime = 0f;
+        Sounds.play(Sounds.Effect.DEATH);
     }
 
     /**

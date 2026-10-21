@@ -1,5 +1,7 @@
 package fr.epitech.katanagame.ui;
 
+import fr.epitech.katanagame.audio.Sounds;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -12,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Disposable;
@@ -130,6 +133,12 @@ public class Theme implements Disposable {
         TextButton b = new TextButton(text, buttonStyle);
         b.getLabel().setAlignment(centered ? Align.center : Align.left);
         if (!centered) b.getLabelCell().padLeft(18f);
+        b.addListener(new ClickListener() {
+            @Override public void enter(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
+                super.enter(event, x, y, pointer, fromActor);
+                if (pointer == -1) Sounds.play(Sounds.Effect.MENU);   // survol à la souris
+            }
+        });
         return b;
     }
 

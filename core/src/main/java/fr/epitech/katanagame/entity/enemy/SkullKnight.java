@@ -1,5 +1,6 @@
 package fr.epitech.katanagame.entity.enemy;
 
+import fr.epitech.katanagame.audio.Sounds;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
@@ -93,6 +94,7 @@ public class SkullKnight extends Enemy {
         }
         if (!hitDone && attackTime >= HIT_TIME) {
             hitDone = true;
+            Sounds.play(Sounds.Effect.ATTACK);
             if (player.isAlive()) strike(world, player, target);
         }
         if (attackTime >= ATTACK_TOTAL) {

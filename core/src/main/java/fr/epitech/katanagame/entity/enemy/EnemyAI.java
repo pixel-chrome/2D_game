@@ -1,5 +1,6 @@
 package fr.epitech.katanagame.entity.enemy;
 
+import fr.epitech.katanagame.audio.Sounds;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -40,6 +41,7 @@ final class EnemyAI {
     void updateAlert(boolean sees, Vector2 target, float delta) {
         seesPlayer = sees;
         if (sees) {
+            if (!alerted) Sounds.play(Sounds.Effect.DETECT);
             alerted = true;
             alertTimer = LOSE_SIGHT_TIME;
             lastKnown.set(target);

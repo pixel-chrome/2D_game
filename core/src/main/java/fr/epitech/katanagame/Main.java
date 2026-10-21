@@ -1,5 +1,7 @@
 package fr.epitech.katanagame;
 
+import fr.epitech.katanagame.audio.Jukebox;
+import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.screen.GameScreen;
 import fr.epitech.katanagame.screen.MainMenuScreen;
 import fr.epitech.katanagame.settings.GameSettings;
@@ -55,6 +57,8 @@ public class Main extends Game {
         super.dispose();
         Screen current = getScreen();
         if (current != null) current.dispose();
+        Jukebox.dispose();
+        Sounds.dispose();
         theme.dispose();
         background.dispose();
         film.dispose();

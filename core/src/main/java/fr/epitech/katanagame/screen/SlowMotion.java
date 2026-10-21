@@ -17,10 +17,12 @@ final class SlowMotion {
     private float charge = 1f;
     private float blend;
     private boolean active;
+    private boolean started;
 
     /** À appeler une fois par image avec le vrai delta. */
     void update(float delta, boolean wantsSlow) {
         if (wantsSlow && (active || charge >= MIN_TO_START) && charge > 0f) {
+            started |= !active;
             active = true;
             charge = Math.max(0f, charge - delta / MAX_DURATION);
         } else {
@@ -30,10 +32,18 @@ final class SlowMotion {
         blend = MathUtils.clamp(blend + (active ? 1f : -1f) * BLEND_SPEED * delta, 0f, 1f);
     }
 
+    /** Vrai une seule fois par ralenti, à son démarrage. */
+    boolean pollStart() {
+        boolean was = started;
+        started = false;
+        return was;
+    }
+
     void reset() {
         charge = 1f;
         blend = 0f;
         active = false;
+        started = false;
     }
 
     /** Échelle de temps des ennemis et des tirs (1 = normal). */

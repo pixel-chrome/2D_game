@@ -1,6 +1,7 @@
 package fr.epitech.katanagame.entity.player;
 
 import com.badlogic.gdx.math.Vector2;
+import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.Direction;
 import fr.epitech.katanagame.world.World;
 
@@ -21,6 +22,7 @@ final class DashAbility extends Ability {
         dir.set(direction);
         facing = Direction.of(dir);
         started = true;
+        Sounds.play(Sounds.Effect.DASH);
         timer = DURATION;
         cooldown = COOLDOWN;
     }
