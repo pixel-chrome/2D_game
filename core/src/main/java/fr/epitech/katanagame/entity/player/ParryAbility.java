@@ -1,6 +1,7 @@
 package fr.epitech.katanagame.entity.player;
 
 import com.badlogic.gdx.math.Vector2;
+import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.enemy.Enemy;
 import fr.epitech.katanagame.entity.projectile.Bullet;
 import fr.epitech.katanagame.world.World;
@@ -33,6 +34,7 @@ final class ParryAbility extends Ability {
         timer = DURATION;
         animTimer = ANIM;
         cooldown = COOLDOWN;
+        Sounds.play(Sounds.Effect.PARRY);
         world.parryFx.swing(zone(), player.getAim().angleDeg());
         return true;
     }
@@ -64,6 +66,7 @@ final class ParryAbility extends Ability {
         }
         if (any) {
             succeeded = true;
+            Sounds.play(Sounds.Effect.PARRY_HIT);
             cooldown = 0f;                                        // un parry réussi se rejoue tout de suite
             player.flash();
         }

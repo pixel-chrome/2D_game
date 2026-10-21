@@ -2,6 +2,7 @@ package fr.epitech.katanagame.entity.enemy;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.projectile.Bullet;
 import fr.epitech.katanagame.world.World;
 
@@ -163,6 +164,7 @@ final class EnemyWeapon {
 
     /** Crée une salve dans la direction annoncée pendant la canalisation. */
     private void fireVolley(World world) {
+        Sounds.play(Sounds.Effect.SHOOT);
         float baseAngle = chargeDirection.angleDeg();
         int half = FAN_BULLETS / 2;
 

@@ -2,6 +2,7 @@ package fr.epitech.katanagame.entity.player;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.enemy.Enemy;
 import fr.epitech.katanagame.world.World;
 
@@ -35,6 +36,7 @@ final class MeleeAttack extends Ability {
         cooldown = COOLDOWN;
         lungeTimer = LUNGE_TIME;
         lungeDir.set(player.getAim());
+        Sounds.play(Sounds.Effect.ATTACK);
         strike(world);
     }
 

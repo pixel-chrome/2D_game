@@ -1,5 +1,6 @@
 package fr.epitech.katanagame.entity.player;
 
+import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.Character;
 import fr.epitech.katanagame.settings.GameSettings;
 import fr.epitech.katanagame.world.World;
@@ -62,7 +63,11 @@ public class Player extends Character implements Disposable {
         takeDamage();
     }
 
-    @Override protected void onDeath() { dash.reset(); }
+    @Override protected void onDeath() {
+        dash.reset();
+        Sounds.walking(false);
+        Sounds.play(Sounds.Effect.DEATH);
+    }
 
     /** Éclat blanc sur le sprite (coup ou parry qui touche). */
     void flash() { flash = FLASH_TIME; }
@@ -126,6 +131,7 @@ public class Player extends Character implements Disposable {
         if (GameSettings.justPressed(GameSettings.Action.DASH)) dash.trigger(moving ? dir : aim);
 
         Vector2 velocity = steering(world);
+        Sounds.walking(moving && velocity == null);
         if (velocity != null) move(velocity.x * delta, velocity.y * delta, world.moveLayers);
         else if (moving) move(dir.x * SPEED * delta, dir.y * SPEED * delta, world.moveLayers);
 
