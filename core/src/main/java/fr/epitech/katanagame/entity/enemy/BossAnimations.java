@@ -4,7 +4,10 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import fr.epitech.katanagame.entity.Direction;
+import fr.epitech.katanagame.render.ShadowRenderer;
+import fr.epitech.katanagame.render.Vfx;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -18,6 +21,8 @@ final class BossAnimations {
     private static final int FRAME = 64;
     /** Agrandissement du sprite (le boss est plus grand que les gardes). */
     private static final float SCALE = 1.8f;
+    /** Ombre un peu plus sombre que celle des gardes : le boss est grand. */
+    private static final float SHADOW_ALPHA = 0.35f;
     private static final float IDLE_TIME = 0.2f, WALK_TIME = 0.1f, FADE_TIME = 1f;
 
     private static Texture idleSheet, walkSheet, attackSheet;
@@ -94,10 +99,22 @@ final class BossAnimations {
         }
         if (boss.isAlive() && boss.phase() >= 3) green = blue = Math.min(green, blue) * 0.8f;   // enragé : rougit
         if (boss.isHurt() && ((int) (boss.time() * 30f) & 1) == 0) alpha = 0.45f;               // clignote après un dégât
+        float x = boss.getPosition().x, y = boss.getPosition().y, size = FRAME * SCALE;
+        Rectangle feet = boss.getFeetBounds();
+        float footY = feet.y + feet.height / 2f;
+        // Ombre au sol (même projection que les gardes), qui s'efface avec le corps.
+        ShadowRenderer.draw(batch, frame, x - size / 2f, y - size / 2f, size, size, footY, SHADOW_ALPHA * alpha);
+        // Flammes bleues autour du boss enragé, sous le sprite.
+        if (boss.isAlive() && boss.phase() >= 3) {
+            Vfx.draw(batch, Vfx.Kind.ANIMA, x, footY + 38f, 150f, boss.time(), 0.55f);
+        }
         batch.setColor(red, green, blue, alpha);
-        batch.draw(frame, boss.getPosition().x - FRAME / 2f, boss.getPosition().y - FRAME / 2f,
-                FRAME / 2f, FRAME / 2f, FRAME, FRAME, SCALE, SCALE, 0f);
+        batch.draw(frame, x - FRAME / 2f, y - FRAME / 2f, FRAME / 2f, FRAME / 2f, FRAME, FRAME, SCALE, SCALE, 0f);
         batch.setColor(1f, 1f, 1f, 1f);
+        // Anneau électrique qui enfle pendant l'annonce d'une attaque.
+        if (boss.isAlive() && boss.windupProgress() >= 0f) {
+            Vfx.draw(batch, Vfx.Kind.ELECTRIC_SHIELD, x, footY + 30f, 70f + 70f * boss.windupProgress(), boss.time(), 0.9f);
+        }
     }
 
     /** Libère les feuilles. */

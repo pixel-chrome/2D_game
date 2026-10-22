@@ -36,7 +36,19 @@ public final class Sounds {
         /** Tous les ennemis de l'étage sont morts. */
         VICTORY("victoireFinale"),
         /** Pas du joueur (en boucle tant qu'il marche). */
-        STEP("pas");
+        STEP("pas"),
+        /** Mort du joueur. */
+        FATALITY("fatality1", "fatality2"),
+        /** Coup de sabre du boss (balayage). */
+        BOSS_ATTACK("attaqueboss1"),
+        /** Tirs du boss. */
+        BOSS_SHOOT("attaqueboss_pppiou"),
+        /** Le boss charge son attaque. */
+        BOSS_CHARGE("attaquechargeeboss"),
+        /** Un pas du boss. */
+        BOSS_STEP("bruitpasboss"),
+        /** Charge du boss. */
+        BOSS_DASH("dashboss");
 
         private final String[] files;
 

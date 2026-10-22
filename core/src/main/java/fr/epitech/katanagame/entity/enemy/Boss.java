@@ -3,6 +3,7 @@ package fr.epitech.katanagame.entity.enemy;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Vector2;
+import fr.epitech.katanagame.world.World;
 
 /**
  * Ennemi à points de vie : encaisse plusieurs coups, brièvement invincible après chacun, et ignore les bruits.
@@ -17,6 +18,9 @@ public abstract class Boss extends Enemy {
     private final int maxHealth;
     private int health;
     private float hitCooldown;
+    /** Dégât reçu depuis la dernière image (0 = aucun) : les effets le lisent dans update(), qui a accès au monde. */
+    private int pendingHit;
+    private boolean deathReported;
 
     /**
      * Crée un boss.
@@ -63,6 +67,34 @@ public abstract class Boss extends Enemy {
     protected void onHurt() {}
 
     /**
+     * Appelé une fois par dégât encaissé, avec le monde (effets visuels).
+     *
+     * @param world monde
+     * @param reflected vrai si le dégât vient d'un projectile renvoyé
+     */
+    protected void onHitEffects(World world, boolean reflected) {}
+
+    /**
+     * Appelé une fois à la mort du boss, avec le monde (effets visuels).
+     *
+     * @param world monde
+     */
+    protected void onDeathEffects(World world) {}
+
+    @Override
+    public void update(float delta, World world) {
+        super.update(delta, world);
+        if (pendingHit > 0) {
+            onHitEffects(world, pendingHit == REFLECTED_DAMAGE);
+            pendingHit = 0;
+        }
+        if (!isAlive() && !deathReported) {
+            deathReported = true;
+            onDeathEffects(world);
+        }
+    }
+
+    /**
      * Vrai juste après un dégât (clignotement du sprite).
      *
      * @return vrai pendant l'invincibilité
@@ -86,6 +118,7 @@ public abstract class Boss extends Enemy {
         if (!isAlive() || isInvincible()) return;
         health = Math.max(0, health - damage);
         hitCooldown = HIT_COOLDOWN;
+        pendingHit = damage;
         if (health == 0) kill();
         else onHurt();
     }

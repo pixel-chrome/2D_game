@@ -7,6 +7,7 @@ import fr.epitech.katanagame.render.BloodEffects;
 import fr.epitech.katanagame.render.ParryEffects;
 import fr.epitech.katanagame.render.ShapeEffect;
 import fr.epitech.katanagame.render.SlashEffects;
+import fr.epitech.katanagame.render.VfxEffects;
 
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Vector2;
@@ -42,6 +43,8 @@ public class World {
     public final ParryEffects parryFx = new ParryEffects();
     /** Croissant, traits de vitesse et entailles de l'attaque. */
     public final SlashEffects slashFx = new SlashEffects();
+    /** Effets visuels du pack VFX (explosions, étincelles, ondes de choc). */
+    public final VfxEffects vfx = new VfxEffects();
     /** Effets dessinés au-dessus des sprites, dans l'ordre. */
     public final List<ShapeEffect> effects = List.of(slashFx, parryFx);
 
