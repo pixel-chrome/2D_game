@@ -34,7 +34,7 @@ public final class MapShadows implements Disposable {
      * est aussi dessinée décalée de ce nombre de pixels. Y négatif = vers le bas.
      */
     private static final float SIDE_OFFSET_X = 6f;
-    private static final float SIDE_OFFSET_Y = -4.5f;
+    private static final float SIDE_OFFSET_Y = -3f;
 
     private static final float SIDE_SHEAR = 0f;
 
