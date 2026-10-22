@@ -1,5 +1,6 @@
 package fr.epitech.katanagame.entity.player;
 
+import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.Character;
 import fr.epitech.katanagame.settings.GameSettings;
 import fr.epitech.katanagame.world.World;
@@ -34,7 +35,11 @@ public class Player extends Character implements Disposable {
     /** Initialise le joueur et ses dimensions de collision. */
     public Player() { super(320, 180, HITBOX_W, HITBOX_H, FEET_W, FEET_H, FEET_OFFSET_Y); }
 
-    /** Active ou désactive le mode dieu. */
+    /**
+     * Active ou désactive le mode dieu.
+     *
+     * @param godMode vrai pour rendre le joueur invincible
+     */
     public void setGodMode(boolean godMode) { this.godMode = godMode; }
 
     /** Invincible pendant le dash, ou en permanence en mode dieu. */
@@ -47,34 +52,66 @@ public class Player extends Character implements Disposable {
         corpse.reset();
     }
 
-    /** Touché par un tir venant dans la direction dir : le corps sera projeté dans ce sens. */
+    /**
+     * Touché par un tir venant dans la direction dir : le corps sera projeté dans ce sens.
+     *
+     * @param dir direction du coup reçu
+     */
     public void hit(Vector2 dir) {
         if (!isAlive() || isInvincible()) return;
         corpse.fall(dir);
         takeDamage();
     }
 
-    @Override protected void onDeath() { dash.reset(); }
+    @Override protected void onDeath() {
+        dash.reset();
+        Sounds.walking(false);
+        Sounds.play(Sounds.Effect.DEATH);
+    }
 
     /** Éclat blanc sur le sprite (coup ou parry qui touche). */
     void flash() { flash = FLASH_TIME; }
 
-    /** Direction (normalisée) du dernier dash. */
+    /**
+     * Direction (normalisée) du dernier dash.
+     *
+     * @return la direction du dernier dash
+     */
     public Vector2 getDashDir() { return dash.direction(); }
 
-    /** Vrai une seule fois par dash, au moment où il démarre (secousse de caméra). */
+    /**
+     * Vrai une seule fois par dash, au moment où il démarre (secousse de caméra).
+     *
+     * @return vrai si un dash vient de démarrer
+     */
     public boolean pollDashStart() { return dash.pollStart(); }
 
-    /** Vrai une seule fois par parry réussi (arrêt sur image, secousse de caméra). */
+    /**
+     * Vrai une seule fois par parry réussi (arrêt sur image, secousse de caméra).
+     *
+     * @return vrai si un parry vient de réussir
+     */
     public boolean pollParrySuccess() { return parry.pollSuccess(); }
 
-    /** Vrai une seule fois par coup qui touche (arrêt sur image, secousse de caméra). */
+    /**
+     * Vrai une seule fois par coup qui touche (arrêt sur image, secousse de caméra).
+     *
+     * @return vrai si un coup vient de toucher
+     */
     public boolean pollAttackHit() { return melee.pollHit(); }
 
-    /** Indique si la fenêtre de parry est active. */
+    /**
+     * Indique si la fenêtre de parry est active.
+     *
+     * @return vrai pendant la fenêtre de parry
+     */
     public boolean isParrying() { return parry.isActive(); }
 
-    /** Indique si le dash est en cours. */
+    /**
+     * Indique si le dash est en cours.
+     *
+     * @return vrai pendant le dash
+     */
     public boolean isDashing() { return dash.isActive(); }
 
     @Override public void update(float delta, World world) {
@@ -94,6 +131,7 @@ public class Player extends Character implements Disposable {
         if (GameSettings.justPressed(GameSettings.Action.DASH)) dash.trigger(moving ? dir : aim);
 
         Vector2 velocity = steering(world);
+        Sounds.walking(moving && velocity == null);
         if (velocity != null) move(velocity.x * delta, velocity.y * delta, world.moveLayers);
         else if (moving) move(dir.x * SPEED * delta, dir.y * SPEED * delta, world.moveLayers);
 
@@ -111,7 +149,11 @@ public class Player extends Character implements Disposable {
         return null;
     }
 
-    /** Hitbox de l'attaque, visible uniquement pendant son animation. */
+    /**
+     * Hitbox de l'attaque, visible uniquement pendant son animation.
+     *
+     * @return la hitbox du coup, ou null hors animation
+     */
     public Rectangle getAttackBounds() { return melee.bounds(); }
 
     @Override public void draw(SpriteBatch batch) {

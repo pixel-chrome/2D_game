@@ -42,8 +42,11 @@ public final class MapShadows implements Disposable {
     private final TextureRegion shadows;
 
     /**
+     * Pré-calcule les ombres de la carte dans une texture.
+     *
      * @param casters calques dont les tuiles projettent une ombre (Mur, Objets, Chaises...)
-     * @param mapWidthPx,mapHeightPx taille de la map en pixels
+     * @param mapWidthPx largeur de la map en pixels
+     * @param mapHeightPx hauteur de la map en pixels
      */
     public MapShadows(TiledMapTileLayer[] casters, int mapWidthPx, int mapHeightPx) {
         buffer = new FrameBuffer(Pixmap.Format.RGBA8888, mapWidthPx, mapHeightPx, false);
@@ -55,7 +58,11 @@ public final class MapShadows implements Disposable {
         shadows.flip(false, true);   // un FrameBuffer est stocké à l'envers
     }
 
-    /** À appeler entre les calques de sol et les calques de murs/objets. */
+    /**
+     * À appeler entre les calques de sol et les calques de murs/objets.
+     *
+     * @param batch batch de la carte
+     */
     public void draw(Batch batch) {
         batch.begin();
         batch.enableBlending();

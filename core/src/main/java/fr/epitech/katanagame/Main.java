@@ -1,5 +1,7 @@
 package fr.epitech.katanagame;
 
+import fr.epitech.katanagame.audio.Jukebox;
+import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.screen.GameScreen;
 import fr.epitech.katanagame.screen.MainMenuScreen;
 import fr.epitech.katanagame.settings.GameSettings;
@@ -25,6 +27,9 @@ public class Main extends Game {
     /** Fond animé partagé par les menus. */
     public MenuBackground background;
 
+    /** Crée le jeu ; les ressources sont chargées dans {@link #create()}. */
+    public Main() {}
+
     /** Initialise les paramètres, les ressources communes et le menu principal. */
     @Override
     public void create() {
@@ -35,7 +40,11 @@ public class Main extends Game {
         setScreen(new MainMenuScreen(this));
     }
 
-    /** Change d'écran et libère l'ancien. */
+    /**
+     * Change d'écran et libère l'ancien.
+     *
+     * @param next écran à afficher
+     */
     public void switchTo(Screen next) {
         Screen old = getScreen();
         setScreen(next);
@@ -48,6 +57,8 @@ public class Main extends Game {
         super.dispose();
         Screen current = getScreen();
         if (current != null) current.dispose();
+        Jukebox.dispose();
+        Sounds.dispose();
         theme.dispose();
         background.dispose();
         film.dispose();

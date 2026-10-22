@@ -1,6 +1,7 @@
 package fr.epitech.katanagame.screen;
 
 import fr.epitech.katanagame.Main;
+import fr.epitech.katanagame.audio.Jukebox;
 import fr.epitech.katanagame.settings.GameSettings;
 import fr.epitech.katanagame.ui.Theme;
 import fr.epitech.katanagame.ui.MenuBackground;
@@ -39,6 +40,13 @@ public class SettingsScreen extends ScreenAdapter {
     private GameSettings.Action waiting = null;
     private boolean consumedKey = false;   // la touche vient d'être prise par le réglage : pas de retour
 
+    /**
+     * Construit l'écran des paramètres.
+     *
+     * @param game jeu qui possède l'écran
+     * @param backdrop partie à afficher derrière (null : fond du menu)
+     * @param onBack action à lancer au retour
+     */
     public SettingsScreen(Main game, GameScreen backdrop, Runnable onBack) {
         this.game = game;
         this.backdrop = backdrop;
@@ -48,7 +56,10 @@ public class SettingsScreen extends ScreenAdapter {
         Label title = new Label(Theme.spaced("PARAMETRES"), t.titleStyle);
 
         Label musicValue = new Label("", t.labelStyle);
-        Slider music = volumeSlider(GameSettings.musicVolume, musicValue, v -> GameSettings.musicVolume = v);
+        Slider music = volumeSlider(GameSettings.musicVolume, musicValue, v -> {
+            GameSettings.musicVolume = v;
+            Jukebox.refreshVolume();
+        });
         Label sfxValue = new Label("", t.labelStyle);
         Slider sfx = volumeSlider(GameSettings.sfxVolume, sfxValue, v -> GameSettings.sfxVolume = v);
 

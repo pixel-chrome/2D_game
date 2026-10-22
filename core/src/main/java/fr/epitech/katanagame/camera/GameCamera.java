@@ -26,26 +26,53 @@ public final class GameCamera {
 
     private final Viewport viewport = new FitViewport(VIEW_WIDTH, VIEW_HEIGHT);
 
-    /** Retourne le viewport utilisé par la caméra. */
+    /** Crée la caméra avec son viewport de 480 x 270. */
+    public GameCamera() {}
+
+    /**
+     * Retourne le viewport utilisé par la caméra.
+     *
+     * @return le viewport
+     */
     public Viewport getViewport() { return viewport; }
 
-    /** Centre immédiatement la caméra sur une position. */
+    /**
+     * Centre immédiatement la caméra sur une position.
+     *
+     * @param position position à centrer
+     */
     public void centerOn(Vector2 position) {
         viewport.getCamera().position.set(position.x, position.y, 0f);
         viewport.getCamera().update();
     }
 
-    /** Déclenche une courte secousse (en pixels du monde). */
+    /**
+     * Déclenche une courte secousse (en pixels du monde).
+     *
+     * @param amount amplitude (unités du monde)
+     */
     public void shake(float amount) {
         shake = Math.max(shake, amount);
     }
 
-    /** Adapte le viewport à la taille de la fenêtre. */
+    /**
+     * Adapte le viewport à la taille de la fenêtre.
+     *
+     * @param width largeur de la fenêtre (px)
+     * @param height hauteur de la fenêtre (px)
+     */
     public void resize(int width, int height) {
         viewport.update(width, height, false);
     }
 
-    /** Suit le joueur, anticipe légèrement la souris et limite la caméra à la carte. */
+    /**
+     * Suit le joueur, anticipe légèrement la souris et limite la caméra à la carte.
+     *
+     * @param delta temps réel écoulé (s)
+     * @param playerPosition position du joueur
+     * @param mapWidth largeur de la carte (px)
+     * @param mapHeight hauteur de la carte (px)
+     */
     public void update(float delta, Vector2 playerPosition, float mapWidth, float mapHeight) {
         Camera camera = viewport.getCamera();
         camera.position.x -= shakeX;   // on retire la secousse de la frame précédente

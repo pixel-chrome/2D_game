@@ -1,6 +1,7 @@
 package fr.epitech.katanagame.screen;
 
 import fr.epitech.katanagame.Main;
+import fr.epitech.katanagame.audio.Jukebox;
 import fr.epitech.katanagame.ui.Theme;
 import fr.epitech.katanagame.ui.MenuBackground;
 
@@ -22,6 +23,11 @@ public class MainMenuScreen extends ScreenAdapter {
     private final Stage stage = new Stage(new FitViewport(MenuBackground.W, MenuBackground.H));
     private boolean leaving = false;
 
+    /**
+     * Construit le menu principal.
+     *
+     * @param game jeu qui possède l'écran
+     */
     public MainMenuScreen(Main game) {
         this.game = game;
         Theme t = game.theme;
@@ -64,6 +70,7 @@ public class MainMenuScreen extends ScreenAdapter {
 
     @Override
     public void show() {
+        Jukebox.play(Jukebox.Mode.MENU);
         Gdx.input.setInputProcessor(stage);
         stage.getRoot().getColor().a = 0f;
         stage.getRoot().addAction(Actions.fadeIn(0.9f));

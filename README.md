@@ -1,8 +1,49 @@
-# Katana Omega
+# LAME D'AUBE — Katana Omega
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+Jeu d'action **top-down « un coup = mort »** en Java ([libGDX](https://libgdx.com/)), inspiré de *Katana Zero* :
+on esquive (dash), on dévie les tirs (parry), on tranche, et on ralentit le temps. Projet EPITECH B-OOP-301 (2D Game).
 
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
+> Une lame. Un dash. Un seul coup.
+
+## Lancer le jeu
+
+```bash
+./gradlew lwjgl3:run
+```
+
+| Action | Entrée |
+|---|---|
+| Déplacement | `Z` `Q` `S` `D` |
+| Coup de sabre | clic gauche |
+| Parry (renvoie les lasers, assomme au contact) | clic droit |
+| Esquive (invincible) | `Espace` |
+| Ralenti | `Maj` gauche (maintenu) |
+| Pause / menu | `Échap` |
+| Recommencer | `R` ou `Entrée` (écran Game Over) |
+| Hitbox de debug | `F1` |
+| Mode dieu (test) | `F2` |
+
+## Documentation
+
+| Document | Contenu |
+|---|---|
+| [`docs/GDD.md`](docs/GDD.md) | Game Design Document : concept, contrôles, joueur, ennemis, niveau |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | modules, cycle de vie, ressources, données de niveau, dette technique |
+| [`docs/UML.md`](docs/UML.md) | diagrammes de classes, d'états et de séquence (Mermaid) |
+| [`docs/PATTERNS.md`](docs/PATTERNS.md) | principes OOP / SOLID et design patterns, avec renvois au code |
+| [`docs/FONCTIONS.md`](docs/FONCTIONS.md) | arbres d'appels de fonctions |
+| [`docs/BOSS.md`](docs/BOSS.md) | préparation du boss final (conception, pas encore codé) |
+| [`docs/TESTS.md`](docs/TESTS.md) | tests unitaires (89), couverture, écarts, liste de contrôle manuelle |
+| Javadoc | `./gradlew core:javadoc` → `core/build/docs/javadoc/index.html` |
+
+## État
+
+Trois cartes enchaînées par des portes (étage 1, étage 2, arène du boss vide), deux types d'ennemis, trois capacités + ralenti, IA avec A\*. Pas encore : audio, boss final
+(voir le GDD §10).
+
+---
+
+*Le reste de ce fichier vient du gabarit gdx-liftoff.*
 
 ## Platforms
 

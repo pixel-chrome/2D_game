@@ -25,7 +25,14 @@ public final class Pathfinder {
     /** Classe utilitaire : pas d'instance. */
     private Pathfinder() {}
 
-    /** Vrai si un corps de la taille des pieds peut aller de 'from' à 'to' en ligne droite. */
+    /**
+     * Vrai si un corps de la taille des pieds peut aller de 'from' à 'to' en ligne droite.
+     *
+     * @param layers calques qui bloquent
+     * @param from départ (position des pieds)
+     * @param to arrivée (position des pieds)
+     * @return vrai si le trajet en ligne droite est libre
+     */
     public static boolean isClear(TiledMapTileLayer[] layers, Vector2 from, Vector2 to) {
         float dist = from.dst(to);
         int steps = Math.max(1, (int) Math.ceil(dist / SAMPLE_STEP));
@@ -39,8 +46,12 @@ public final class Pathfinder {
     }
 
     /**
-     * Chemin de 'from' à 'to' (sans le point de départ), lissé en quelques points de passage.
-     * Liste vide si déjà en ligne droite ; null si aucun chemin.
+     * Chemin de 'from' à 'to' (sans le point de départ), lissé en quelques points de passage. Liste vide si déjà en ligne droite ; null si aucun chemin.
+     *
+     * @param layers calques qui bloquent
+     * @param from départ (position des pieds)
+     * @param to arrivée (position des pieds)
+     * @return les points de passage, une liste vide si la ligne droite est libre, ou null s'il n'y a aucun chemin
      */
     public static List<Vector2> findPath(TiledMapTileLayer[] layers, Vector2 from, Vector2 to) {
         if (isClear(layers, from, to)) return new ArrayList<>();

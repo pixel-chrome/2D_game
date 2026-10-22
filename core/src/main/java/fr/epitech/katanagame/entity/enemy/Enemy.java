@@ -7,6 +7,7 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.Character;
 import fr.epitech.katanagame.entity.projectile.LaserAssets;
 import fr.epitech.katanagame.world.World;
@@ -25,7 +26,13 @@ public abstract class Enemy extends Character {
     private float stateTime;
     private float deathTime;
 
-    /** Initialise un ennemi à une position, avec sa vitesse de course. */
+    /**
+     * Initialise un ennemi à une position, avec sa vitesse de course.
+     *
+     * @param x abscisse initiale
+     * @param y ordonnée initiale
+     * @param runSpeed vitesse de course (px/s)
+     */
     protected Enemy(float x, float y, float runSpeed) {
         super(x, y, WIDTH, HEIGHT, FEET_W, FEET_H, FEET_OFFSET_Y);
         aim.set(0f, -1f);
@@ -48,10 +55,19 @@ public abstract class Enemy extends Character {
 
     // --- Comportement ---
 
-    /** Comportement de l'ennemi vivant et non sonné : voir, se déplacer, attaquer. */
+    /**
+     * Comportement de l'ennemi vivant et non sonné : voir, se déplacer, attaquer.
+     *
+     * @param delta temps écoulé (s)
+     * @param world état partagé du monde
+     */
     protected abstract void think(float delta, World world);
 
-    /** Appelé à chaque image tant que l'ennemi est vivant, même sonné (recharges). */
+    /**
+     * Appelé à chaque image tant que l'ennemi est vivant, même sonné (recharges).
+     *
+     * @param delta temps écoulé (s)
+     */
     protected void tick(float delta) {}
 
     /** Appelé à chaque image une fois mort (arrête les attaques en cours). */
@@ -83,11 +99,14 @@ public abstract class Enemy extends Character {
     @Override
     protected void onDeath() {
         deathTime = 0f;
+        Sounds.play(Sounds.Effect.DEATH);
     }
 
     /**
-     * Repoussé par un parry venu de from : l'attaque est interrompue et l'ennemi reste sonné un instant.
-     * Même touché dans le dos, il se retourne et sait où est le joueur.
+     * Repoussé par un parry venu de from : l'attaque est interrompue et l'ennemi reste sonné un instant. Même touché dans le dos, il se retourne et sait où est le joueur.
+     *
+     * @param dir direction du recul
+     * @param from position du joueur qui pare
      */
     public void parried(Vector2 dir, Vector2 from) {
         if (!isAlive()) return;
@@ -97,12 +116,20 @@ public abstract class Enemy extends Character {
         onParried();
     }
 
-    /** Indique si l'ennemi est sonné par un parry. */
+    /**
+     * Indique si l'ennemi est sonné par un parry.
+     *
+     * @return vrai pendant la stupeur
+     */
     public boolean isStunned() {
         return stun.isActive();
     }
 
-    /** L'ennemi entend un bruit à cet endroit et vient voir. */
+    /**
+     * L'ennemi entend un bruit à cet endroit et vient voir.
+     *
+     * @param at position du bruit
+     */
     public void hearNoise(Vector2 at) {
         if (isAlive()) {
             ai.hearNoise(at);
@@ -111,15 +138,28 @@ public abstract class Enemy extends Character {
 
     // --- Affichage ---
 
-    /** Affiche le champ de vision de l'ennemi. */
+    /**
+     * Affiche le champ de vision de l'ennemi.
+     *
+     * @param shapes Le ShapeRenderer, déjà ouvert en mode Filled.
+     * @param walls calques qui bloquent la vue
+     */
     public void drawVision(ShapeRenderer shapes, TiledMapTileLayer[] walls) {
         EnemyVision.draw(this, shapes, walls);
     }
 
-    /** Affiche la préparation de l'attaque (par défaut rien). */
+    /**
+     * Affiche la préparation de l'attaque (par défaut rien).
+     *
+     * @param shapes Le ShapeRenderer, déjà ouvert en mode Filled.
+     */
     public void drawCharge(ShapeRenderer shapes) {}
 
-    /** Affiche l'indicateur d'alerte de l'ennemi. */
+    /**
+     * Affiche l'indicateur d'alerte de l'ennemi.
+     *
+     * @param shapes Le ShapeRenderer, déjà ouvert en mode Filled.
+     */
     public void drawAlert(ShapeRenderer shapes) {
         if (!isAlive() || !ai.seesPlayer()) {
             return;

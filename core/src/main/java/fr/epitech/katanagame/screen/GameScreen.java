@@ -6,6 +6,8 @@ import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Vector2;
+import fr.epitech.katanagame.audio.Jukebox;
+import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.Main;
 import fr.epitech.katanagame.camera.GameCamera;
 import fr.epitech.katanagame.entity.enemy.Enemy;
@@ -66,6 +68,8 @@ public class GameScreen extends ScreenAdapter {
     private String currentEntry;
     /** Vrai tant que le joueur n'a pas quitté la zone d'arrivée (évite de repartir aussitôt). */
     private boolean doorsLocked;
+    /** Vrai une fois la victoire jouée (tous les ennemis de l'étage sont morts). */
+    private boolean victoryPlayed;
 
     /** Active ou désactive l’affichage des hitbox. */
     private boolean debug = false;
@@ -73,7 +77,11 @@ public class GameScreen extends ScreenAdapter {
     /** Mode dieu (F2) : le joueur ne peut plus mourir. Reste actif d'un étage à l'autre. */
     private boolean godMode = false;
 
-    /** Prépare les éléments de la partie et charge le premier étage. */
+    /**
+     * Prépare les éléments de la partie et charge le premier étage.
+     *
+     * @param game jeu qui possède l'écran
+     */
     public GameScreen(Main game) {
         this.game = game;
         camera = new GameCamera();
@@ -161,6 +169,7 @@ public class GameScreen extends ScreenAdapter {
         for (ShapeEffect effect : world.effects) effect.clear();
         hitStop.reset();
         doorsLocked = true;
+        victoryPlayed = false;
     }
 
     /** Crée les ennemis aux positions définies dans la carte. */
@@ -203,6 +212,7 @@ public class GameScreen extends ScreenAdapter {
 
         final Door door = touched;
         doorsLocked = true;
+        Sounds.play(Sounds.Effect.DOOR);
         fade.start(FADE_TIME, () -> loadLevel(door.getTargetMap(), door.getTargetEntry()));
     }
 
@@ -213,6 +223,7 @@ public class GameScreen extends ScreenAdapter {
     /** Prépare l’écran de jeu lorsqu’il devient actif. */
     @Override
     public void show() {
+        Jukebox.play(Jukebox.Mode.GAME);
         Gdx.input.setInputProcessor(null); // Le joueur lit directement clavier et souris.
         crosshair.apply();
     }
@@ -220,6 +231,7 @@ public class GameScreen extends ScreenAdapter {
     /** Rend la flèche normale quand on quitte la partie (pause, game over). */
     @Override
     public void hide() {
+        Sounds.walking(false);
         Crosshair.restore();
     }
 
@@ -264,7 +276,11 @@ public class GameScreen extends ScreenAdapter {
         renderer.render(world, player, camera.getViewport(), debug, slowMo.getCharge(), slowMo.getIntensity(), godMode);
     }
 
-    /** Fait vivre le corps et le sang pendant l'écran de game over. */
+    /**
+     * Fait vivre le corps et le sang pendant l'écran de game over.
+     *
+     * @param delta temps réel écoulé (s)
+     */
     public void updateEffects(float delta) {
         player.update(delta, world);
         world.blood.update(delta, world.bulletLayers);
@@ -277,6 +293,7 @@ public class GameScreen extends ScreenAdapter {
     /** Met à jour le joueur, les ennemis et l’état du monde. */
     private void update(float delta) {
         slowMo.update(delta, player.isAlive() && GameSettings.pressed(GameSettings.Action.SLOWMO));
+        if (slowMo.pollStart()) Sounds.play(Sounds.Effect.SLOWMO);
         float live = delta * slowMo.playerScale(), worldDt = delta * slowMo.worldScale();
         if (!player.isAlive()) {
             death.advance(delta);
@@ -304,6 +321,10 @@ public class GameScreen extends ScreenAdapter {
             for (Enemy enemy : world.enemies) enemy.update(worldDt, world);
             if (wasAlive && !player.isAlive()) death.start();   // tué au corps à corps
             bullets.update(worldDt);
+        }
+        if (!victoryPlayed && player.isAlive() && !world.enemies.isEmpty() && world.allEnemiesDead()) {
+            victoryPlayed = true;
+            Sounds.play(Sounds.Effect.VICTORY);
         }
         camera.update(delta, player.getPosition(), mapLoader.getWidth(), mapLoader.getHeight());
     }

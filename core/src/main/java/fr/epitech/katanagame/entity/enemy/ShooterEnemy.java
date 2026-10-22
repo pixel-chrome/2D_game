@@ -21,7 +21,12 @@ public class ShooterEnemy extends Enemy {
     /** Texture laser conservée par cet ennemi pendant toute la partie. */
     private final Texture laserTexture;
 
-    /** Initialise un tireur, son arme et la couleur de son laser. */
+    /**
+     * Initialise un tireur, son arme et la couleur de son laser.
+     *
+     * @param x abscisse initiale
+     * @param y ordonnée initiale
+     */
     public ShooterEnemy(float x, float y) {
         super(x, y, RUN_SPEED);
         laserTexture = LaserAssets.getRandomTexture();
@@ -87,7 +92,11 @@ public class ShooterEnemy extends Enemy {
         EnemyAnimations.draw(this, batch);
     }
 
-    /** Retourne la texture laser attribuée à cet ennemi. */
+    /**
+     * Retourne la texture laser attribuée à cet ennemi.
+     *
+     * @return la texture du laser de cet ennemi
+     */
     public Texture getLaserTexture() {
         return laserTexture;
     }

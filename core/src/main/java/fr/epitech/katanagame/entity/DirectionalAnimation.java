@@ -12,7 +12,18 @@ public final class DirectionalAnimation {
 
     private DirectionalAnimation() {}
 
-    /** Lignes bas / côté droit / haut ; la gauche est le côté droit retourné. */
+    /**
+     * Lignes bas / côté droit / haut ; la gauche est le côté droit retourné.
+     *
+     * @param grid feuille de sprites découpée en lignes et colonnes
+     * @param downRow ligne de l'animation vers le bas
+     * @param sideRow ligne de l'animation de côté
+     * @param upRow ligne de l'animation vers le haut
+     * @param count nombre d'images par animation
+     * @param frameTime durée d'une image (s)
+     * @param mode mode de lecture
+     * @return l'animation pour les quatre directions
+     */
     public static DirectionalAnimation sideRight(TextureRegion[][] grid, int downRow, int sideRow, int upRow,
                                                  int count, float frameTime, Animation.PlayMode mode) {
         DirectionalAnimation result = new DirectionalAnimation();
@@ -23,7 +34,18 @@ public final class DirectionalAnimation {
         return result;
     }
 
-    /** Lignes bas / côté gauche / haut ; la droite est le côté gauche retourné. */
+    /**
+     * Lignes bas / côté gauche / haut ; la droite est le côté gauche retourné.
+     *
+     * @param grid feuille de sprites découpée en lignes et colonnes
+     * @param downRow ligne de l'animation vers le bas
+     * @param sideRow ligne de l'animation de côté
+     * @param upRow ligne de l'animation vers le haut
+     * @param count nombre d'images par animation
+     * @param frameTime durée d'une image (s)
+     * @param mode mode de lecture
+     * @return l'animation pour les quatre directions
+     */
     public static DirectionalAnimation sideLeft(TextureRegion[][] grid, int downRow, int sideRow, int upRow,
                                                 int count, float frameTime, Animation.PlayMode mode) {
         DirectionalAnimation result = sideRight(grid, downRow, sideRow, upRow, count, frameTime, mode);
@@ -32,7 +54,12 @@ public final class DirectionalAnimation {
         return result;
     }
 
-    /** Mêmes images avec un autre rythme (course = marche plus rapide). */
+    /**
+     * Mêmes images avec un autre rythme (course = marche plus rapide).
+     *
+     * @param frameTime nouvelle durée d'une image (s)
+     * @return une copie à ce nouveau rythme
+     */
     public DirectionalAnimation withFrameTime(float frameTime) {
         DirectionalAnimation result = new DirectionalAnimation();
         for (Map.Entry<Direction, Animation<TextureRegion>> e : anims.entrySet()) {
@@ -43,6 +70,12 @@ public final class DirectionalAnimation {
         return result;
     }
 
+    /**
+     * Animation correspondant à une direction.
+     *
+     * @param direction direction demandée
+     * @return l'animation de cette direction
+     */
     public Animation<TextureRegion> get(Direction direction) { return anims.get(direction); }
 
     private static Animation<TextureRegion> build(TextureRegion[] row, int count, float frameTime,

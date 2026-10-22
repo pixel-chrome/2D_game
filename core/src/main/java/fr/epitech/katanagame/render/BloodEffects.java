@@ -52,7 +52,16 @@ public final class BloodEffects {
         Stain(float x, float y, float size) { this.x = x; this.y = y; this.size = size; }
     }
 
-    /** Gerbe de sang depuis un point, projetée surtout dans la direction du tir. */
+    /** Crée un système de sang vide. */
+    public BloodEffects() {}
+
+    /**
+     * Gerbe de sang depuis un point, projetée surtout dans la direction du tir.
+     *
+     * @param at point d'impact
+     * @param dir direction du tir
+     * @param walls calques qui arrêtent les gouttes
+     */
     public void burst(Vector2 at, Vector2 dir, TiledMapTileLayer[] walls) {
         spray(at, dir, 80, 0.65f, 70f, 1f);
         for (int i = 0; i < 10; i++) {                                // gros morceaux, plus lents
@@ -72,7 +81,13 @@ public final class BloodEffects {
         flash = 0.55f;
     }
 
-    /** Sang d'un ennemi tué : gerbe plus petite et quelques taches au sol, sans flash ni mare. */
+    /**
+     * Sang d'un ennemi tué : gerbe plus petite et quelques taches au sol, sans flash ni mare.
+     *
+     * @param at point d'impact
+     * @param dir direction du coup
+     * @param walls calques qui arrêtent les gouttes
+     */
     public void splatter(Vector2 at, Vector2 dir, TiledMapTileLayer[] walls) {
         spray(at, dir, 45, 0.7f, 60f, 0.87f);
         for (int i = 0; i < 6; i++) {                                 // petite flaque faite de grosses taches
@@ -106,7 +121,12 @@ public final class BloodEffects {
         drops.add(d);
     }
 
-    /** Fait avancer les gouttes (qui retombent en taches), la mare et le flash. */
+    /**
+     * Fait avancer les gouttes (qui retombent en taches), la mare et le flash.
+     *
+     * @param delta temps écoulé (s)
+     * @param walls calques qui arrêtent les gouttes
+     */
     public void update(float delta, TiledMapTileLayer[] walls) {
         if (delta <= 0f) return;
         flash = Math.max(0f, flash - FLASH_DECAY * delta);
@@ -148,7 +168,11 @@ public final class BloodEffects {
         flash = 0f;
     }
 
-    /** Taches, mare et gouttes en vol. À dessiner sous les sprites, ShapeRenderer en mode Filled. */
+    /**
+     * Taches, mare et gouttes en vol. À dessiner sous les sprites, ShapeRenderer en mode Filled.
+     *
+     * @param shapes Le ShapeRenderer, déjà ouvert en mode Filled.
+     */
     public void draw(ShapeRenderer shapes) {
         if (pool) {
             float grow = 1f - (float) Math.exp(-poolTime * 2.5f);
@@ -172,7 +196,12 @@ public final class BloodEffects {
         for (Drop d : drops) shapes.circle(d.x, d.y, d.size, 8);
     }
 
-    /** Flash blanc teinté de rouge à l'impact, couvrant toute la vue. */
+    /**
+     * Flash blanc teinté de rouge à l'impact, couvrant toute la vue.
+     *
+     * @param shapes Le ShapeRenderer, déjà ouvert en mode Filled.
+     * @param camera caméra de la partie
+     */
     public void drawFlash(ShapeRenderer shapes, Camera camera) {
         if (flash <= 0f) return;
         shapes.setColor(1f, 0.9f, 0.9f, Math.min(1f, flash));

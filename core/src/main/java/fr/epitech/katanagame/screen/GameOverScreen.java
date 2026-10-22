@@ -27,6 +27,12 @@ public class GameOverScreen extends ScreenAdapter {
     private final Stage stage = new Stage(new FitViewport(MenuBackground.W, MenuBackground.H));
     private boolean leaving = false;
 
+    /**
+     * Crée l'écran de game over par-dessus la partie qui vient de se terminer.
+     *
+     * @param game jeu qui possède l'écran
+     * @param level partie à recommencer ou à quitter
+     */
     public GameOverScreen(Main game, GameScreen level) {
         this.game = game;
         this.level = level;
