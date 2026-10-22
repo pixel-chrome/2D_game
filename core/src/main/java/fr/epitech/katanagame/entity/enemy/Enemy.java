@@ -34,7 +34,24 @@ public abstract class Enemy extends Character {
      * @param runSpeed vitesse de course (px/s)
      */
     protected Enemy(float x, float y, float runSpeed) {
-        super(x, y, WIDTH, HEIGHT, FEET_W, FEET_H, FEET_OFFSET_Y);
+        this(x, y, runSpeed, WIDTH, HEIGHT, FEET_W, FEET_H, FEET_OFFSET_Y);
+    }
+
+    /**
+     * Initialise un ennemi avec des hitbox personnalisées (boss plus grand que les gardes).
+     *
+     * @param x abscisse initiale
+     * @param y ordonnée initiale
+     * @param runSpeed vitesse de course (px/s)
+     * @param width largeur du corps
+     * @param height hauteur du corps
+     * @param feetW largeur des pieds
+     * @param feetH hauteur des pieds
+     * @param feetOffsetY décalage centre du sprite → centre des pieds
+     */
+    protected Enemy(float x, float y, float runSpeed, float width, float height,
+                    float feetW, float feetH, float feetOffsetY) {
+        super(x, y, width, height, feetW, feetH, feetOffsetY);
         aim.set(0f, -1f);
         ai = new EnemyAI(this, x, y, runSpeed);
     }
@@ -44,6 +61,7 @@ public abstract class Enemy extends Character {
         EnemyAnimations.loadAssets();
         SkullKnightAnimations.loadAssets();
         LaserAssets.loadAssets();
+        BossAnimations.loadAssets();
     }
 
     /** Libère les ressources graphiques partagées des ennemis et des lasers. */
@@ -51,6 +69,7 @@ public abstract class Enemy extends Character {
         EnemyAnimations.disposeAssets();
         SkullKnightAnimations.disposeAssets();
         LaserAssets.disposeAssets();
+        BossAnimations.disposeAssets();
     }
 
     // --- Comportement ---
@@ -100,6 +119,21 @@ public abstract class Enemy extends Character {
     protected void onDeath() {
         deathTime = 0f;
         Sounds.play(Sounds.Effect.DEATH);
+    }
+
+    /**
+     * Indique si un parry peut l'atteindre en ce moment (faux : le parry passe sans effet ni son).
+     * Un ennemi qui a repéré le joueur (point d'exclamation) ne se pare pas : seuls ses tirs se renvoient.
+     *
+     * @return vrai tant que l'ennemi ne voit pas le joueur
+     */
+    public boolean canBeParried() {
+        return !ai.seesPlayer();
+    }
+
+    /** Touché par un projectile renvoyé : un dégât (les boss peuvent encaisser plus). */
+    public void takeReflectedHit() {
+        takeDamage();
     }
 
     /**

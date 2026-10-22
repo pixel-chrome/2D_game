@@ -54,6 +54,12 @@ public abstract class Character extends Entity {
     /** Applique un dégât si le personnage peut être touché. */
     public void takeDamage() {
         if (!alive || isInvincible()) return;
+        kill();
+    }
+
+    /** Tue le personnage quoi qu'il arrive (même invincible). */
+    public void kill() {
+        if (!alive) return;
         alive = false;
         onDeath();
     }

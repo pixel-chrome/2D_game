@@ -49,6 +49,7 @@ public final class MapLoader implements Disposable {
     private final Vector2 playerSpawn = new Vector2(100f, 100f);
     private final List<Vector2> enemySpawns = new ArrayList<>();
     private final List<Vector2> knightSpawns = new ArrayList<>();
+    private final List<Vector2> bossSpawns = new ArrayList<>();
 
 
     private final TiledMapTileLayer[] moveLayers;
@@ -107,6 +108,7 @@ public final class MapLoader implements Disposable {
      * - player_spawn : entrée par défaut du joueur ;
      * - entry_xxx    : entrée accessible depuis une porte ;
      * - skull_knight : apparition d'un Skull Knight ;
+     * - boss : apparition du boss final ;
      * - tout autre nom : apparition d'un ennemi classique.
      */
     private void loadSpawns() {
@@ -127,6 +129,9 @@ public final class MapLoader implements Disposable {
                         || (name != null && name.startsWith(ENTRY_PREFIX))) {
                     // Entrée du joueur, notamment pour les portes.
                     entries.put(name, center);
+                } else if ("boss".equals(name)) {
+                    // Apparition du boss final.
+                    bossSpawns.add(center);
                 } else if ("skull_knight".equals(name)) {
                     // Apparition d'un Skull Knight.
                     knightSpawns.add(center);
@@ -240,6 +245,15 @@ public final class MapLoader implements Disposable {
      * Positions de départ des Skull Knights (objets nommés « skull_knight » dans Tiled).
      *
      * @return une liste en lecture seule
+     */
+    public List<Vector2> getBossSpawns() {
+        return Collections.unmodifiableList(bossSpawns);
+    }
+
+    /**
+     * Positions de départ des Skull Knights.
+     *
+     * @return la liste des positions (lecture seule)
      */
     public List<Vector2> getKnightSpawns() {
         return Collections.unmodifiableList(knightSpawns);

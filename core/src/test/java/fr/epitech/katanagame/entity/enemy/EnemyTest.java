@@ -58,4 +58,9 @@ class EnemyTest {
         enemy.hearNoise(new Vector2(30f, 40f));
         assertFalse(enemy.alerted());
     }
+
+    @Test
+    void canBeParried_tantQuIlNeVoitPasLeJoueur() {
+        assertTrue(enemy.canBeParried());
+    }
 }

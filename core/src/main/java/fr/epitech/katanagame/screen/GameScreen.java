@@ -5,12 +5,15 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import fr.epitech.katanagame.audio.Jukebox;
 import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.Main;
 import fr.epitech.katanagame.camera.GameCamera;
+import fr.epitech.katanagame.entity.enemy.Boss;
 import fr.epitech.katanagame.entity.enemy.Enemy;
+import fr.epitech.katanagame.entity.enemy.FinalBoss;
 import fr.epitech.katanagame.entity.enemy.ShooterEnemy;
 import fr.epitech.katanagame.entity.enemy.SkullKnight;
 import fr.epitech.katanagame.entity.player.Player;
@@ -34,6 +37,8 @@ public class GameScreen extends ScreenAdapter {
     private static final String FIRST_MAP = "maps/etage_1.tmx";
     /** Durée de chaque moitié du fondu (noircir, puis éclaircir). */
     private static final float FADE_TIME = 0.4f;
+    /** Délai (s) entre la mort du boss et l'écran de victoire : le temps de voir le corps tomber. */
+    private static final float BOSS_OUTRO = 2.5f;
     /** Calques de tuiles qui projettent une ombre (ceux qui n'existent pas dans une map sont ignorés). */
     private static final String[] SHADOW_LAYERS = { "Mur", "Chaises", "Objets", "Petits Objets" };
 
@@ -70,6 +75,8 @@ public class GameScreen extends ScreenAdapter {
     private boolean doorsLocked;
     /** Vrai une fois la victoire jouée (tous les ennemis de l'étage sont morts). */
     private boolean victoryPlayed;
+    /** Temps écoulé depuis la mort du boss (s) ; négatif tant qu'il est en vie. */
+    private float bossDeadTime = -1f;
 
     /** Active ou désactive l’affichage des hitbox. */
     private boolean debug = false;
@@ -170,6 +177,7 @@ public class GameScreen extends ScreenAdapter {
         hitStop.reset();
         doorsLocked = true;
         victoryPlayed = false;
+        bossDeadTime = -1f;
     }
 
     /** Crée les ennemis aux positions définies dans la carte. */
@@ -181,6 +189,9 @@ public class GameScreen extends ScreenAdapter {
         }
         for (Vector2 spawn : mapLoader.getKnightSpawns()) {
             world.enemies.add(new SkullKnight(spawn.x, spawn.y));
+        }
+        for (Vector2 spawn : mapLoader.getBossSpawns()) {
+            world.enemies.add(new FinalBoss(spawn.x, spawn.y));
         }
     }
 
@@ -258,6 +269,10 @@ public class GameScreen extends ScreenAdapter {
                 return;
             }
             updateDoors();
+            if (bossDeadTime >= BOSS_OUTRO) {
+                game.setScreen(new VictoryScreen(game, this));
+                return;
+            }
         }
         fade.update(delta);   // peut changer d'étage : à faire avant de dessiner
 
@@ -267,8 +282,20 @@ public class GameScreen extends ScreenAdapter {
             player.setGodMode(godMode);
             Gdx.app.log("GOD", godMode ? "mode dieu activé" : "mode dieu désactivé");
         }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F3)) killAllEnemies();
         drawFrame();
         fade.draw();          // en dernier : recouvre toute la fenêtre
+    }
+
+    /** Triche (F3) : tue d'un coup tous les ennemis de l'étage, boss compris. */
+    private void killAllEnemies() {
+        for (Enemy enemy : world.enemies) {
+            if (!enemy.isAlive()) continue;
+            Vector2 at = enemy.getBounds().getCenter(new Vector2());
+            enemy.kill();
+            world.blood.splatter(at, new Vector2(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f)), world.bulletLayers);
+        }
+        Gdx.app.log("CHEAT", "F3 : tous les ennemis tués");
     }
 
     /** Dessine une image de la partie sans rien faire avancer (utilisé par la pause). */
@@ -326,7 +353,19 @@ public class GameScreen extends ScreenAdapter {
             victoryPlayed = true;
             Sounds.play(Sounds.Effect.VICTORY);
         }
+        if (bossDefeated()) bossDeadTime = Math.max(0f, bossDeadTime) + delta;
         camera.update(delta, player.getPosition(), mapLoader.getWidth(), mapLoader.getHeight());
+    }
+
+    /** Vrai quand l'étage a un boss et qu'il est mort. */
+    private boolean bossDefeated() {
+        boolean hasBoss = false;
+        for (Enemy enemy : world.enemies) {
+            if (!(enemy instanceof Boss)) continue;
+            if (enemy.isAlive()) return false;
+            hasBoss = true;
+        }
+        return hasBoss;
     }
 
     /** Libère les ressources utilisées par la partie. */

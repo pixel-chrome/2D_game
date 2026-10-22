@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import fr.epitech.katanagame.entity.enemy.Boss;
 import fr.epitech.katanagame.entity.enemy.Enemy;
 import fr.epitech.katanagame.entity.player.Player;
 import fr.epitech.katanagame.entity.projectile.Bullet;
@@ -135,6 +136,11 @@ public final class GameRenderer implements Disposable {
         // Flash d'impact par-dessus tout.
         world.blood.drawFlash(shapes, viewport.getCamera());
         world.parryFx.drawFlash(shapes, viewport.getCamera());
+        for (Enemy enemy : world.enemies) {
+            if (enemy instanceof Boss && enemy.isAlive() && ((Boss) enemy).isEngaged()) {
+                BossHealthBar.draw(shapes, (OrthographicCamera) viewport.getCamera(), (Boss) enemy);
+            }
+        }
         slowMoEffects.drawBar(shapes, (OrthographicCamera) viewport.getCamera(), slowCharge);
         shapes.end();
 
