@@ -39,7 +39,7 @@ public final class Jukebox {
 
     /** Applique le volume des paramètres à la piste en cours. */
     public static void refreshVolume() {
-        if (music != null) music.setVolume(GameSettings.musicVolume);
+        if (music != null) music.setVolume(MathUtils.clamp(GameSettings.musicVolume * 4f, 0f, 1f));
     }
 
     private static void playRandom() {
