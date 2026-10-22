@@ -38,19 +38,19 @@
             "expandedObjectLayers": [
                 8
             ],
-            "scale": 1.0053,
-            "selectedLayer": 3,
+            "scale": 1,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 592.8578533771014,
-                "y": 430.21983487516167
+                "x": 627,
+                "y": 432.5
             }
         },
         "assets/maps/etage_1.tmx": {
             "scale": 2,
-            "selectedLayer": 5,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 571,
-                "y": 435.75
+                "x": 1032.5,
+                "y": 233.25
             }
         },
         "assets/maps/etage_2.tmx": {
@@ -58,11 +58,11 @@
                 8,
                 7
             ],
-            "scale": 1.6261,
-            "selectedLayer": 2,
+            "scale": 0.75,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 186.33540372670802,
-                "y": 197.7123178156325
+                "x": 265.3333333333333,
+                "y": 523.3333333333333
             }
         },
         "assets/maps/jeudetuie.tsx": {
