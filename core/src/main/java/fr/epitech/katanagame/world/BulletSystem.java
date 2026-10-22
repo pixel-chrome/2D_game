@@ -52,7 +52,7 @@ public final class BulletSystem {
         if (!bullet.isAlive()) return;
         for (Enemy enemy : world.enemies) {
             if (enemy.isAlive() && bullet.getBounds().overlaps(enemy.getBounds())) {
-                enemy.takeDamage();
+                enemy.takeReflectedHit();
                 Vector2 at = enemy.getBounds().getCenter(new Vector2());
                 world.blood.splatter(at, bullet.getDirection(), world.bulletLayers);
                 bullet.kill();

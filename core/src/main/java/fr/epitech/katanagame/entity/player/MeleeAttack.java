@@ -55,7 +55,7 @@ final class MeleeAttack extends Ability {
         Vector2 pos = player.getPosition(), aim = player.getAim();
         bounds.set(pos.x + aim.x * REACH + OFFSET, pos.y + aim.y * REACH + OFFSET, WIDTH, HEIGHT);
         for (Enemy enemy : world.enemies) {
-            if (!enemy.isAlive() || !bounds.overlaps(enemy.getBounds())) continue;
+            if (!enemy.isAlive() || enemy.isInvincible() || !bounds.overlaps(enemy.getBounds())) continue;
             enemy.takeDamage();
             Vector2 at = enemy.getBounds().getCenter(new Vector2());
             Vector2 dir = at.cpy().sub(pos);

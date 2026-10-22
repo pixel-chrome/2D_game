@@ -55,7 +55,7 @@ final class ParryAbility extends Ability {
             }
         }
         for (Enemy enemy : world.enemies) {
-            if (!enemy.isAlive() || enemy.isStunned()) continue;
+            if (!enemy.isAlive() || enemy.isStunned() || !enemy.canBeParried()) continue;
             Vector2 at = enemy.getBounds().getCenter(new Vector2());
             if (at.dst(z) > RADIUS + MELEE_BONUS) continue;
             Vector2 from = player.getPosition();
