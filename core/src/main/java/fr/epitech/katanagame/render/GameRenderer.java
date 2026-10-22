@@ -125,6 +125,7 @@ public final class GameRenderer implements Disposable {
         for (Bullet bullet : world.bullets) {
             bullet.draw(batch);
         }
+        world.vfx.draw(batch);
         batch.end();
 
         // Les indicateurs d'alerte et les cadenas passent au-dessus des sprites et des projectiles.

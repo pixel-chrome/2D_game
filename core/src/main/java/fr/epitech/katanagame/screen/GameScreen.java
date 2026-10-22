@@ -22,6 +22,7 @@ import fr.epitech.katanagame.render.MapShadows;
 import fr.epitech.katanagame.render.ScreenFade;
 import fr.epitech.katanagame.render.ShadowRenderer;
 import fr.epitech.katanagame.render.ShapeEffect;
+import fr.epitech.katanagame.render.Vfx;
 import fr.epitech.katanagame.settings.GameSettings;
 import fr.epitech.katanagame.ui.Crosshair;
 import fr.epitech.katanagame.world.BulletSystem;
@@ -95,6 +96,7 @@ public class GameScreen extends ScreenAdapter {
         player = new Player();
 
         Enemy.loadAssets();
+        Vfx.loadAssets();
         ShadowRenderer.initialize();
         loadLevel(FIRST_MAP, MapLoader.DEFAULT_ENTRY);
     }
@@ -173,6 +175,7 @@ public class GameScreen extends ScreenAdapter {
         death.reset();
         slowMo.reset();
         world.blood.clear();
+        world.vfx.clear();
         for (ShapeEffect effect : world.effects) effect.clear();
         hitStop.reset();
         doorsLocked = true;
@@ -340,6 +343,7 @@ public class GameScreen extends ScreenAdapter {
             camera.shake(3f);
         }
         for (ShapeEffect effect : world.effects) effect.update(delta);
+        world.vfx.update(live);
         world.blood.update(live, world.bulletLayers);
         if (!player.isAlive() && Gdx.input.isKeyJustPressed(Input.Keys.R)) restart();
 
@@ -378,6 +382,7 @@ public class GameScreen extends ScreenAdapter {
         mapLoader.dispose();
         fade.dispose();
         Enemy.disposeAssets();
+        Vfx.disposeAssets();
         ShadowRenderer.dispose();
         mapShadows.dispose();
     }

@@ -1,6 +1,7 @@
 package fr.epitech.katanagame.screen;
 
 import fr.epitech.katanagame.Main;
+import fr.epitech.katanagame.audio.Jukebox;
 import fr.epitech.katanagame.ui.MenuBackground;
 import fr.epitech.katanagame.ui.Theme;
 
@@ -40,6 +41,7 @@ public class VictoryScreen extends ScreenAdapter {
         this.game = game;
         this.level = level;
         Theme t = game.theme;
+        Jukebox.play(Jukebox.Mode.VICTORY);
 
         Label title = new Label(Theme.spaced("VICTOIRE"), new Label.LabelStyle(t.titleFont, GOLD));
         Label subtitle = new Label("LE CHAPELIER NOIR EST TOMBE", t.labelStyle);

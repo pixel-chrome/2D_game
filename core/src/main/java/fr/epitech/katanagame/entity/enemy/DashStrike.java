@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.player.Player;
+import fr.epitech.katanagame.render.Vfx;
 import fr.epitech.katanagame.world.World;
 
 /** Estoc : une ligne rouge annonce la charge, la visée est figée, puis le boss fonce. Se dash de côté (le boss ne se pare pas). */
@@ -24,7 +25,8 @@ final class DashStrike extends BossAttack {
     }
 
     @Override void fire(FinalBoss boss, World world) {
-        Sounds.play(Sounds.Effect.ATTACK);
+        Sounds.play(Sounds.Effect.BOSS_DASH);
+        world.vfx.spawn(Vfx.Kind.IMPACT, boss.getPosition().x, boss.getPosition().y, 110f);
     }
 
     @Override void tick(FinalBoss boss, float delta, float elapsed, World world) {
@@ -35,6 +37,8 @@ final class DashStrike extends BossAttack {
         reach.setSize(boss.getBounds().width + 2f * GROW, boss.getBounds().height + 2f * GROW);
         if (!reach.overlaps(player.getBounds())) return;
         struck = true;
+        world.vfx.spawn(Vfx.Kind.SMALL_HIT, player.getBounds().x + player.getBounds().width / 2f,
+                player.getBounds().y + player.getBounds().height / 2f, 90f);
         player.hit(dir);   // sans effet si le joueur est en dash
         if (!player.isAlive()) {
             world.blood.burst(player.getBounds().getCenter(new Vector2()), dir, world.bulletLayers);

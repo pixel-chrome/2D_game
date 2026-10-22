@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.player.Player;
+import fr.epitech.katanagame.render.Vfx;
 import fr.epitech.katanagame.world.Collision;
 import fr.epitech.katanagame.world.World;
 
@@ -14,7 +15,8 @@ final class SweepAttack extends BossAttack {
     SweepAttack() { super(0.55f, 0.25f, 0.5f); }
 
     @Override void fire(FinalBoss boss, World world) {
-        Sounds.play(Sounds.Effect.ATTACK);
+        Sounds.play(Sounds.Effect.BOSS_ATTACK);
+        world.vfx.spawn(Vfx.Kind.WHEEL, boss.getPosition().x, boss.getPosition().y, RADIUS * 2.4f);
         Player player = world.player;
         if (!player.isAlive()) return;
         Vector2 center = player.getBounds().getCenter(new Vector2());

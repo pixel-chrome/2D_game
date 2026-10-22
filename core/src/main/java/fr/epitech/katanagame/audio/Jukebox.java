@@ -12,6 +12,8 @@ public final class Jukebox {
     public enum Mode {
         /** Menus. */
         MENU("musiqueMenu1", "C418Alpha"),
+        /** Écran de victoire. */
+        VICTORY("musiquevictoire"),
         /** Partie. */
         GAME("aurasound", "musiczelda", "musicjeumegalovania", "musiccrazy", "musictest", "HarryPoter");
 
@@ -39,7 +41,7 @@ public final class Jukebox {
 
     /** Applique le volume des paramètres à la piste en cours. */
     public static void refreshVolume() {
-        if (music != null) music.setVolume(MathUtils.clamp(GameSettings.musicVolume * 4f, 0f, 1f));
+        if (music != null) music.setVolume(GameSettings.musicVolume);
     }
 
     private static void playRandom() {

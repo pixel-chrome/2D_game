@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.projectile.Bullet;
+import fr.epitech.katanagame.render.Vfx;
 import fr.epitech.katanagame.world.World;
 
 /** Anneau de lasers dans toutes les directions ; en phase 3, un second anneau décalé suit. À passer en se glissant entre les rayons. */
@@ -14,6 +15,10 @@ final class RadialBurst extends BossAttack {
     private boolean refired;
 
     RadialBurst() { super(0.9f, 0.7f, 0.6f); }
+
+    @Override void begin(FinalBoss boss) {
+        Sounds.play(Sounds.Effect.BOSS_CHARGE);
+    }
 
     @Override void fire(FinalBoss boss, World world) {
         refired = false;
@@ -28,7 +33,8 @@ final class RadialBurst extends BossAttack {
     }
 
     private void ring(FinalBoss boss, World world, float offset) {
-        Sounds.play(Sounds.Effect.SHOOT);
+        Sounds.play(Sounds.Effect.BOSS_SHOOT);
+        world.vfx.spawn(Vfx.Kind.WHEEL, boss.getPosition().x, boss.getPosition().y, 150f);
         for (int i = 0; i < RAYS; i++) {
             Vector2 dir = new Vector2(1f, 0f).setAngleDeg(offset + i * 360f / RAYS);
             world.bullets.add(new Bullet(new Vector2(boss.getPosition()), dir, boss.laserTexture()));

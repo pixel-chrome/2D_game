@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector2;
 import fr.epitech.katanagame.audio.Sounds;
 import fr.epitech.katanagame.entity.player.Player;
 import fr.epitech.katanagame.entity.projectile.LaserAssets;
+import fr.epitech.katanagame.render.Vfx;
 import fr.epitech.katanagame.world.World;
 
 /**
@@ -33,6 +34,8 @@ public final class FinalBoss extends Boss {
     private BossAttack attack, last;
     private float timer, cooldown, strafeTimer, strafeSide = 1f;
     private boolean moving;
+    private int shownPhase = 1;
+    private float stepTimer;
 
     /**
      * Crée le boss à la position donnée.
@@ -60,6 +63,29 @@ public final class FinalBoss extends Boss {
     /** Multiplicateur de durée des annonces et pauses : le boss accélère de phase en phase. */
     private float tempo() {
         return phase() == 1 ? 1f : phase() == 2 ? 0.85f : 0.7f;
+    }
+
+    // --- Effets ---
+
+    @Override
+    protected void onHitEffects(World world, boolean reflected) {
+        Vector2 p = getPosition();
+        world.vfx.spawn(reflected ? Vfx.Kind.BIG_HIT : Vfx.Kind.SMALL_HIT, p.x, p.y, reflected ? 130f : 90f);
+        if (phase() > shownPhase) {   // changement de phase : anneau de feu et onde de choc
+            shownPhase = phase();
+            world.vfx.spawn(Vfx.Kind.ELDEN_RING, p.x, p.y, 220f);
+            world.vfx.spawn(Vfx.Kind.WHEEL, p.x, p.y, 160f, 0.15f);
+        }
+    }
+
+    @Override
+    protected void onDeathEffects(World world) {
+        Vector2 p = getPosition();
+        world.vfx.spawn(Vfx.Kind.EXPLOSION, p.x, p.y, 170f);
+        world.vfx.spawn(Vfx.Kind.EXPLOSION, p.x - 28f, p.y + 22f, 110f, 0.3f);
+        world.vfx.spawn(Vfx.Kind.EXPLOSION, p.x + 30f, p.y - 6f, 130f, 0.55f);
+        world.vfx.spawn(Vfx.Kind.WHEEL, p.x, p.y, 240f, 0.1f);
+        world.vfx.spawn(Vfx.Kind.EXPLOSION, p.x + 6f, p.y + 30f, 200f, 0.85f);
     }
 
     // --- Comportement ---
@@ -107,6 +133,11 @@ public final class FinalBoss extends Boss {
         else move.set(-toPlayer.y * strafeSide, toPlayer.x * strafeSide);
         step(move.x * speed * delta, move.y * speed * delta, world);
         moving = true;
+        stepTimer -= delta;
+        if (stepTimer <= 0f) {
+            Sounds.play(Sounds.Effect.BOSS_STEP);
+            stepTimer = phase() == 3 ? 0.3f : 0.45f;
+        }
 
         cooldown -= delta;
         if (cooldown <= 0f) startAttack(dist);

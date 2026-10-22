@@ -66,7 +66,7 @@ public class Player extends Character implements Disposable {
     @Override protected void onDeath() {
         dash.reset();
         Sounds.walking(false);
-        Sounds.play(Sounds.Effect.DEATH);
+        Sounds.play(Sounds.Effect.FATALITY);
     }
 
     /** Éclat blanc sur le sprite (coup ou parry qui touche). */
