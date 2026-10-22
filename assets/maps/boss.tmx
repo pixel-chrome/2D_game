@@ -166,7 +166,7 @@
  </layer>
  <objectgroup id="7" name="Doors"/>
  <objectgroup id="8" name="Spawns">
-  <object id="1" name="entry_from_etage_1" x="592.858" y="686.362">
+  <object id="1" name="entry_from_etage_2" x="592.858" y="686.362">
    <point/>
   </object>
  </objectgroup>
