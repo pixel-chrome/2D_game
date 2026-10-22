@@ -118,6 +118,11 @@ public abstract class Enemy extends Character {
     @Override
     protected void onDeath() {
         deathTime = 0f;
+        playDeathSound();
+    }
+
+    /** Son de mort ; un boss le remplace par sa propre mise en scène. */
+    protected void playDeathSound() {
         Sounds.play(Sounds.Effect.DEATH);
     }
 

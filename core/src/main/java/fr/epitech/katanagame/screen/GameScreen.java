@@ -355,7 +355,8 @@ public class GameScreen extends ScreenAdapter {
         }
         if (!victoryPlayed && player.isAlive() && !world.enemies.isEmpty() && world.allEnemiesDead()) {
             victoryPlayed = true;
-            Sounds.play(Sounds.Effect.VICTORY);
+            if (bossDefeated()) Jukebox.play(Jukebox.Mode.VICTORY);   // remplace la musique du combat, sans autre son par-dessus
+            else Sounds.play(Sounds.Effect.VICTORY);
         }
         if (bossDefeated()) bossDeadTime = Math.max(0f, bossDeadTime) + delta;
         camera.update(delta, player.getPosition(), mapLoader.getWidth(), mapLoader.getHeight());

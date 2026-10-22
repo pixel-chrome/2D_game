@@ -123,6 +123,10 @@ public abstract class Boss extends Enemy {
         else onHurt();
     }
 
+    /** Pas de cri de garde à la mort du boss : la musique de victoire prend le relais. */
+    @Override
+    protected void playDeathSound() {}
+
     /** Un boss ne se pare pas. */
     @Override
     public boolean canBeParried() {
